@@ -1,4 +1,4 @@
-using CTMLEs
+using TargetedLearning
 using Base.Test
 
 # write your own tests here
