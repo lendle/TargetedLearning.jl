@@ -2,7 +2,7 @@
 
 export TMLE, tmle, iptw, gcomp
 
-using LReg
+using ..LReg
 
 type TMLE{T<:FloatingPoint}
     psi::T

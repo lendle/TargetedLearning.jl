@@ -8,8 +8,7 @@ export CTMLE, ctmle
 
 const debug = 0
 
-include("LReg.jl")
-using .LReg
+using ..LReg
 
 include("pcor.jl")
 include("atefunctors.jl")
