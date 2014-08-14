@@ -56,7 +56,7 @@ function xb!(xb, X, beta, offset)
     end
 end
 
-function lreg{T <: FloatingPoint}(X::Matrix{T}, Y::Vector{T}, offset = :none)
+function lreg{T <: FloatingPoint}(X::Matrix{T}, Y::Vector{T}, offset = :none; tol = eps)
     p = size(X, 2)
     mu = (Y .+ 0.5) ./ (2.0)
     #mu = fill(mean(Y), size(Y))
@@ -95,7 +95,7 @@ function lreg{T <: FloatingPoint}(X::Matrix{T}, Y::Vector{T}, offset = :none)
         map!(FMA(), newbeta, beta, -stepsize, dir)
         xb!(xb, X, newbeta, offset)
         newloss = mean(Loss(), Y, xb)
-        while newloss - oldloss > eps && stepsize > 0.01
+        while newloss - oldloss > tol && stepsize > 0.01
             #info("halving. oldloss: $oldloss, newloss: $newloss")
             stepsize /= 2.0
             map!(FMA(), newbeta, beta, -stepsize, dir)
@@ -104,7 +104,7 @@ function lreg{T <: FloatingPoint}(X::Matrix{T}, Y::Vector{T}, offset = :none)
         end
         oldloss = newloss
         copy!(beta, newbeta)
-        if maxabsdiff(beta, oldbeta) < eps
+        if maxabsdiff(beta, oldbeta) < tol
             break
         end
         copy!(oldbeta, beta)
