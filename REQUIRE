@@ -4,4 +4,4 @@ NumericExtensions
 StatsBase
 MLBase
 Devectorize
-ReExport
+Reexport
