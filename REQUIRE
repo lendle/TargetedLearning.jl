@@ -3,8 +3,5 @@ NumericFuns
 NumericExtensions
 StatsBase
 MLBase
-<<<<<<< HEAD
 Devectorize
-=======
->>>>>>> 8ae4989a9a75ee8d6c3219c311768c377b8d0c4e
 Reexport
