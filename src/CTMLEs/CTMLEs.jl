@@ -54,7 +54,7 @@ function build_Q!(qfit::Qmodel, dat, valdat=:none; k=typemax(Int), opts=CTMLEOpt
     init!(opts.searchstrategy)
 
     #fit initial g with intercept only
-    ginit = sslreg(w, a, IntSet(1))
+    ginit = sparselreg(w, a, IntSet(1))
 
     #fluctuate qfit with intercept-only g
     fluctuate!(qfit, ginit, dat...)
