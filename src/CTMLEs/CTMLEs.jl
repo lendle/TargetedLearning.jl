@@ -1,14 +1,13 @@
-@reexport module CTMLEs
+module CTMLEs
 
 using NumericExtensions, StatsBase, MLBase, Devectorize
-
 import StatsBase.predict, StatsBase.predict!, NumericExtensions.evaluate
 
-export CTMLE, ctmle
+export CTMLE, ctmle, fitinfo
 
 const debug = 0
 
-using ..LReg
+using ..LReg, ..Common
 
 include("pcor.jl")
 include(joinpath("..", "atefunctors.jl"))
@@ -16,20 +15,29 @@ include("Qmodel.jl")
 include("strategies.jl")
 include("opts.jl")
 
-type CTMLE
+type CTMLE <: ScalarEstimate
     psi::Float64
+    ic::Vector{Float64}
+    n::Int
+    estimand::String
     q::Qmodel
     opts::CTMLEOpts
 end
+CTMLE(psi, ic, n, q, opts) = CTMLE(psi, ic, n, "ATE", q, opts)
 
 function Base.show(io::IO, obj::CTMLE)
-    println(io, "Estimate: $(obj.psi)")
+    println(io, "CTMLE estimate")
+    show(io, coeftable(obj))
+end
+
+fitinfo(obj) = fitinfo(STDOUT, obj)
+function fitinfo(io::IO, obj::CTMLE)
     print(io, "Search strategy: ")
     print(io, "\n")
     show(io, obj.opts.searchstrategy)
+    print(io, "\n")
     show(io, obj.q)
 end
-
 
 function build_Q!(qfit::Qmodel, dat, valdat=:none; k=typemax(Int), opts=CTMLEOpts())
     #qfit should just be the inital fit of Qbar, not fluctuated.
@@ -93,12 +101,20 @@ function ctmle(w, a, y, QWidx = 1:size(w, 2), opts::CTMLEOpts=CTMLEOpts())
     debug > 0 && info("building full Q")
     build_Q!(qfit, (w, a, y), k = best_k, opts=opts)
 
+    #compute IC and final estimate
     QnA1 = predict(qfit, w, ones(n), :prob)
     QnA0 = predict(qfit, w, zeros(n), :prob)
 
-    CTMLE(mean(QnA1) - mean(QnA0), qfit, opts)
+    h = predict(finalg(qfit), w, :prob)
+    map1!(Gatoh(), h, a)
+    psi = mean(QnA1) - mean(QnA0)
+    x=rand(10)
+    @devec ic = h .* (y .- blend(a .== 1.0, QnA1, QnA0)) .+ QnA1 .- QnA0 .- psi
+    CTMLE(psi, ic, n, qfit, opts)
 end
 
 ctmle(w, a, y, QWidx = 1:size(w, 2); opts...) = ctmle(w, a, y, QWidx, CTMLEOpts(;opts...))
 
 end # module
+
+@reexport using .CTMLEs

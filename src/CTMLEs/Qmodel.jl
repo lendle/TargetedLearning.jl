@@ -95,3 +95,5 @@ function risk(q::Qmodel, w, a, y; pen=true)
     end
     loss
 end
+
+finalg(q::Qmodel) = q.gseq[end]

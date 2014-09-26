@@ -1,14 +1,16 @@
-@reexport module TMLEs
-
+@reexport(
+module TMLEs
 export TMLE, tmle, iptw, gcomp
 
-using ..LReg
+using ..LReg, ..Common
 
-type TMLE{T<:FloatingPoint}
+type TMLE{T<:FloatingPoint} <: ScalarEstimate
     psi::T
     ic::Vector{T}
+    n::Int
+    estimand::String
 end
-
+TMLE(psi, ic) = TMLE(psi, ic, length(ic), "ATE")
 
 cvec(A::Vector) = reshape(A, length(A), 1)
 
@@ -56,13 +58,19 @@ end
 
 tmle(W, A, Y) = tmle(W, W, A, Y)
 
+
+
 function Base.show(io::IO, t::TMLE)
-    se = sqrt(var(t.ic) / length(t.ic))
-    ul = t.psi .+ [-1.96, 1.96] * se
-    Base.println(io, "psi: ", t.psi)
-    Base.println(io, "se: ", se)
-    Base.println(io, "ci: (", ul[1], ", ", ul[2], ")")
+    println(io, "TMLE estimate")
+    show(io, coeftable(t))
 end
+
+#     se = sqrt(var(t.ic) / length(t.ic))
+#     ul = t.psi .+ [-1.96, 1.96] * se
+#     Base.println(io, "psi: ", t.psi)
+#     Base.println(io, "se: ", se)
+#     Base.println(io, "ci: (", ul[1], ", ", ul[2], ")")
+# end
 
 function gcomp(W, A, Y)
     n = length(Y)
@@ -84,4 +92,4 @@ end
 
 
 
-end
+end)
