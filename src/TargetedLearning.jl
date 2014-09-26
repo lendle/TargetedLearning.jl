@@ -3,7 +3,7 @@ module TargetedLearning
 using Reexport
 
 include("LReg.jl")
-include("CTMLEs.jl")
+include(joinpath("CTMLEs", "CTMLEs.jl"))
 include("TMLEs.jl")
 
 end

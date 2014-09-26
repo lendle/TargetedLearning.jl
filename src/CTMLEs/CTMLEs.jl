@@ -11,7 +11,7 @@ const debug = 0
 using ..LReg
 
 include("pcor.jl")
-include("atefunctors.jl")
+include(joinpath("..", "atefunctors.jl"))
 include("Qmodel.jl")
 include("strategies.jl")
 include("opts.jl")
