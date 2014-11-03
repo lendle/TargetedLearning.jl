@@ -5,7 +5,7 @@ import StatsBase.predict, StatsBase.predict!, NumericExtensions.evaluate
 
 export CTMLE, ctmle, fitinfo
 
-const debug = 0
+const debug = [0]
 
 using ..LReg, ..Common
 
@@ -92,13 +92,13 @@ function ctmle(w, a, y, QWidx = 1:size(w, 2), opts::CTMLEOpts=CTMLEOpts())
 
     #fit initial Q and build fluctuations on training data
     train_qfit = Qmodel(sparselreg([train_dat[1] train_dat[2]], train_dat[3], QWAidx))
-    debug > 0 && info("building training Q")
+    debug[1] > 0 && info("building training Q")
     train_risk, val_risk = build_Q!(train_qfit, train_dat, val_dat, opts=opts)
     best_k_risk, best_k = findmin(val_risk)
 
     #fit initial Q and build fluctuations on validation data, adding best_k terms
     qfit = Qmodel(sparselreg([w a], y, QWAidx))
-    debug > 0 && info("building full Q")
+    debug[1] > 0 && info("building full Q")
     build_Q!(qfit, (w, a, y), k = best_k, opts=opts)
 
     #compute IC and final estimate

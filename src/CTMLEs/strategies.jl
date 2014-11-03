@@ -39,8 +39,8 @@ function add_covar!(::ForwardStepwise, qfit, w, a, y, used_covars, unused_covars
 
     g_and_flucs = Dict{IntSet, (AbstractLR, AbstractLR)}()
 
-    debug > 0 && info("unused_covars: $unused_covars")
-    debug > 0 && info("used_covars: $used_covars")
+    debug[1] > 0 && info("unused_covars: $unused_covars")
+    debug[1] > 0 && info("used_covars: $used_covars")
 
     #Remove most recent fluctuation (and save for later use)
     #So that we can add one covar to the current fluctuation to see if it works
@@ -90,10 +90,10 @@ function add_covar!(::ForwardStepwise, qfit, w, a, y, used_covars, unused_covars
                 f = open("blah", "w")
                 serialize(f, qfit)
                 close(f)
-            end            
+            end
             g_and_flucs[current_covars] = defluctuate!(qfit)
         end
-        debug > 0 && info("next_covar_risk: $next_covar_risk")
+        debug[1] > 0 && info("next_covar_risk: $next_covar_risk")
         best_risk, best_j = findmin(next_covar_risk)
 
         # if best_risk > best_risk
@@ -101,7 +101,7 @@ function add_covar!(::ForwardStepwise, qfit, w, a, y, used_covars, unused_covars
         # end
         # verbose >= 2 && info("Best updated covar score: $best_risk")
         # verbose >= 1 && info("Adding covar $best_j to new clever covar")
-        debug > 0 && info("best_j: $best_j, unused_covars: $unused_covars")
+        debug[1] > 0 && info("best_j: $best_j, unused_covars: $unused_covars")
         push!(used_covars, best_j)
         delete!(unused_covars, best_j)
         #fluctuate!(qfit, sslreg(w, a, used_covars), w, a, y)
