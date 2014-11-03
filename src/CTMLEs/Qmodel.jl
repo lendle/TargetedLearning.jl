@@ -9,6 +9,8 @@ end
 
 Qmodel(qinit::AbstractLR) = Qmodel(qinit, AbstractLR[], LR[])
 
+Base.copy(q::Qmodel) = Qmodel(q.Qinit, copy(q.gseq), copy(q.flucseq))
+
 function Base.show(io::IO, obj::Qmodel)
     idxs = [IntSet(), map(x-> x.idx, obj.gseq)]
     print(io, "Initial Q fit on covars:")
@@ -45,21 +47,28 @@ end
 
 predict(q::Qmodel, w, a, kind) = predict!(q, similar(a), w, a, kind)
 
-function fluctuate!(q::Qmodel, g::AbstractLR, w, a, y)
-    #adds an estimate of g and fluctuation to q
+function computefluc(q::Qmodel, g::AbstractLR, w, a, y)
+    #computes fluctuation for a given q and g
     offset = predict(q, w, a, :link)
     h = predict(g, w, :prob)
     map1!(Gatoh(), h, a)
     h = reshape(h, length(h), 1)
-    fluc = lreg(h, y, offset)
-    if isnan(fluc.beta[1])
-        f = open("asdf", "w")
-        serialize(f, (h, y, offset))
-        close(f)
-    end
+    lreg(h, y, offset)
+end
+
+function fluctuate!(q::Qmodel, g::AbstractLR, fluc::LR)
+    #adds g and fluc to q
     push!(q.gseq, g)
     push!(q.flucseq, fluc)
+    q
 end
+
+function fluctuate!(q::Qmodel, g::AbstractLR, w, a, y)
+    #computes fluc then adds an estimate of g and fluctuation to q
+    fluctuate!(q, g, computefluc(q, g, w, a, y))
+end
+
+fluctuate(q::Qmodel, args...) = fluctuate!(copy(q), args...)
 
 function defluctuate!(q::Qmodel)
     #removes last fluctuation and g
@@ -68,10 +77,6 @@ function defluctuate!(q::Qmodel)
     (g, pop!(q.flucseq))
 end
 
-function refluctuate!(q::Qmodel, g::AbstractLR, fluc::LR)
-    push!(q.gseq, g)
-    push!(q.flucseq, fluc)
-end
 
 function risk(q::Qmodel, w, a, y; pen=true)
     #calculate penalized log likelihood as RSS + tau(=1 here?) * var(ic)
