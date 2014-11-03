@@ -65,7 +65,7 @@ function build_Q!(qfit::Qmodel, dat, valdat=:none; k=typemax(Int), opts=CTMLEOpt
     while ! isempty(unused_covars) && length(used_covars) < k
         push!(train_risk, risk(qfit, w, a, y))
         if valdat != :none
-            push!(val_risk, risk(qfit, dat..., pen=false))
+            push!(val_risk, risk(qfit, valdat..., pen=false))
         end
         add_covar!(opts.searchstrategy, qfit, w, a, y, used_covars, unused_covars, train_risk[end])
     end
