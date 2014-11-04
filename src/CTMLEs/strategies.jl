@@ -46,12 +46,8 @@ function add_covar!(::ForwardStepwise, qfit, w, a, y, used_covars, unused_covars
     #So that we can add one covar to the current fluctuation to see if it works
     g_now, fluc_now = defluctuate!(qfit)
 
-    sw = SharedArray(eltype(w), size(w))
-    copy!(sw, w)
-
     #compute g fluctuations and risks
     gfits_flucs_risks = pmap(unused_covars) do j
-        w = sdata(w)
         current_covars = union(used_covars, IntSet(j))
         #estimate g with additional covariate j
         gfit = sparselreg(w, a, collect(current_covars))
