@@ -56,7 +56,7 @@ function xb!(xb, X, beta, offset)
     end
 end
 
-function lreg{T <: FloatingPoint}(X::Matrix{T}, Y::Vector{T}, offset = :none; tol = eps)
+function lreg{T <: FloatingPoint}(X::DenseMatrix{T}, Y::Vector{T}, offset = :none; tol = eps)
     p = size(X, 2)
     mu = (Y .+ 0.5) ./ (2.0)
     #mu = fill(mean(Y), size(Y))
@@ -119,7 +119,7 @@ end
 lreg{T<:FloatingPoint}(X::Vector{T}, Y::Vector{T}, offset = :none) =
     lreg(reshape(X, size(X,1), 1), Y, offset)
 
-function predict(lr::AbstractLR, newX::Matrix, kind::Symbol=:link; offset = :none)
+function predict(lr::AbstractLR, newX::DenseMatrix, kind::Symbol=:link; offset = :none)
     @assert size(newX, 2) == length(lr.beta)
     if kind == :prob
         offset == :none ? logistic(newX * lr.beta) : logistic(newX * lr.beta .+ offset)
@@ -133,7 +133,7 @@ end
 predict(lr::AbstractLR, newX::Vector, kind::Symbol=:link; offset = :none)=
     predict(lr, reshape(newX, size(newX, 1), 1), kind, offset=offset)
 
-function predict!{T<:FloatingPoint}(lr::AbstractLR, p::Vector{T}, newX::Matrix{T}, kind::Symbol=:link; offset = :none)
+function predict!{T<:FloatingPoint}(lr::AbstractLR, p::Vector{T}, newX::DenseMatrix{T}, kind::Symbol=:link; offset = :none)
     BLAS.gemv!('N', 1.0, newX, lr.beta, 0.0, p) #p=newX*lr.beta
     if offset != :none
         add!(p, offset)
@@ -150,7 +150,7 @@ type SSLR{T <: FloatingPoint} <: AbstractLR
     idx::IntSet
 end
 
-function sslreg{T <: FloatingPoint}(X::Matrix{T}, Y::Vector{T}, idx = 1:size(X, 2), offset = :none)
+function sslreg{T <: FloatingPoint}(X::DenseMatrix{T}, Y::Vector{T}, idx = 1:size(X, 2), offset = :none)
     idx = IntSet(idx) #convert to IntSet or make a copy
     nzp = length(idx)
     p = size(X, 2)
@@ -223,7 +223,7 @@ function sslreg{T <: FloatingPoint}(X::Matrix{T}, Y::Vector{T}, idx = 1:size(X, 
     SSLR(beta, idx)
 end
 
-function sparselreg{T <: FloatingPoint}(X::Matrix{T}, Y::Vector{T}, idx = 1:size(X, 2), offset = :none)
+function sparselreg{T <: FloatingPoint}(X::DenseMatrix{T}, Y::Vector{T}, idx = 1:size(X, 2), offset = :none)
     idx = IntSet(idx)
     if idx == IntSet(1:size(X,2))
         return SSLR(lreg(X,Y, offset).beta, idx)
