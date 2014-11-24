@@ -119,22 +119,26 @@ end
 lreg{T<:FloatingPoint}(X::Vector{T}, Y::Vector{T}, offset = :none) =
     lreg(reshape(X, size(X,1), 1), Y, offset)
 
-function predict(lr::AbstractLR, newX::DenseMatrix, kind::Symbol=:link; offset = :none)
-    @assert size(newX, 2) == length(lr.beta)
-    if kind == :prob
-        offset == :none ? logistic(newX * lr.beta) : logistic(newX * lr.beta .+ offset)
-    elseif kind == :link
-        offset == :none ? newX * lr.beta : newX * lr.beta .+ offset
-    else
-        error("kind should be :prob or :link")
-    end
-end
+# function predict(lr::AbstractLR, newX::DenseMatrix, kind::Symbol=:link; offset = :none)
+#     @assert size(newX, 2) == length(lr.beta)
+#     if kind == :prob
+#         offset == :none ? logistic(newX * lr.beta) : logistic(newX * lr.beta .+ offset)
+#     elseif kind == :link
+#         offset == :none ? newX * lr.beta : newX * lr.beta .+ offset
+#     else
+#         error("kind should be :prob or :link")
+#     end
+# end
+
+predict{T <: FloatingPoint}(lr::AbstractLR, newX::DenseMatrix{T}, kind::Symbol=:link; offset = :none) =
+    predict!(lr, Array(T, size(newX, 1)), newX, kind, offset=offset)
 
 predict(lr::AbstractLR, newX::Vector, kind::Symbol=:link; offset = :none)=
     predict(lr, reshape(newX, size(newX, 1), 1), kind, offset=offset)
 
 function predict!{T<:FloatingPoint}(lr::AbstractLR, p::Vector{T}, newX::DenseMatrix{T}, kind::Symbol=:link; offset = :none)
-    BLAS.gemv!('N', 1.0, newX, lr.beta, 0.0, p) #p=newX*lr.beta
+#     BLAS.gemv!('N', 1.0, newX, lr.beta, 0.0, p) #p=newX*lr.beta
+    A_mul_B!(p, newX, lr.beta)
     if offset != :none
         add!(p, offset)
     end
@@ -144,6 +148,8 @@ function predict!{T<:FloatingPoint}(lr::AbstractLR, p::Vector{T}, newX::DenseMat
     end
     p
 end
+
+
 
 type SSLR{T <: FloatingPoint} <: AbstractLR
     beta::Vector{T}
