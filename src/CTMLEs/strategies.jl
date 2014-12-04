@@ -46,23 +46,24 @@ function add_covar!(::ForwardStepwise, qfit, w, a, y, used_covars, unused_covars
     #So that we can add one covar to the current fluctuation to see if it works
     g_now, fluc_now = defluctuate!(qfit)
 
-    #try adding each covariate to the current fluctuation
-    for j in unused_covars
-        #estimate g with additional covariate j
-        #println("Vars: $(union(used_covars, IntSet(j)))")
+    #compute g fluctuations and risks
+    gfits_flucs_risks = pmap(unused_covars) do j
         current_covars = union(used_covars, IntSet(j))
-        gfit = sparselreg(w, a, collect(current_covars)) #sslreg(w, a, current_covars)
-        #fluctuate and get risk
-        fluctuate!(qfit, gfit, w, a, y)
-        next_covar_risk[j] = risk(qfit, w, a, y)
-        if isnan(next_covar_risk[j])
-            f = open("blah", "w")
-            serialize(f, qfit)
-            close(f)
-        end
-        #remove newest fluctuation
-        g_and_flucs[current_covars] = defluctuate!(qfit)
-        #should memoize here, or otherwise save gs and fluctuations for reuse if needed
+        #estimate g with additional covariate j
+        gfit = sparselreg(w, a, collect(current_covars))
+        #compute fluctuation
+        fluc = computefluc(qfit, gfit, w, a, y)
+        #compute risk on a copy of q
+        r = risk(fluctuate(qfit, gfit, fluc), w, a, y)
+        (gfit, fluc, r)
+    end
+
+    #store fluctuations and risks computed in parallel in a nice way
+    for (idx, j) in enumerate(unused_covars)
+        current_covars = union(used_covars, IntSet(j))
+        gfit, fluc, r = gfits_flucs_risks[idx]
+        next_covar_risk[j] = r
+        g_and_flucs[current_covars] = (gfit, fluc)
     end
     best_risk, best_j = findmin(next_covar_risk)
 
@@ -70,14 +71,12 @@ function add_covar!(::ForwardStepwise, qfit, w, a, y, used_covars, unused_covars
         #adding one covariate to current fluc does better, then use that fluctuation
         push!(used_covars, best_j)
         delete!(unused_covars, best_j)
-        #should save gfit from above so don't have to refit here
-        #fluctuate!(qfit, sslreg(w, a, used_covars), w, a, y)
-        refluctuate!(qfit, g_and_flucs[used_covars]...)
+        fluctuate!(qfit, g_and_flucs[used_covars]...)
     else
         #otherwise, keep current fluctuation find best new fluctuation adding a
         #single covariate
 
-        refluctuate!(qfit, g_now, fluc_now) #reuse previous best fluctuation
+        fluctuate!(qfit, g_now, fluc_now) #reuse previous best fluctuation
 
         next_covar_risk = fill(Inf, maximum(unused_covars))
         for j in unused_covars
@@ -105,7 +104,7 @@ function add_covar!(::ForwardStepwise, qfit, w, a, y, used_covars, unused_covars
         push!(used_covars, best_j)
         delete!(unused_covars, best_j)
         #fluctuate!(qfit, sslreg(w, a, used_covars), w, a, y)
-        try refluctuate!(qfit, g_and_flucs[used_covars]...)
+        try fluctuate!(qfit, g_and_flucs[used_covars]...)
         catch e
             info("best_j: $best_j, unused_covars: $unused_covars")
             rethrow(e)
@@ -132,12 +131,11 @@ function add_covar!(strategy::PreOrdered, qfit, w, a, y, used_covars, unused_cov
         return
     else
         defluctuate!(qfit)
-        refluctuate!(qfit, g_old, fluc_old)
+        fluctuate!(qfit, g_old, fluc_old)
         fluctuate!(qfit, g_fit, w, a, y)
     end
 end
 
-#check me, was drunk
 function order_covars(ordering::LogisticOrdering, qfit, w, a, y, available_covars)
     logitQnAA = predict(qfit, w, a, :link)
     r = similar(y)
