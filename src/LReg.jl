@@ -1,6 +1,6 @@
 module LReg
 
-using NumericExtensions, NumericFuns
+using NumericExtensions, NumericFuns, Devectorize
 
 import StatsBase: predict, predict!
 
@@ -37,16 +37,16 @@ type SqrtM1mM <: Functor{1} end
 NumericExtensions.evaluate(::SqrtM1mM, m) = sqrt(m * (1.0 - m))
 
 type Loss <: Functor{2} end
-NumericExtensions.evaluate(::Loss, y, xb) = y * log1pexp(-xb) + (1.0-y) * log1pexp(xb)
+NumericExtensions.evaluate(::Loss, y, xb) =
+    y == one(y)? log1pexp(-xb) :
+    y == zero(y)? log1pexp(xb) :
+    y * log1pexp(-xb) + (1.0-y) * log1pexp(xb)
 
-log1pexp(x::Float64) = x <= 18.0? log1p(exp(x)) :
-                                   (x > 33.3? x :
-                                              x + exp(-x))
-#     if(x <= 18.) return log1p(exp(x))
-#     if(x > 33.3) return x
-#     # else: 18.0 < x <= 33.3
-#     return x + exp(-x)
-#
+log1pexp(x::Float64) =
+    x <= 18.0? log1p(exp(x)) :
+    x > 33.3? x :
+    x + exp(-x)
+
 log1pexp(x) = log1p(exp(x))
 
 function xb!(xb, X, beta, offset)
@@ -240,6 +240,73 @@ function sparselreg{T <: FloatingPoint}(X::DenseMatrix{T}, Y::Vector{T}, idx = 1
         beta[collect(idx)] = lr.beta
         return SSLR(beta, idx)
     end
+end
+
+function lreg_bfgs{T}(X::DenseMatrix{T}, Y::Vector{T}, offset = :none; weights=:none, tol=1.0e-8, maxiter=25)
+    #http://research.microsoft.com/en-us/um/people/minka/papers/logreg/minka-logreg.pdf
+    #Section 6
+    n,p = size(X)
+    mu = fill(0.5, n)
+    resid = similar(Y)
+    A = similar(Y)
+    H_inv = eye(T, p)
+    w = zeros(T, p)
+    w_old = copy(w)
+    Δw = copy(w)
+    g = copy(w)
+    g_old = copy(g)
+    Δg = copy(w)
+    xw = similar(Y)
+    Xu = similar(Y)
+    local iter
+    for iter in 0:maxiter
+        map!(Subtract(), resid, mu, Y) #resid = mu .- Y
+        At_mul_B!(g, X, resid) #g = X'resid
+        @devec A[:]  = mu .* (1.0 .- mu)
+
+        if iter > 0
+            #can't update H_inv on the first iteration...
+            map!(Subtract(), Δg, g, g_old)
+
+            ΔwᵀΔg = Δw ⋅ Δg
+            b = 1.0 + vec(Δg'H_inv)⋅Δg / ΔwᵀΔg
+            H_invΔg = H_inv * Δg
+
+            BLAS.syr!('U', b/ΔwᵀΔg, Δw, H_inv)
+            BLAS.syr2k!('U', 'N', -1.0/ΔwᵀΔg, Δw, H_invΔg, 1.0, H_inv)
+            #TODO: use a Symmetric matrix for H_inv, and replace multiplication by H_inv
+            #..... below by BLAS.symm! instead of manually symmetrizing
+            for i in 2:p, j in 1:i-1
+                @inbounds H_inv[i,j] = H_inv[j, i]
+            end
+#             H_inv += (b .* Δw*Δw' .- Δw*Δg'H_inv .- H_inv*Δg*Δw') ./ ΔwᵀΔg
+        end
+        u = - H_inv * g
+        gᵀu = g ⋅ u
+        A_mul_B!(Xu, X, u)
+        @devec uᵀHu = sum(A .* Xu .* Xu)
+
+        Δw = - (gᵀu/uᵀHu) .* u
+
+        w .+= Δw
+
+        #TODO: Implement backtracking line search
+        #TODO: https://en.wikipedia.org/wiki/Armijo_condition
+        #TODO: https://en.wikipedia.org/wiki/Wolfe_conditions
+
+
+        if maxabsdiff(w, w_old) < tol
+            break
+        end
+        xb!(xw, X, w, offset)
+        map!(LogisticFun(), mu, xw)
+        copy!(w_old, w)
+        copy!(g_old, g)
+    end
+    if iter == maxiter
+        warn("lreg_bfgs did not converge in $maxiter iterations.")
+    end
+    LReg.LR(w)
 end
 
 end
