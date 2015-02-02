@@ -1,5 +1,8 @@
 module TargetedLearning
 
+using Docile
+@document
+
 using Reexport
 
 include("Common.jl")

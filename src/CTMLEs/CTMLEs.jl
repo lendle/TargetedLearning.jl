@@ -1,5 +1,8 @@
 module CTMLEs
 
+using Docile
+@document
+
 using NumericExtensions, StatsBase, MLBase, Devectorize
 import StatsBase.predict, StatsBase.predict!, NumericExtensions.evaluate
 
@@ -53,14 +56,14 @@ function build_Q!(qfit::Qmodel, dat, valdat=:none; k=typemax(Int), opts=CTMLEOpt
     #initialize the search strategy object
     init!(opts.searchstrategy)
 
-    #fit initial g with intercept only
-    ginit = sparselreg(w, a, IntSet(1))
+    used_covars = IntSet(opts.ginitidx) #indicies for covariates used in g, starts as intercept only
+    unused_covars = setdiff(IntSet(1:size(w, 2)), used_covars) #indecies for covariates not yet in g
+    
+    #fit initial g with preselected initial covars
+    ginit = sparselreg(w, a, used_covars)
 
-    #fluctuate qfit with intercept-only g
+    #fluctuate qfit with initial g
     fluctuate!(qfit, ginit, dat...)
-
-    used_covars = IntSet(1) #indicies for covariates used in g, starts as intercept only
-    unused_covars = IntSet(2:size(w, 2)) #indecies for covariates not yet in g
 
     while ! isempty(unused_covars) && length(used_covars) < k
         push!(train_risk, risk(qfit, w, a, y))
@@ -73,7 +76,8 @@ function build_Q!(qfit::Qmodel, dat, valdat=:none; k=typemax(Int), opts=CTMLEOpt
     (train_risk, val_risk)
 end
 
-function ctmle(w, a, y, QWidx = 1:size(w, 2), opts::CTMLEOpts=CTMLEOpts())
+
+function ctmle(w, a, y, QWidx = 1:size(w, 2), ginitidx = [1], opts::CTMLEOpts=CTMLEOpts())
     #QWidx specifies the indexes of the covars in W to be used to fit Q
 
     n = length(y)
@@ -113,7 +117,23 @@ function ctmle(w, a, y, QWidx = 1:size(w, 2), opts::CTMLEOpts=CTMLEOpts())
     CTMLE(psi, ic, n, qfit, opts)
 end
 
-ctmle(w, a, y, QWidx = 1:size(w, 2); opts...) = ctmle(w, a, y, QWidx, CTMLEOpts(;opts...))
+"""
+Performs c-tmle estimation for the average treatment effect
+
+** Arguments **
+
+* `w` - a design matrix of covariates, first column should be all 1s for an intercept
+* `a` - a vector of treatments, 0.0 or 1.0
+* `y` - a vector of outcomes, should be in the interval [0.0, 1.0], but need not be binary
+* `QWidx` - a vector or range specifying which covariates should be used to estimate E(Y|A,W) with logistic regression. Defaults to all.
+
+** Named Arguments **
+
+* `searchstrategy` - Search strategy for choosing next covariates to add to g. See docs for `SearchStrategy`. Default is `ForwardStepwise`.
+* `ginitidx` - a collection specifying which covariates should always included in estimate of g. Defaults to intercept only.
+
+"""
+ctmle(w, a, y, QWidx = 1:size(w, 2),  ginitidx = [1]; opts...) = ctmle(w, a, y, QWidx, ginitidx, CTMLEOpts(;opts...))
 
 end # module
 

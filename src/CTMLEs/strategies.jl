@@ -1,12 +1,25 @@
 module Strategies
 
+using Docile
+@document
+
 export SearchStrategy, ForwardStepwise, PreOrdered
-export OrderingStrategy, LogisticOrdering, PartialCorrOrdering
+export OrderingStrategy, LogisticOrdering, PartialCorrOrdering, HDPSOrdering
 
 abstract OrderingStrategy
 type LogisticOrdering <: OrderingStrategy end
 type PartialCorrOrdering <: OrderingStrategy end
+type HDPSOrdering <: OrderingStrategy end
 
+"""
+Defines how the next covariate added to g is chosen
+
+* `ForwardStepwise` - default, tries each unused covariate to find the one that helps the most. Slow, O(p^2) time for p covariates.
+* `PreOrdered` - Orders covariates once then adds them in that order. Takes O(p) time for p covariates. Specify with `PreOrdered(ordering)` where `ordering` is
+    * `LogisticOrdering()` - ranks covariates based on reduction in log likelihood with intital Q as an offset if added one at a time. Basically the first step of `ForwardStepwise`
+    * `PartialCorrOrdering()` - ranks covariates based on partial correlation of each covariate and the residual (y - predicted y from initial Qbar) given a
+    * `HDPSOrdering()` - ranks covariates based on bias reduction potential as in the hdps procedure. This ignores intial Qbar.
+"""
 abstract SearchStrategy
 type ForwardStepwise <: SearchStrategy end
 type PreOrdered <: SearchStrategy
@@ -162,3 +175,8 @@ function order_covars(ordering::PartialCorrOrdering, qfit, w, a, y, available_co
         return sort!(collect(keys(scores)), by = x -> scores[x], rev=true)
     end
 end
+
+function order_covars(ordering::HDPSOrdering, qfit, w, a, y, available_covars)
+    error()
+end
+
