@@ -24,8 +24,9 @@ abstract SearchStrategy
 type ForwardStepwise <: SearchStrategy end
 type PreOrdered <: SearchStrategy
     ordering::OrderingStrategy
+    katatime::Int
     covar_order::Vector{Int}
-    PreOrdered(ordering::OrderingStrategy) = new(ordering, Array(Int, 0))
+    PreOrdered(ordering::OrderingStrategy, katatime=1) = new(ordering, katatime, Array(Int, 0))
 end
 Base.show(io::IO, strat::PreOrdered) = print(io, "Preordered($(strat.ordering))")
 end
@@ -130,12 +131,18 @@ function add_covar!(strategy::PreOrdered, qfit, w, a, y, used_covars, unused_cov
         append!(strategy.covar_order, order_covars(strategy.ordering, qfit, w, a, y, unused_covars))
     end
 
-    next_covar = strategy.covar_order[findfirst(x -> x ∉ used_covars, strategy.covar_order)]
+    
+    ordered_unused_covars = filter(x -> x ∉ used_covars, strategy.covar_order)
+    next_covars = length(ordered_unused_covars) >= strategy.katatime ?
+        ordered_unused_covars[1:strategy.katatime] :
+        ordered_unused_covars
+    
 
     g_old, fluc_old = defluctuate!(qfit)
 
-    push!(used_covars, next_covar)
-    delete!(unused_covars, next_covar)
+    union!(used_covars, next_covars)
+    setdiff!(unused_covars, next_covars)
+    
     g_fit = sslreg(w, a, used_covars)
 
     fluctuate!(qfit, g_fit, w, a, y)

@@ -3,6 +3,13 @@ module CTMLEs
 using Docile
 @document
 
+using Logging
+if isdefined(Main, :CTMLE_DEBUG) && Main.CTMLE_DEBUG
+@Logging.configure(level=DEBUG)
+else
+@Logging.configure(level=OFF)
+end
+
 using NumericExtensions, StatsBase, MLBase, Devectorize
 import StatsBase.predict, StatsBase.predict!, NumericExtensions.evaluate
 
@@ -34,6 +41,8 @@ function Base.show(io::IO, obj::CTMLE)
 end
 
 fitinfo(obj) = fitinfo(STDOUT, obj)
+
+"prints some info about the fit of the CTMLE object to io, STDIO by default"
 function fitinfo(io::IO, obj::CTMLE)
     print(io, "Search strategy: ")
     print(io, "\n")
@@ -49,35 +58,42 @@ function build_Q!(qfit::Qmodel, dat, valdat=:none; k=typemax(Int), opts=CTMLEOpt
 
     #valdat is :none or a tuple (w_val, a_val, y_val) of validation data.
 
-    #set up storage for risk estimates
-    train_risk = Float64[]
-    val_risk = Float64[]
-
     #initialize the search strategy object
     init!(opts.searchstrategy)
 
-    used_covars = IntSet(opts.ginitidx) #indicies for covariates used in g, starts as intercept only
+    used_covars = IntSet(opts.allgWidx) #indicies for covariates used in g, starts as intercept only
     unused_covars = setdiff(IntSet(1:size(w, 2)), used_covars) #indecies for covariates not yet in g
-    
+
     #fit initial g with preselected initial covars
     ginit = sparselreg(w, a, used_covars)
 
     #fluctuate qfit with initial g
     fluctuate!(qfit, ginit, dat...)
 
+    #set up storage for risk estimates
+    train_risk = fill(Inf, size(w, 2))
+    val_risk = fill(Inf, size(w, 2))
+
+    prev_risk = risk(qfit, w, a, y)
+    train_risk[length(used_covars)] = prev_risk
+    if valdat != :none
+        val_risk[length(used_covars)] = risk(qfit, valdat..., pen=false)
+    end
+
     while ! isempty(unused_covars) && length(used_covars) < k
-        push!(train_risk, risk(qfit, w, a, y))
+        add_covar!(opts.searchstrategy, qfit, w, a, y, used_covars, unused_covars, prev_risk)
+        prev_risk = risk(qfit, w, a, y)
+        train_risk[length(used_covars)] = prev_risk
         if valdat != :none
-            push!(val_risk, risk(qfit, valdat..., pen=false))
+            val_risk[length(used_covars)] = risk(qfit, valdat..., pen=false)
         end
-        add_covar!(opts.searchstrategy, qfit, w, a, y, used_covars, unused_covars, train_risk[end])
     end
 
     (train_risk, val_risk)
 end
 
 
-function ctmle(w, a, y, QWidx = 1:size(w, 2), ginitidx = [1], opts::CTMLEOpts=CTMLEOpts())
+function ctmle(w, a, y, opts::CTMLEOpts)
     #QWidx specifies the indexes of the covars in W to be used to fit Q
 
     n = length(y)
@@ -86,18 +102,30 @@ function ctmle(w, a, y, QWidx = 1:size(w, 2), ginitidx = [1], opts::CTMLEOpts=CT
     #it is assumed that the first column of w is 1.0 for an intercept
     @assert all(w[:, 1] .== 1.0)
 
-    QWAidx = union(QWidx, size(w,2)+ 1)
+    QWAidx = union(opts.QWidx, size(w,2)+ 1)
 
-    train_idx = collect(StratifiedRandomSub(zip(a, y), iround(0.9 * n), 1))[1]
-    val_idx = setdiff(1:n, train_idx)
+    cvplan = opts.cvscheme(zip(a, y), opts.cvschemeopts...)
 
-    train_dat = (w[train_idx, :], a[train_idx], y[train_idx])
-    val_dat = (w[val_idx, :], a[val_idx], y[val_idx])
+    val_risks = fill(Inf, length(cvplan), size(w, 2))
 
-    #fit initial Q and build fluctuations on training data
-    train_qfit = Qmodel(sparselreg([train_dat[1] train_dat[2]], train_dat[3], QWAidx))
-    debug[1] > 0 && info("building training Q")
-    train_risk, val_risk = build_Q!(train_qfit, train_dat, val_dat, opts=opts)
+    for (i, train_idx) in enumerate(cvplan)
+        val_idx = setdiff(1:n, train_idx)
+        train_dat = (w[train_idx, :], a[train_idx], y[train_idx])
+        val_dat = (w[val_idx, :], a[val_idx], y[val_idx])
+
+        #fit initial Q and build fluctuations on training data
+        train_qfit = Qmodel(sparselreg([train_dat[1] train_dat[2]], train_dat[3], QWAidx))
+        debug[1] > 0 && info("building training Q $i")
+        train_risk, val_risk = build_Q!(train_qfit, train_dat, val_dat, opts=opts)
+        val_risks[i,:] = val_risk
+    end
+
+
+    val_risk = mean(val_risks, 1)
+
+#     @show round(val_risks, 3)
+#     @show round(val_risk, 3)
+
     best_k_risk, best_k = findmin(val_risk)
 
     #fit initial Q and build fluctuations on validation data, adding best_k terms
@@ -129,11 +157,26 @@ Performs c-tmle estimation for the average treatment effect
 
 ** Named Arguments **
 
-* `searchstrategy` - Search strategy for choosing next covariates to add to g. See docs for `SearchStrategy`. Default is `ForwardStepwise`.
-* `ginitidx` - a collection specifying which covariates should always included in estimate of g. Defaults to intercept only.
+See the documentation for CTMLEOpts for details
+
+* searchstrategy
+* QWidx
+* allgWidx
 
 """
-ctmle(w, a, y, QWidx = 1:size(w, 2),  ginitidx = [1]; opts...) = ctmle(w, a, y, QWidx, ginitidx, CTMLEOpts(;opts...))
+function ctmle(w, a, y;
+               searchstrategy = ForwardStepwise(),
+               QWidx = 1:size(w, 2),
+               allgWidx = [1],
+               cvscheme = StratifiedRandomSub,
+               cvschemeopts = (iround(0.9 * size(w, 1)), 1))
+    ctmle(w, a, y,
+          CTMLEOpts(searchstrategy=searchstrategy,
+                    QWidx=QWidx,
+                    allgWidx=allgWidx,
+                    cvscheme=cvscheme,
+                    cvschemeopts=cvschemeopts))
+end
 
 end # module
 

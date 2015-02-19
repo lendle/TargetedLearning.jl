@@ -1,6 +1,6 @@
 @reexport(
 module TMLEs
-export TMLE, tmle, iptw, gcomp
+export TMLE, tmle, iptw, gcomp, CTMLEs
 
 using ..LReg, ..Common
 

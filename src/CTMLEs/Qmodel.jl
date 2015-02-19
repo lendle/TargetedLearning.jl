@@ -20,7 +20,11 @@ function Base.show(io::IO, obj::Qmodel)
         added = setdiff(idxs[i], idxs[i-1])
         println(io, "$(i-1)th fluctuation, covars added: $(collect(added))")
     end
-    println(io, "$(length(obj.gseq[end].idx)) of $(length(obj.gseq[end].beta)) covariates in fluctuations.")
+    if length(obj.gseq) > 0
+        println(io, "$(length(obj.gseq[end].idx)) of $(length(obj.gseq[end].beta)) covariates in fluctuations.")
+    else
+        println(io, "No fluctuations.")
+    end
 end
 
 function predict!(q::Qmodel, r, w, a, kind)
