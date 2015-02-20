@@ -25,7 +25,7 @@ include("Qmodel.jl")
 include("strategies.jl")
 include("opts.jl")
 
-type CTMLE <: ScalarEstimate
+type CTMLE <: AbstractScalarEstimate
     psi::Float64
     ic::Vector{Float64}
     n::Int

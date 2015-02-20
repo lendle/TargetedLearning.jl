@@ -4,7 +4,7 @@ export TMLE, tmle, iptw, gcomp, CTMLEs
 
 using ..LReg, ..Common
 
-type TMLE{T<:FloatingPoint} <: ScalarEstimate
+type TMLE{T<:FloatingPoint} <: AbstractScalarEstimate
     psi::T
     ic::Vector{T}
     n::Int

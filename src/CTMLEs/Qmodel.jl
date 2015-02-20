@@ -7,7 +7,7 @@ type Qmodel
     flucseq::Vector{LR}
 end
 
-Qmodel(qinit::AbstractLR) = Qmodel(qinit, AbstractLR[], LR[])
+Qmodel(qinit::SSLR) = Qmodel(qinit, AbstractLR[], LR[])
 
 Base.copy(q::Qmodel) = Qmodel(q.Qinit, copy(q.gseq), copy(q.flucseq))
 

@@ -1,5 +1,7 @@
 module TestLReg
 
+using Base.Test
+
 import TargetedLearning.LReg
 
 srand(10)
@@ -20,6 +22,7 @@ sslrfit = LReg.sslreg(x, y, [1:3])
 sp2 = LReg.sparselreg(x, y, [1,3])
 @test sp2.beta[[1,3]] == LReg.lreg(x[:, [1,3]], y).beta
 @test sp2.beta[2] == 0.0
-@test sp2.beta == LReg.sslreg(x, y, [1,3]).beta
+
+@test_approx_eq sp2.beta LReg.sslreg(x, y, [1,3]).beta
 
 end
