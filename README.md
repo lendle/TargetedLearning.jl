@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/lendle/TargetedLearning.jl.svg?branch=master)](https://travis-ci.org/lendle/TargetedLearning.jl)
 
+[![Coverage Status](https://coveralls.io/repos/lendle/TargetedLearning.jl/badge.svg)](https://coveralls.io/r/lendle/TargetedLearning.jl)
+
 [![Documentation Status](https://readthedocs.org/projects/targetedlearningjl/badge/?version=latest)](https://readthedocs.org/projects/targetedlearningjl/?badge=latest)
 
 
