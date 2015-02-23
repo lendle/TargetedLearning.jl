@@ -1,2 +1,12 @@
-site_name: Targeted Learning
+site_name: TargetedLearning.jl
+theme: cosmo
+repo_url: https://github.com/lendle/TargetedLearning.jl/
+site_url: http://targetedlearningjl.readthedocs.org
 
+pages:
+- ['index.md', 'Home']
+- ['user-guide/julia.md', 'User Guide', 'Julia']
+- ['user-guide/estimation.md', 'User Guide', 'The estimation problem']
+- ['user-guide/ctmle.md', 'User Guide', '(C)TMLE']
+- ['user-guide/influencecurves.md', 'User Guide', 'Influece curves']
+- ['about/license.md', 'About', 'License']
