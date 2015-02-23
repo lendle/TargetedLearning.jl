@@ -67,14 +67,15 @@ name!(est::AbstractScalarEstimate, estimand) = (est.estimand=estimand; est)
 ^(a::AbstractScalarEstimate, b::Real) = ScalarEstimate(a.psi ^ b, (b*(a.psi^(b-1))) .* a.ic)
 ^(a::Real, b::AbstractScalarEstimate) = ScalarEstimate(a ^ b.psi, (a^b.psi * log(a)) .* b.ic)
 
-using Calculus, DualNumbers
-importall Base
+using Calculus
 
 for (funsym, _) in Calculus.derivative_rules
-    funsym = Expr(:.,:Base,Base.Meta.quot(funsym))
-    @eval function $(funsym)(a::AbstractScalarEstimate)
-        phi_dphi = $(funsym)(dual(a.psi, 1))
-        ScalarEstimate(real(phi_dphi), epsilon(phi_dphi) .* a.ic)
+    fullfunpath = Expr(:.,:Base,Base.Meta.quot(funsym))
+    @eval function $(fullfunpath)(a::AbstractScalarEstimate)
+        psi  = a.psi
+        phi_psi = $funsym(psi)
+        dphi_dpsi = $(differentiate(:($funsym(psi)), :psi))
+        ScalarEstimate(phi_psi, dphi_dpsi .* a.ic)
     end
 end
 
