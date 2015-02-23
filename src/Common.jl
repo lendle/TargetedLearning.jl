@@ -1,6 +1,6 @@
 module Common
 
-export AbstractScalarEstimate, ScalarEstimate, coef, vcov, nobs, stderr, confint, coeftable
+export AbstractScalarEstimate, ScalarEstimate, name!, coef, vcov, nobs, stderr, confint, coeftable
 
 using Distributions
 
@@ -41,6 +41,8 @@ end
 
 ScalarEstimate{T<:FloatingPoint}(psi::T, ic::Vector{T}, estimand="psi") = ScalarEstimate{T}(psi,ic, estimand)
 
+name!(est::AbstractScalarEstimate, estimand) = (est.estimand=estimand; est)
+
 +(a::AbstractScalarEstimate, b::AbstractScalarEstimate) = ScalarEstimate(a.psi + b.psi, a.ic .+ b.ic)
 +(a::AbstractScalarEstimate, b::Real) = ScalarEstimate(a.psi + b, a.ic)
 +(a::Real, b::AbstractScalarEstimate) = ScalarEstimate(a + b.psi, b.ic)
@@ -70,9 +72,9 @@ importall Base
 
 for (funsym, _) in Calculus.derivative_rules
     funsym = Expr(:.,:Base,Base.Meta.quot(funsym))
-    @eval function $(funsym)(a::Estimate)
+    @eval function $(funsym)(a::AbstractScalarEstimate)
         phi_dphi = $(funsym)(dual(a.psi, 1))
-        Estimate(real(phi_dphi), epsilon(phi_dphi) .* a.ic)
+        ScalarEstimate(real(phi_dphi), epsilon(phi_dphi) .* a.ic)
     end
 end
 
