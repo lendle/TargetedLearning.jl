@@ -1,1 +1,3 @@
 site/
+*.jl.cov
+*.jl.mem
