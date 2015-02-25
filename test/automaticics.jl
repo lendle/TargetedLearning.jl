@@ -14,7 +14,7 @@ ey0 = ScalarEstimate(mean(b), b .- mean(b), "EY0")
 ate = name!(ey1 - ey0, "ATE")
 @test_approx_eq ate.ic  ey1.ic .- ey0.ic
 
-#see http://onlinelibrary.wiley.com/doi/10.1002/sim.3445/abstract;jsessionid=F6B735D18167EB40C4EEB55440235B71.f04t01 appendix
+#see http://onlinelibrary.wiley.com/doi/10.1002/sim.3445/abstract appendix
 # for influence curves for logRR and logOR
 logrr = log(ey1/ey0)
 @test_approx_eq logrr.ic (1/ey1.psi) .* ey1.ic .- (1/ey0.psi) .* ey0.ic

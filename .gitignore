@@ -1,3 +1,4 @@
 site/
+docs/api
 *.jl.cov
 *.jl.mem

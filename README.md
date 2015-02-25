@@ -4,13 +4,8 @@
 
 [![Coverage Status](https://coveralls.io/repos/lendle/TargetedLearning.jl/badge.svg)](https://coveralls.io/r/lendle/TargetedLearning.jl)
 
-[![Documentation Status](https://readthedocs.org/projects/targetedlearningjl/badge/?version=latest)](https://readthedocs.org/projects/targetedlearningjl/?badge=latest)
+Find the documentation [here](https://lendle.github.io/TargetedLearning.jl/).
 
+Bugs or questions? File an issue [here](https://github.com/lendle/TargetedLearning.jl/issues/new).
 
---
-Some implementations of targeted minimum-loss based estimation (TMLE) and other estimators in Julia. For the average treatment effect (ATE):
-
-* `tmle`
-* `ctmle`
-* `iptw`
-* `gcomp`
+Want to contribute? Pull requests are welcome!
