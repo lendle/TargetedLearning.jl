@@ -34,11 +34,11 @@ For a proof of a more general result, see Theorem 3.1 in [Asymptotic Statistics 
 If $\psi_n$ is asymptotically linear with IC $D$, then by the continuous mapping theorem and the definition of asymptotic linearity we have 
 
 \begin{align}
-\sqrt{n}(\phi(\psi_n) - \phi_0) =& \phi_{\psi_0}' \sum_{i=1}^n D(O_i) + o_p(1)\\\\
-=&  \sum_{i=1}^n \phi_{\psi_0}'D(O_i) + o_p(1)
+\sqrt{n}(\phi(\psi_n) - \phi_0) =& \phi_{\psi_0}' \frac{1}{\sqrt{n}}\sum_{i=1}^n D(O_i) + o_p(1)\\\\
+=&  \frac{1}{\sqrt{n}}\sum_{i=1}^n \phi_{\psi_0}'D(O_i) + o_p(1)
 \end{align}
 
-This means that the IC of the transformed estimator $\phi(\psi_n)$ is $\phi_{\psi_0}D$. Note that if $\phi_{\psi_0}'$ is $0$, this is not very interesting.
+This means that the IC of the transformed estimator $\phi(\psi_n)$ is $\phi_{\psi_0}'D$. Note that if $\phi_{\psi_0}'$ is $0$, this is not very interesting.
 
 
 # Automatic differentiation
@@ -69,12 +69,12 @@ Symbolic differentiation wouldn't know what to do with the for loop and if state
 
 [Here](https://justindomke.wordpress.com/2009/02/17/automatic-differentiation-the-most-criminally-underused-tool-in-the-potential-machine-learning-toolbox/) is an interesting blog post about autotodiff and another [here](https://justindomke.wordpress.com/2009/11/30/automatic-differentiation-without-compromises/). [This](https://justindomke.wordpress.com/2009/03/24/a-simple-explanation-of-reverse-mode-automatic-differentiation/) post describes one method called reverse-mode automatic differentiation. There are a handful of packages that implement different kinds of autodiff in Julia with information available at [juliadiff.org](http://juliadiff.org).  [www.autodiff.org](http://www.autodiff.org) has a lot of useful information too.
 
-A particularly easy to understand method for autodiff uses [dual numbers](https://en.wikipedia.org/wiki/Dual_number#Differentiation). The [DualNumbers.jl](https://github.com/JuliaDiff/DualNumbers.jl) package.
+A particularly easy to understand method for autodiff uses [dual numbers](https://en.wikipedia.org/wiki/Dual_number#Differentiation). The [DualNumbers.jl](https://github.com/JuliaDiff/DualNumbers.jl) package implements dual numbers in Julia, and the [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) uses that for autodiff.
 
 # Putting it all together
 
 The estimation methods in TargetedLearning.jl returns objects that are subtypes of the `Estimate` type which contain estimated influence curve information. Using operator overloading to implement automatic differentiation in nearly the same way that DualNumbers.jl does, we can compute arbitrary an arbitrary transformation $\phi$ of `Estimate`s and automatically calculate an estimate of the IC of the transformed `Estimate` without having to work it out by hand.  The estimate of the IC of $\phi(\psi_n)$ is computed as $\phi'_{\psi_n} D_n$ where $D_n$ is the estimated IC of $\psi_n$.
 
-For example suppose we have `Estimate` objects `ey1` and `ey0` which are estimates of $E(Y_1)$ and $E(Y_0)$ (mean counterfactual outcomes under treatments 1 and 0) respectively. If the outcome is binary, we might be interested in the log causal [odds ratio](https://en.wikipedia.org/wiki/Odds_ratio). We can compute that as `log((ey1/(1-ey1))/(ey0/(1-ey0)))`. This expression will return a new `Estimate` which includes an estimated influence curve for the log causal odds ratio. 
+For example suppose we have `Estimate` objects `ey1` and `ey0` which are estimates of $E(Y_1)$ and $E(Y_0)$ (mean counterfactual outcomes under treatments 1 and 0) respectively. If the outcome is binary, we might be interested in the log causal [odds ratio](https://en.wikipedia.org/wiki/Odds_ratio). We can compute that as `log((ey1/(1-ey1))/(ey0/(1-ey0)))`. This expression yields a new `Estimate` which includes an estimated influence curve for the log causal odds ratio. 
 
 *It's important to remember that if $\phi_{\psi_0}'$ is $0$, this might not be so useful.*
