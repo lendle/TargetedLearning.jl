@@ -4,5 +4,5 @@ fmnames = [("ctmles", TargetedLearning.CTMLEs),
    		   ("strategies", TargetedLearning.CTMLEs.Strategies)] 
 
 for (fname, mod) in fmnames 
-	save("docs/api/$fname.md", mod)
+	save("docs/api/$fname.md", mod, mathjax=true)
 end
