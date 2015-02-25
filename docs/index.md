@@ -1,8 +1,3 @@
-
-<script type="text/javascript"
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-
 # Welcome to MkDocs
 
 For full documentation visit [mkdocs.org](http://mkdocs.org).
@@ -22,3 +17,5 @@ For full documentation visit [mkdocs.org](http://mkdocs.org).
         ...       # Other markdown pages, images and other files.
 
         
+
+    
