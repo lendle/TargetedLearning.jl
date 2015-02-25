@@ -25,4 +25,9 @@ logor = log((ey1/(1-ey1))/(ey0/(1-ey0)))
 logor2 = log(ey1) - log(1-ey1) - log(ey0) + log(1-ey0)
 @test_approx_eq logor.ic logor2.ic
 
+ey1tx1 = ey1 * ey1 * ey1 / sqrt(ey1)
+ey1tx2 = ey1 ^ 2.5
+@test_approx_eq ey1tx1.psi ey1tx2.psi
+@test_approx_eq ey1tx1.ic ey1tx2.ic
+
 end
