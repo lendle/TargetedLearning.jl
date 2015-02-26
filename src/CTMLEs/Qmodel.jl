@@ -2,12 +2,12 @@
 #sequence of g estimates and fluctuations
 
 type Qmodel
-    Qinit::SSLR
-    gseq::Vector{AbstractLR}
+    Qinit::LR
+    gseq::Vector{LR}
     flucseq::Vector{LR}
 end
 
-Qmodel(qinit::SSLR) = Qmodel(qinit, AbstractLR[], LR[])
+Qmodel(qinit::LR) = Qmodel(qinit, LR[], LR[])
 
 Base.copy(q::Qmodel) = Qmodel(q.Qinit, copy(q.gseq), copy(q.flucseq))
 
@@ -51,7 +51,7 @@ end
 
 predict(q::Qmodel, w, a, kind) = predict!(q, similar(a), w, a, kind)
 
-function computefluc(q::Qmodel, g::AbstractLR, w, a, y)
+function computefluc(q::Qmodel, g::LR, w, a, y)
     #computes fluctuation for a given q and g
     offset = predict(q, w, a, :link)
     h = predict(g, w, :prob)
@@ -60,14 +60,14 @@ function computefluc(q::Qmodel, g::AbstractLR, w, a, y)
     lreg(h, y, offset)
 end
 
-function fluctuate!(q::Qmodel, g::AbstractLR, fluc::LR)
+function fluctuate!(q::Qmodel, g::LR, fluc::LR)
     #adds g and fluc to q
     push!(q.gseq, g)
     push!(q.flucseq, fluc)
     q
 end
 
-function fluctuate!(q::Qmodel, g::AbstractLR, w, a, y)
+function fluctuate!(q::Qmodel, g::LR, w, a, y)
     #computes fluc then adds an estimate of g and fluctuation to q
     fluctuate!(q, g, computefluc(q, g, w, a, y))
 end

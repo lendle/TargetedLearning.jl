@@ -1,5 +1,11 @@
 module LReg
 
+using Docile
+@document
+
+"""This module wraps [GLM.jl](https://github.com/JuliaStats/GLM.jl)'s logistic regression"""
+LReg
+
 using GLM
 
 using NumericExtensions, NumericFuns, Devectorize
@@ -7,36 +13,45 @@ using NumericExtensions, NumericFuns, Devectorize
 import StatsBase: predict, coef
 import Distributions: log1pexp
 
-export AbstractLR, LR, SSLR, lreg, predict
+export LR, lreg, predict, linpred
 
-abstract AbstractLR
-
-type LR{T<:FloatingPoint} <: AbstractLR
+immutable LR{T<:FloatingPoint}
     β::Vector{T}
+    idx::AbstractVector{Int}
+    fitwithoffset::Bool
 end
 
-type SSLR{T <: FloatingPoint} <: AbstractLR
-    β::Vector{T}
-    idx::AbstractVector
-end
-
-function linpred(lr::AbstractLR, newX; offset=nothing)
+function linpred(lr::LR, newX; offset=Array(eltype(newX), 0))
+    if size(newX, 2) == 1
+        newX = reshape(newX, size(newX, 1), 1)
+    end
     p = newX * lr.β
-    isa(offset, Nothing) || add!(p, offset)
+    if lr.fitwithoffset
+        length(offset) == size(newX, 1) || error(ArgumentError("fit with offset, 'offset' kw arg should have length size(newX, 1)"))
+        add!(p, offset)
+    else
+        length(offset) == 0 || error(ArgumentError("not fit with offset, 'offset' kw arg should have length 0"))
+    end
     p
 end
 
-predict(lr::AbstractLR, newX; offset=nothing) = map1!(LogisticFun(), linpred(lr, newX, offset=offset))
+predict(lr::LR, newX; offset=Array(eltype(newX), 0)) = map1!(LogisticFun(), linpred(lr, newX, offset=offset))
 
-function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=nothing)
-    if isa(subset, Nothing)
-        return LR(coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset)))
+function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2))
+    if size(x, 2) == 1
+        x = reshape(x, size(x, 1), 1)
+    end
+    subset=sort(subset)
+    fitwithoffset = length(offset) > 0
+    
+    if subset == 1:size(x,2) || collect(1:size(x,2)) == subset
+        subset = 1:size(x,2)
+        return LR(coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset)), subset, fitwithoffset)
     else
-        subset=sort(subset)
-        tempx = subset == 1:size(x,2) || collect(1:size(x,2)) == collect(subset)? x : x[:, subset]
+        tempx = x[:, subset]
         β = zeros(eltype(x), size(x, 2))
         β[subset] = coef(fit(GeneralizedLinearModel, tempx, y, Binomial(); wts=wts, offset=offset))
-        return SSLR(β, subset)
+        return LR(β, subset, fitwithoffset)
     end
 end
 
