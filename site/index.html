@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/">
+        <link rel="shortcut icon" href="./img/favicon.ico">
+
+        <title>TargetedLearning.jl</title>
+
+        <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link href="./css/prettify-1.0.css" rel="stylesheet">
+        <link href="./css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href=".">TargetedLearning.jl</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li class="active">
+                    <a href=".">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="user-guide/julia/">Julia</a>
+                        </li>
+                    
+                        <li >
+                            <a href="user-guide/estimation/">The estimation problem</a>
+                        </li>
+                    
+                        <li >
+                            <a href="user-guide/ctmle/">(C)TMLE</a>
+                        </li>
+                    
+                        <li >
+                            <a href="user-guide/influencecurves/">Automatic influece curves</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">API <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="api/ctmles/">CTMLEs</a>
+                        </li>
+                    
+                        <li >
+                            <a href="api/strategies/">CTMLE.Strategies</a>
+                        </li>
+                    
+                        <li >
+                            <a href="api/lreg/">LReg</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="about/license/">License</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                
+                <li class="disabled">
+                    <a rel="next" >
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="user-guide/julia/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://github.com/lendle/TargetedLearning.jl/">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#about">About</a></li>
+        
+            <li><a href="#contents">Contents</a></li>
+        
+    
+        <li class="main "><a href="#installing">Installing</a></li>
+        
+    
+        <li class="main "><a href="#bugs-questions">Bugs? Questions?</a></li>
+        
+    
+        <li class="main "><a href="#want-to-contribute">Want to contribute?</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="about">About</h1>
+<p>Targeted minimum loss-based estimation (TMLE) (sometimes targeted maximum likelihood estimation) is a general framework for constructing regular, asymptotically linear estimators for pathwise differentiable parameters with additional properties such as <a href="https://en.wikipedia.org/wiki/Efficiency_%28statistics%29#Asymptotic_efficiency">asymptotic efficiency</a> and double robustness. For background and details, see <a href="https://www.springer.com/statistics/statistical+theory+and+methods/book/978-1-4419-9781-4">Targeted Learning</a> by van der Laan and Rose, or <a href="http://scholar.google.com/scholar?q=targeted+estimation+tmle">articles</a> on TMLE.</p>
+<p>TargetedLearing.jl is a package for <a href="julialang.org">Julia</a> v0.3.x that implements a TMLE and collaborative TMLE (CTMLE) to estimate a handful of statistical parameters. In particular, we can currently estimate the (statistical parameter corresponding to the) <a href="https://en.wikipedia.org/wiki/Rubin_causal_model">counterfactual</a> mean of some outcome under a static or dynamic single time point treatment with baseline covariates or the difference in counterfactual means. Additionally, arbitrary transformations of these parameters can be estimated, and inference is performed <a href="user-guide/influencecurves/">automatically</a>.  With a little massaging, the functionality of this package can also be used to estimate the mean of an outcome subject to missingness.</p>
+<h3 id="contents">Contents</h3>
+<ul>
+<li>If you're new to Julia, go <a href="user-guide/julia/">here</a> to learn why this package is implemented in Julia and enough about it to get you started.</li>
+<li>For details on the estimation problem and causal assumptions, go <a href="user-guide/estimation/">here</a>.</li>
+<li>For an overview about how the CTMLE procedure works, go <a href="user-guide/ctmle/">here</a>.</li>
+<li>For information on how we perform inference on arbitrary transformations of estimates, go <a href="user-guide/influencecurves/">here</a>.</li>
+<li>To obtain a special <a href="https://www.youtube.com/watch?v=OqjF7HKSaaI">dialing wand</a> please mash the keypad with your palm now.</li>
+</ul>
+<h1 id="installing">Installing</h1>
+<p>If Julia is already installed, just</p>
+<pre class="prettyprint well"><code class="jlcon">julia&gt; Pkg.clone(&quot;https://github.com/lendle/TargetedLearning.jl.git&quot;)
+</code></pre>
+
+<p>If not, <a href="http://julialang.org/downloads/">download</a> the latest version of Julia v0.3.x.</p>
+<p>If you're on OSX and use homebrew, there's a <a href="https://github.com/staticfloat/homebrew-julia#homebrew-julia">tap</a> for that.</p>
+<p>Many linux distributions can install Julia via the package manager, but may be out of date. If you wind up with v0.2.x, you're definitely out of date.</p>
+<p>If you <a href="https://github.com/julialang/julia#source-download-and-compilation">build from source</a>, make sure you <code>git checkout release-0.3</code> so you don't wind up with the development version.</p>
+<h1 id="bugs-questions">Bugs? Questions?</h1>
+<p>Chances are someone else has the same issue, so don't email me. Instead, look at the <a href="https://github.com/lendle/TargetedLearning.jl/issues">issues page</a> to see if you can find anyone else talking about it, or open a new issue.</p>
+<h1 id="want-to-contribute">Want to contribute?</h1>
+<p>There's a link to the <a href="https://github.com/lendle/TargetedLearning.jl/">github repository</a> in the top right of every page of the documentation. Pull requests welcome!</p>
+</div>
+        </div>
+
+        
+
+        <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="./js/bootstrap-3.0.3.min.js"></script>
+        <script src="./js/prettify-1.0.min.js"></script>
+        <script src="./js/base.js"></script>
+    </body>
+</html>
