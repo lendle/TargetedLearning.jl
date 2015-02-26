@@ -11,7 +11,7 @@ else
 end
 
 using NumericExtensions, StatsBase, MLBase, Devectorize
-import StatsBase.predict, StatsBase.predict!, NumericExtensions.evaluate
+import StatsBase.predict, NumericExtensions.evaluate
 
 export CTMLE, ctmle, fitinfo
 
@@ -65,7 +65,7 @@ function build_Q!(qfit::Qmodel, dat, valdat=:none; k=typemax(Int), opts=CTMLEOpt
     unused_covars = setdiff(IntSet(1:size(w, 2)), used_covars) #indecies for covariates not yet in g
 
     #fit initial g with preselected initial covars
-    ginit = sparselreg(w, a, used_covars)
+    ginit = lreg(w, a, subset=collect(used_covars))
 
     #fluctuate qfit with initial g
     fluctuate!(qfit, ginit, dat...)
@@ -114,7 +114,7 @@ function ctmle(w, a, y, opts::CTMLEOpts)
         val_dat = (w[val_idx, :], a[val_idx], y[val_idx])
 
         #fit initial Q and build fluctuations on training data
-        train_qfit = Qmodel(sparselreg([train_dat[1] train_dat[2]], train_dat[3], QWAidx))
+        train_qfit = Qmodel(lreg([train_dat[1] train_dat[2]], train_dat[3], subset=QWAidx))
         debug[1] > 0 && info("building training Q $i")
         train_risk, val_risk = build_Q!(train_qfit, train_dat, val_dat, opts=opts)
         val_risks[i,:] = val_risk
@@ -129,7 +129,7 @@ function ctmle(w, a, y, opts::CTMLEOpts)
     best_k_risk, best_k = findmin(val_risk)
 
     #fit initial Q and build fluctuations on validation data, adding best_k terms
-    qfit = Qmodel(sparselreg([w a], y, QWAidx))
+    qfit = Qmodel(lreg([w a], y, subset=QWAidx))
     debug[1] > 0 && info("building full Q")
     build_Q!(qfit, (w, a, y), k = best_k, opts=opts)
 
@@ -137,7 +137,7 @@ function ctmle(w, a, y, opts::CTMLEOpts)
     QnA1 = predict(qfit, w, ones(n), :prob)
     QnA0 = predict(qfit, w, zeros(n), :prob)
 
-    h = predict(finalg(qfit), w, :prob)
+    h = predict(finalg(qfit), w)
     map1!(Gatoh(), h, a)
     psi = mean(QnA1) - mean(QnA0)
     x=rand(10)

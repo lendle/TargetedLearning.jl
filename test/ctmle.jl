@@ -35,7 +35,7 @@ w = [ones(n) rand(n, p)]
 a = round(rand(n))
 y = round(rand(n))
 
-qlreg = LReg.SSLR(lreg(w,y).beta, IntSet(1:p))
+qlreg = lreg(w,y)
 
 
 

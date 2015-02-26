@@ -106,10 +106,10 @@ function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2))
     end
 end
 
-# type Loss <: Functor{2} end
-# NumericExtensions.evaluate(::Loss, y, xb) =
-#     y == one(y)? log1pexp(-xb) :
-#     y == zero(y)? log1pexp(xb) :
-#     y * log1pexp(-xb) + (one(y)-y) * log1pexp(xb)
+type Loss <: Functor{2} end
+NumericExtensions.evaluate(::Loss, y, xb) =
+    y == one(y)? log1pexp(-xb) :
+    y == zero(y)? log1pexp(xb) :
+    y * log1pexp(-xb) + (one(y)-y) * log1pexp(xb)
 
 end

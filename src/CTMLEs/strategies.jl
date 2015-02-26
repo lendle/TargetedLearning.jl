@@ -51,7 +51,7 @@ function add_covar!(::ForwardStepwise, qfit, w, a, y, used_covars, unused_covars
     #set up an array with length = max index of unused_covars initialized to Inf
     next_covar_risk = fill(Inf, maximum(unused_covars))
 
-    g_and_flucs = Dict{IntSet, (AbstractLR, AbstractLR)}()
+    g_and_flucs = Dict{IntSet, (LR, LR)}()
 
     debug[1] > 0 && info("unused_covars: $unused_covars")
     debug[1] > 0 && info("used_covars: $used_covars")
@@ -64,7 +64,7 @@ function add_covar!(::ForwardStepwise, qfit, w, a, y, used_covars, unused_covars
     gfits_flucs_risks = pmap(unused_covars) do j
         current_covars = union(used_covars, IntSet(j))
         #estimate g with additional covariate j
-        gfit = sparselreg(w, a, collect(current_covars))
+        gfit = lreg(w, a, subset=collect(current_covars))
         #compute fluctuation
         fluc = computefluc(qfit, gfit, w, a, y)
         #compute risk on a copy of q
@@ -131,19 +131,19 @@ function add_covar!(strategy::PreOrdered, qfit, w, a, y, used_covars, unused_cov
         append!(strategy.covar_order, order_covars(strategy.ordering, qfit, w, a, y, unused_covars))
     end
 
-    
+
     ordered_unused_covars = filter(x -> x ∉ used_covars, strategy.covar_order)
     next_covars = length(ordered_unused_covars) >= strategy.katatime ?
         ordered_unused_covars[1:strategy.katatime] :
         ordered_unused_covars
-    
+
 
     g_old, fluc_old = defluctuate!(qfit)
 
     union!(used_covars, next_covars)
     setdiff!(unused_covars, next_covars)
-    
-    g_fit = sslreg(w, a, used_covars)
+
+    g_fit = lreg(w, a, subset=collect(used_covars))
 
     fluctuate!(qfit, g_fit, w, a, y)
 
@@ -158,13 +158,12 @@ end
 
 function order_covars(ordering::LogisticOrdering, qfit, w, a, y, available_covars)
     logitQnAA = predict(qfit, w, a, :link)
-    r = similar(y)
     scores = Dict{Int, Float64}()
     wa = [w a]
     aidx = size(wa, 2)
     for i in available_covars
-        fit = sparselreg(wa, y, [i, aidx], logitQnAA)
-        predict!(fit, r, wa, :prob, offset=logitQnAA)
+        fit = lreg(wa, y, subset=[i, aidx], offset=logitQnAA)
+        r = predict(fit, wa, offset=logitQnAA)
         @devec r[:] = - y .* log(r) .- (1.0 .- y) .* log(1.0 .- r)
         scores[i] = mean(r)
     end

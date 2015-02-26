@@ -2,7 +2,7 @@ module Common
 
 export AbstractScalarEstimate, ScalarEstimate, name!, coef, vcov, nobs, stderr, confint, coeftable
 
-using Distributions
+using Distributions, Calculus
 
 import Base.var
 #borrowing some names from StatsBase, but not the StatsModels type
@@ -66,8 +66,6 @@ name!(est::AbstractScalarEstimate, estimand) = (est.estimand=estimand; est)
 ^(a::AbstractScalarEstimate, b::Real) = ScalarEstimate(a.psi ^ b, (b*(a.psi^(b-1))) .* a.ic)
 ^(a::AbstractScalarEstimate, b::Real) = ScalarEstimate(a.psi ^ b, (b*(a.psi^(b-1))) .* a.ic)
 ^(a::Real, b::AbstractScalarEstimate) = ScalarEstimate(a ^ b.psi, (a^b.psi * log(a)) .* b.ic)
-
-using Calculus
 
 for (funsym, _) in Calculus.derivative_rules
     fullfunpath = Expr(:.,:Base,Base.Meta.quot(funsym))

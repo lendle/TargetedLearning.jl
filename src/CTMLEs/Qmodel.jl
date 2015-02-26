@@ -27,21 +27,21 @@ function Base.show(io::IO, obj::Qmodel)
     end
 end
 
-function predict!(q::Qmodel, r, w, a, kind)
+function predict(q::Qmodel, w, a, kind)
     #predicts Qbar by using the initial Q estimate then looping through fluctuations
     #result is stored in r
     @assert length(q.gseq) == length(q.flucseq)
     n = length(a)
     k = length(q.gseq)
-    r = predict(q.Qinit, [w a], :link)  #get initial Q prediction
+    r = linpred(q.Qinit, [w a])  #get initial Q prediction
     if k > 0
         offset = similar(r)
     end
     for i in 1:k  #Loop through fluctuations, updateign prediction
         copy!(offset, r)
-        h = predict(q.gseq[i], w, :prob)
+        h = predict(q.gseq[i], w)
         map1!(Gatoh(), h, a)
-        predict!(q.flucseq[i], r, reshape(h, length(h), 1), :link, offset=offset)
+        r = linpred(q.flucseq[i], h, offset=offset)
     end
     if kind==:prob
         map1!(LogisticFun(), r)
@@ -49,15 +49,13 @@ function predict!(q::Qmodel, r, w, a, kind)
     r
 end
 
-predict(q::Qmodel, w, a, kind) = predict!(q, similar(a), w, a, kind)
-
 function computefluc(q::Qmodel, g::LR, w, a, y)
     #computes fluctuation for a given q and g
     offset = predict(q, w, a, :link)
-    h = predict(g, w, :prob)
+    h = predict(g, w)
     map1!(Gatoh(), h, a)
     h = reshape(h, length(h), 1)
-    lreg(h, y, offset)
+    lreg(h, y, offset=offset)
 end
 
 function fluctuate!(q::Qmodel, g::LR, fluc::LR)
@@ -91,7 +89,7 @@ function risk(q::Qmodel, w, a, y; pen=true)
 
     if pen
         n = length(y)
-        h = predict(q.gseq[end], w, :prob)
+        h = predict(finalg(q), w)
         map1!(Gatoh(), h, a)
 
         QnA1 = predict(q, w, ones(n), :prob)

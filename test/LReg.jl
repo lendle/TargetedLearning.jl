@@ -28,12 +28,12 @@ rwts = rand(50)
 lrfitwts2 = lreg(x, y, wts=rwts)
 @test maxabsdiff(lrfit.β, lrfitwts2.β) > 0.1
 
-sp2 = lreg(x, y, subset=[3,1])
-@test_approx_eq sp2.β[[1,3]] lreg(x[:, [1,3]], y).β
-@test_approx_eq sp2.β[2] 0.0
-@test sp2.idx == [1,3]
+sslrfit = lreg(x, y, subset=[3,1])
+@test_approx_eq sslrfit.β[[1,3]] lreg(x[:, [1,3]], y).β
+@test_approx_eq sslrfit.β[2] 0.0
+@test sslrfit.idx == [1,3]
 
-@test_approx_eq sp2.β lreg(x, y, subset=[1,3]).β
+@test_approx_eq sslrfit.β lreg(x, y, subset=[1,3]).β
 
 #check lreg works when x is a vector
 lrvec = lreg(rand(10), round(rand(10)))

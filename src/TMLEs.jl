@@ -1,6 +1,6 @@
 @reexport(
 module TMLEs
-export TMLE, tmle, iptw, gcomp, CTMLEs
+export TMLE, tmle, iptw, gcomp
 
 using ..LReg, ..Common
 
@@ -23,10 +23,10 @@ function tmle(logitQnA1::Vector, logitQnA0::Vector, gn1::Vector, A, Y)
 
     logitQnAA = ifelse(A .==1.0, logitQnA1, logitQnA0)
 
-    Qnstar = lreg(cvec(hAA), Y, logitQnAA)
+    Qnstar = lreg(cvec(hAA), Y, offset=logitQnAA)
 
-    QnstarA1 = predict(Qnstar, cvec(hA1), :prob, offset=logitQnA1)
-    QnstarA0 = predict(Qnstar, cvec(hA0), :prob, offset=logitQnA0)
+    QnstarA1 = predict(Qnstar, cvec(hA1), offset=logitQnA1)
+    QnstarA0 = predict(Qnstar, cvec(hA0), offset=logitQnA0)
     QnstarAA = ifelse(A .==1.0, QnstarA1, QnstarA0)
 
     psi = mean(QnstarA1) - mean(QnstarA0)
@@ -43,14 +43,14 @@ function tmle(WQ::Matrix, Wg::Matrix, A::Vector, Y::Vector)
     n = length(Y)
 
     gn = lreg(Wg, A)
-    gn1 = predict(gn, Wg, :prob)
+    gn1 = predict(gn, Wg)
 
     WQa = [WQ A]
     Qn = lreg(WQa, Y)
     WQa[:, end] = 1.0
-    logitQnA1 = predict(Qn, WQa)
+    logitQnA1 = linpred(Qn, WQa)
     WQa[:, end] = 0.0
-    logitQnA0 = predict(Qn, WQa)
+    logitQnA0 = linpred(Qn, WQa)
 
 
     tmle(logitQnA1, logitQnA0, gn1, A, Y)
@@ -76,8 +76,8 @@ function gcomp(W, A, Y)
     n = length(Y)
 
     Qn = lreg([W A], Y)
-    QnA1 = predict(Qn, [W ones(n)], :prob)
-    QnA0 = predict(Qn, [W zeros(n)], :prob)
+    QnA1 = predict(Qn, [W ones(n)])
+    QnA0 = predict(Qn, [W zeros(n)])
 
     mean(QnA1) - mean(QnA0)
 
@@ -85,7 +85,7 @@ end
 
 function iptw(W, A, Y)
     gn = lreg(W, A)
-    gn1 = predict(gn, W, :prob)
+    gn1 = predict(gn, W)
 
     mean(((A ./ gn1) - ((1.0 .- A)./ (1.0 .- gn1))) .* Y)
 end
