@@ -3,31 +3,46 @@ module LReg
 using Docile
 @document
 
-"""This module wraps [GLM.jl](https://github.com/JuliaStats/GLM.jl)'s logistic regression"""
-LReg
+#"""This module wraps [GLM.jl](https://github.com/JuliaStats/GLM.jl)'s logistic regression"""
+#LReg
 
 using GLM
 
-using NumericExtensions, NumericFuns, Devectorize
+using NumericExtensions, NumericFuns, StatsBase
 
-import StatsBase: predict, coef
+import StatsBase: predict
 import Distributions: log1pexp
 
 export LR, lreg, predict, linpred
 
+"""The `LR` type contains the coefficent vector of a logistic regression fit, as well as indexes of
+included columns in the design matrix.
+"""
 immutable LR{T<:FloatingPoint}
     β::Vector{T}
     idx::AbstractVector{Int}
     fitwithoffset::Bool
 end
 
-function linpred(lr::LR, newX; offset=Array(eltype(newX), 0))
-    if size(newX, 2) == 1
-        newX = reshape(newX, size(newX, 1), 1)
+"""
+Returns the linear component of predicted values from a logistic regression fit with a new X matrix
+
+** Arguments **
+
+* `lr` - an object of type `LR`
+* `newx` - matrix of new covariates to predict on. Should be the same dimension as the design matrix used to fit `lr`
+
+** Keyword Arguments **
+
+* `offset` - offsets. The length should be the same as `size(newx, 1)` of `lr` was fit with an offset, or 0 otherwise.
+"""
+function linpred(lr::LR, newx; offset=Array(eltype(newx), 0))
+    if size(newx, 2) == 1
+        newx = reshape(newx, size(newx, 1), 1)
     end
-    p = newX * lr.β
+    p = newx * lr.β
     if lr.fitwithoffset
-        length(offset) == size(newX, 1) || error(ArgumentError("fit with offset, 'offset' kw arg should have length size(newX, 1)"))
+        length(offset) == size(newx, 1) || error(ArgumentError("fit with offset, 'offset' kw arg should have length size(newx, 1)"))
         add!(p, offset)
     else
         length(offset) == 0 || error(ArgumentError("not fit with offset, 'offset' kw arg should have length 0"))
@@ -35,8 +50,44 @@ function linpred(lr::LR, newX; offset=Array(eltype(newX), 0))
     p
 end
 
-predict(lr::LR, newX; offset=Array(eltype(newX), 0)) = map1!(LogisticFun(), linpred(lr, newX, offset=offset))
+"""
+Returns the predicted on the probability scale values from a logistic regression fit with a new X matrix
 
+** Arguments **
+
+* `lr` - an object of type `LR`
+* `newx` - matrix of new covariates to predict on. Should be the same dimension as the design matrix used to fit `lr`
+
+** Keyword Arguments
+
+* `offset` - offsets. The length should be the same as `size(newx, 1)` of `lr` was fit with an offset, or 0 otherwise.
+"""
+predict(lr::LR, newx; offset=Array(eltype(newx), 0)) = map1!(LogisticFun(), linpred(lr, newx, offset=offset))
+
+"""
+Fits a logistic regression model
+
+** Arguments **
+
+* `x` - design matrix
+* `y` - response vector. Should have the same length as `size(x, 1)`
+
+** Keyword Arguments **
+
+* `wts` - weight vector. Defaults to all 1s.
+* `offset` - offset vector. Defaults to a vector of length 0 for no offset.
+* `subset` - column indexes for `x` that should be included in the fit. Defaults to all columns.
+
+** Details **
+
+An intercept is not included by default. If you want one, add a column of ones to your design matrix.
+If you do that, don't forget to add the column in the same place to `newx` when you call predict.
+
+`subset` is useful if you want to include only some columns of the design matrix but you want to call `predict`
+with a `newx` matrix with the same number of columns as `x`. The coefficients corresponding to columsn of `x` which
+are not used in the fit are set to zero. If you would like to call `predict` with a `newx` matrix that includes
+only the columns that you fit on, you should subset `x` yourself before calling `lreg`.
+"""
 function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2))
     if size(x, 2) == 1
         x = reshape(x, size(x, 1), 1)

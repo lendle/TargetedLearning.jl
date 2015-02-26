@@ -11,5 +11,6 @@ pages:
 - ['user-guide/ctmle.md', 'User Guide', '(C)TMLE']
 - ['user-guide/influencecurves.md', 'User Guide', 'Automatic influece curves']
 - ['api/ctmles.md', 'API', 'CTMLEs']
-- ['api/strategies.md', 'API', 'CTMLE Strategies']
+- ['api/strategies.md', 'API', 'CTMLE.Strategies']
+- ['api/lreg.md', 'API', 'LReg']
 - ['about/license.md', 'About', 'License']
