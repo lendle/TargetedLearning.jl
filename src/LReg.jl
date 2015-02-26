@@ -3,8 +3,9 @@ module LReg
 using Docile
 @document
 
-#"""This module wraps [GLM.jl](https://github.com/JuliaStats/GLM.jl)'s logistic regression"""
-#LReg
+"""This module wraps some functionality from [GLM.jl](https://github.com/JuliaStats/GLM.jl)
+for logistic regression"""
+LReg
 
 using GLM
 
