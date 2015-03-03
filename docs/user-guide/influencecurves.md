@@ -34,7 +34,7 @@ For a proof of a more general result, see Theorem 3.1 in [Asymptotic Statistics 
 If $\psi_n$ is asymptotically linear with IC $D$, then by the continuous mapping theorem and the definition of asymptotic linearity we have 
 
 \begin{align}
-\sqrt{n}(\phi(\psi_n) - \phi_0) =& \phi_{\psi_0}' \frac{1}{\sqrt{n}}\sum_{i=1}^n D(O_i) + o_p(1)\\\\
+\sqrt{n}(\phi(\psi_n) - \phi(\psi_0)) =& \phi_{\psi_0}' \frac{1}{\sqrt{n}}\sum_{i=1}^n D(O_i) + o_p(1)\\\\
 =&  \frac{1}{\sqrt{n}}\sum_{i=1}^n \phi_{\psi_0}'D(O_i) + o_p(1)
 \end{align}
 
