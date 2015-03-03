@@ -53,7 +53,6 @@ end
 
 function fluccovar{T<:FloatingPoint}(param::ATE{T}, a::Vector{T}, gn1::Vector{T})
     invgna = 1./ifelse(a .== 1, gn1, 1-gn1)
-    ifelse(param.d1.a .== a, invgna, zero(T)) .-
-    ifelse(param.d2.a .== a, invgna, zero(T))
+    ifelse(param.d1.a .== a, invgna, zero(T)) .-  ifelse(param.d2.a .== a, invgna, zero(T))
 end
 end

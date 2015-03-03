@@ -16,6 +16,8 @@ lrfit = lreg(x, y)
 newoff = rand(20)
 @test_throws ArgumentError predict(lrfit, newx, offset=newoff)
 
+pred = logistic(x * lrfit.β)
+@test_approx_eq mean(- y .* log(pred) .- (1-y) .* log(1 .- pred)) mean(LReg.Loss(), y, linpred(lrfit, x))
 
 lrfitoff = lreg(x, y, offset=rand(50))
 @test_approx_eq predict(lrfitoff, newx, offset=newoff) logistic(newx * lrfitoff.β .+ newoff)

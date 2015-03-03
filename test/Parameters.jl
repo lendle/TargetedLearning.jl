@@ -5,7 +5,13 @@ using Base.Test, NumericExtensions
 using TargetedLearning
 using TargetedLearning: LReg, Parameters
 
-# import TargetedLearning.TMLEs: Qmodel, Mean, ATE, Parameter, Regimen, StaticRegimen, DynamicRegimen, fluccovar
+@test regimen(1) == StaticRegimen(1.0)
+d = regimen([1, 0, 1])
+@test d.a == [1.0, 0.0, 1.0]
+@test d === regimen(d)
+
+
+
 
 srand(412)
 n,p = 100, 10

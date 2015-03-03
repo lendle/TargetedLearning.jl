@@ -25,17 +25,22 @@ q = Qmodel(logitQnA1,
 
 gn1 = predict(lreg(w,a), w)
 
-fluctuate!(q, gn1, a, y)
-
-q.flucseq
-
 gna = ifelse(a.==1, gn1, 1-gn1)
 hAA = (2a-1)./gna
 hA1 = 1./gn1
 fluc = lreg(hAA, y, offset=logitQnAA)
 
+theirfluc = computefluc(q, gn1, a, y)
+
+@test_approx_eq fluc.β theirfluc.β
+
+fluctuate!(q, gn1, a, y)
 @test_approx_eq fluc.β q.flucseq[1].β
 @test_approx_eq logistic(logitQnA1 + hA1 * fluc.β[1]) predict(q, ones(n))
 
+g, fluc = defluctuate!(q)
+@test isa(g, Vector{Float64})
+@test isa(fluc, LR{Float64})
+@test length(q.gseq) == length(q.flucseq) == 0
 
 end
