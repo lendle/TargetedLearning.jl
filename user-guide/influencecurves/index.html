@@ -9,7 +9,7 @@
         <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/user-guide/influencecurves/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-        <title>Automatic influece curves - TargetedLearning.jl</title>
+        <title>Automatic influence curves - TargetedLearning.jl</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -21,8 +21,6 @@
             <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
             <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
         <![endif]-->
-
-        
     </head>
 
     <body>
@@ -50,30 +48,24 @@
             <ul class="nav navbar-nav">
             
             
-                <li >
-                    <a href="../..">Home</a>
-                </li>
-            
-            
-            
                 <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../julia/">Julia</a>
+                            <a href="../julia">Julia</a>
                         </li>
                     
                         <li >
-                            <a href="../estimation/">The estimation problem</a>
+                            <a href="../estimation">The estimation problem</a>
                         </li>
                     
                         <li >
-                            <a href="../ctmle/">(C)TMLE</a>
+                            <a href="../ctmle">(C)TMLE</a>
                         </li>
                     
                         <li class="active">
-                            <a href="./">Automatic influece curves</a>
+                            <a href=".">Automatic influence curves</a>
                         </li>
                     
                     </ul>
@@ -86,15 +78,15 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../api/ctmles/">CTMLEs</a>
+                            <a href="../../api/ctmles">CTMLEs</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/strategies/">CTMLE.Strategies</a>
+                            <a href="../../api/strategies">CTMLE.Strategies</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/lreg/">LReg</a>
+                            <a href="../../api/lreg">LReg</a>
                         </li>
                     
                     </ul>
@@ -107,7 +99,7 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../about/license/">License</a>
+                            <a href="../../about/license">License</a>
                         </li>
                     
                     </ul>
@@ -120,12 +112,12 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li >
-                    <a rel="next" href="../ctmle/">
+                    <a rel="next" href="../ctmle">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../../api/ctmles/">
+                    <a rel="prev" href="../../api/ctmles">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -207,7 +199,7 @@ For a proof of a more general result, see Theorem 3.1 in <a href="http://www.cam
 <p><em>Numerical differentiation</em> is when you approximate the derivative of some function at a particular value by evaluating the function at some perturbed values of the input and use linear interpolation. For example, you could approximate <code>sin'(x)</code> at <code>x=5</code> by computing <code>(sin(5.0001)-sin(5))/0.0001</code>.
 Numerical diff is easy to implement but is approximate and can be slow, particularly when you need to compute the gradient of a function of many inputs.</p>
 <p><em>Automatic differentiation</em> doesn't do either of these things. Basically, it takes some arbitrary subroutine you write as input, and produces a new subroutine that computes the derivative. The produced code computes the exact derivative, not an approximation. In many cases it's essentially the same code that you would write if you were to do it by hand. If the target function is not differentiable everywhere, you'll still get code that computes the derivative correctly where the function is differentiable. It can also be used on arbitrary algorithms, for example</p>
-<pre class="prettyprint well"><code class="julia">function f(x::Vector{Float64})
+<pre><code class="julia">function f(x::Vector{Float64})
     total = 0.0
     for y in x
         if y &gt; 0.0
