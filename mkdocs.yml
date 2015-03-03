@@ -9,7 +9,7 @@ pages:
 - ['user-guide/julia.md', 'User Guide', 'Julia']
 - ['user-guide/estimation.md', 'User Guide', 'The estimation problem']
 - ['user-guide/ctmle.md', 'User Guide', '(C)TMLE']
-- ['user-guide/influencecurves.md', 'User Guide', 'Automatic influece curves']
+- ['user-guide/influencecurves.md', 'User Guide', 'Automatic influence curves']
 - ['api/ctmles.md', 'API', 'CTMLEs']
 - ['api/strategies.md', 'API', 'CTMLE.Strategies']
 - ['api/lreg.md', 'API', 'LReg']
