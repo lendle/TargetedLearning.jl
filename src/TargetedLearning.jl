@@ -7,8 +7,8 @@ using Reexport
 
 include("Common.jl")
 include("LReg.jl")
-include("Parameters.jl")
 include("Qmodels.jl")
+include("Parameters.jl")
 include("TMLEs.jl")
 
 end

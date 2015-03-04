@@ -1,12 +1,28 @@
 module Common
 
-export AbstractScalarEstimate, ScalarEstimate, name!, coef, vcov, nobs, stderr, confint, coeftable
+export Parameter,
+       fluccovar,
+
+       Estimate,
+       AbstractScalarEstimate,
+       ScalarEstimate,
+
+       name!,
+       coef,
+       vcov,
+       nobs,
+       stderr,
+       confint,
+       coeftable
 
 using Distributions, Calculus, NumericExtensions
 
 import Base.var
 #borrowing some names from StatsBase, but not the StatsModels type
 import StatsBase: coef, vcov, nobs, stderr, confint, coeftable, CoefTable
+
+abstract Parameter{T<:FloatingPoint}
+fluccovar{T<:FloatingPoint}(param::Parameter{T}, a::Vector{T}, gn1::Vector{T}) = error("fluccovar not implemented for $T")
 
 abstract Estimate
 
@@ -35,7 +51,9 @@ type ScalarEstimate{T <: FloatingPoint} <: AbstractScalarEstimate
     estimand::String
     function ScalarEstimate(psi, ic, estimand)
         meanic=mean(ic)
-        abs(meanic) <= 1e-12 || error("Mean of ic should be 0. It is $meanic.")
+        #cutoff chosen because var(ic) = mean(ic.^2) - mean(ic)^2
+        #which is greater than mean(ic.^2) - eps(T), and eps(T) is pretty small
+        abs(meanic) <= sqrt(eps(T)) || error("Mean of ic should be approximately 0. It is $meanic.")
         subtract!(ic, meanic)
         new(psi, ic, length(ic), estimand)
     end

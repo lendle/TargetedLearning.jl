@@ -5,11 +5,13 @@ export Regimen,
        DynamicRegimen,
        regimen,
 
-       Parameter,
        Mean,
        ATE,
 
        fluccovar
+
+using ..Qmodels
+import ..Common: Parameter, fluccovar
 
 abstract Regimen{T<:FloatingPoint}
 
@@ -31,7 +33,8 @@ regimen(a::Regimen) = a
 regimen(a::Real) = StaticRegimen(float(a))
 regimen{T<:Real}(a::Vector{T}) = DynamicRegimen(float(a))
 
-abstract Parameter{T<:FloatingPoint}
+StatsBase.predict{T<:FloatingPoint}(q::Qmodel{T}, d::StaticRegimen{T}) = predict(q, fill(d.a, nobs(q)))
+StatsBase.predict{T<:FloatingPoint}(q::Qmodel{T}, d::DynamicRegimen{T}) = predict(q, d.a, nobs(q))
 
 type Mean{T<:FloatingPoint} <: Parameter{T}
     d::Regimen{T}
@@ -55,4 +58,23 @@ function fluccovar{T<:FloatingPoint}(param::ATE{T}, a::Vector{T}, gn1::Vector{T}
     invgna = 1./ifelse(a .== 1, gn1, 1-gn1)
     ifelse(param.d1.a .== a, invgna, zero(T)) .-  ifelse(param.d2.a .== a, invgna, zero(T))
 end
+
+function applyparam{T<:FloatingPoint}(param::Mean{T}, q::Qmodel{T}, gn1::Vector{T}, A, Y)
+    QnAd = predict(q, param.d)
+    psi = mean(QnAd)
+    h = fluccovar(param, A, gn1)
+    ic = h .* (Y .- QnAd) .+ QnAd .- psi
+    (psi, ic)
+end
+
+function applyparam{T<:FloatingPoint}(param::ATE{T}, q::Qmodel{T}, gn1::Vector{T}, A, Y)
+    QnAd1 = predict(q, param.d1)
+    QnAd0 = predict(q, param.d0)
+    Qndiff = QnAd1 .- QnAd0
+    psi = mean(Qndiff)
+    h = fluccovar(param, A, gn1)
+    ic = h .* (Y .- Qndiff) .+ Qndiff .- psi
+    (psi, ic)
+end
+
 end
