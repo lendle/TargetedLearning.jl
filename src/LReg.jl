@@ -78,7 +78,7 @@ Fits a logistic regression model
 * `wts` - weight vector. Defaults to all 1s.
 * `offset` - offset vector. Defaults to a vector of length 0 for no offset.
 * `subset` - column indexes for `x` that should be included in the fit. Defaults to all columns.
-* `convTol` - convergence criterion for relative change in deviance. Defaults to 1.0e-6.
+* `convTol` - convergence criterion for relative change in deviance. Defaults to 1.0e-8.
 
 ** Details **
 
@@ -90,7 +90,7 @@ with a `newx` matrix with the same number of columns as `x`. The coefficients co
 are not used in the fit are set to zero. If you would like to call `predict` with a `newx` matrix that includes
 only the columns that you fit on, you should subset `x` yourself before calling `lreg`.
 """
-function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2), convTol=1.0e-6)
+function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2), convTol=1.0e-8)
     if size(x, 2) == 1
         x = reshape(x, size(x, 1), 1)
     end
