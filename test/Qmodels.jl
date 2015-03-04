@@ -5,7 +5,7 @@ using Base.Test, NumericExtensions
 using TargetedLearning
 using TargetedLearning: LReg, Qmodels, Parameters
 
-import TargetedLearning.Qmodels.Fluctuation
+import TargetedLearning.Qmodels: Fluctuation, computefluc
 
 srand(412)
 n,p = 100, 10

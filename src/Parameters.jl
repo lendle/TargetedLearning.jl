@@ -8,10 +8,13 @@ export Regimen,
        Mean,
        ATE,
 
+       estimand,
+       applyparam,
        fluccovar
 
 using ..Qmodels
 import ..Common: Parameter, fluccovar
+import StatsBase.predict
 
 abstract Regimen{T<:FloatingPoint}
 
@@ -33,8 +36,8 @@ regimen(a::Regimen) = a
 regimen(a::Real) = StaticRegimen(float(a))
 regimen{T<:Real}(a::Vector{T}) = DynamicRegimen(float(a))
 
-StatsBase.predict{T<:FloatingPoint}(q::Qmodel{T}, d::StaticRegimen{T}) = predict(q, fill(d.a, nobs(q)))
-StatsBase.predict{T<:FloatingPoint}(q::Qmodel{T}, d::DynamicRegimen{T}) = predict(q, d.a, nobs(q))
+predict{T<:FloatingPoint}(q::Qmodel{T}, d::StaticRegimen{T}) = predict(q, fill(d.a, nobs(q)))
+predict{T<:FloatingPoint}(q::Qmodel{T}, d::DynamicRegimen{T}) = predict(q, d.a, nobs(q))
 
 type Mean{T<:FloatingPoint} <: Parameter{T}
     d::Regimen{T}
@@ -44,10 +47,10 @@ Mean(d) = Mean(regimen(d))
 
 type ATE{T<:FloatingPoint} <: Parameter{T}
     d1::Regimen{T}
-    d2::Regimen{T}
+    d0::Regimen{T}
 end
 
-ATE(d1, d2) = ATE(regimen(d1), regimen(d2))
+ATE(d1, d0) = ATE(regimen(d1), regimen(d0))
 ATE() = ATE(1.0, 0.0)
 
 function fluccovar{T<:FloatingPoint}(param::Mean{T}, a::Vector{T}, gn1::Vector{T})
@@ -56,7 +59,7 @@ end
 
 function fluccovar{T<:FloatingPoint}(param::ATE{T}, a::Vector{T}, gn1::Vector{T})
     invgna = 1./ifelse(a .== 1, gn1, 1-gn1)
-    ifelse(param.d1.a .== a, invgna, zero(T)) .-  ifelse(param.d2.a .== a, invgna, zero(T))
+    ifelse(param.d1.a .== a, invgna, zero(T)) .-  ifelse(param.d0.a .== a, invgna, zero(T))
 end
 
 function applyparam{T<:FloatingPoint}(param::Mean{T}, q::Qmodel{T}, gn1::Vector{T}, A, Y)
@@ -70,11 +73,16 @@ end
 function applyparam{T<:FloatingPoint}(param::ATE{T}, q::Qmodel{T}, gn1::Vector{T}, A, Y)
     QnAd1 = predict(q, param.d1)
     QnAd0 = predict(q, param.d0)
+    QnAA = predict(q, A)
     Qndiff = QnAd1 .- QnAd0
     psi = mean(Qndiff)
     h = fluccovar(param, A, gn1)
-    ic = h .* (Y .- Qndiff) .+ Qndiff .- psi
+    ic = h .* (Y .- QnAA) .+ Qndiff .- psi
     (psi, ic)
 end
+
+estimand(param::Parameter) = "ψ"
+estimand(param::Mean) = "E(Y(d))"
+estimand(param::ATE) = "ATE"
 
 end

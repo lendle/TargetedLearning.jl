@@ -6,8 +6,9 @@ module Qmodels
 using ..Common, ..LReg, NumericExtensions, NumericFuns
 
 import ..LReg: linpred, predict
+import StatsBase.nobs
 
-export Qmodel, fluctuate!, defluctuate!, predict, linpred
+export Qmodel, fluctuate!, defluctuate!, predict, linpred, nobs
 
 type Fluctuation{T<:FloatingPoint}
     hA1::Vector{T}
@@ -22,7 +23,7 @@ end
 Fluctuation{T<:FloatingPoint}(hA1::Vector{T}, hA0::Vector{T},
                               epsilon::LR{T}) = Fluctuation{T}(hA1, hA0, epsilon)    
 
-StatsBase.nobs(fluc::Fluctuation) = length(fluc.hA1)
+nobs(fluc::Fluctuation) = length(fluc.hA1)
 
 function linpred{T<:FloatingPoint}(fluc::Fluctuation{T}, a::Vector{T}; offset::Vector{T}=zeros(T, 0))
     hAA = ifelse(a.==1, fluc.hA1, fluc.hA0)
@@ -41,7 +42,7 @@ end
 
 Qmodel{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T}) = Qmodel{T}(logitQnA1, logitQnA0)
 
-StatsBase.nobs(q::Qmodel) = length(q.logitQnA1)
+nobs(q::Qmodel) = length(q.logitQnA1)
 
 # Qmodel{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T}, param::Parameter{T})=
 #     Qmodel{T}(logitQnA1, logitQnA0, param, Vector{T}[], Vector{LR{Float64}}[])
