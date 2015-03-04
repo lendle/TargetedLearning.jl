@@ -78,6 +78,7 @@ Fits a logistic regression model
 * `wts` - weight vector. Defaults to all 1s.
 * `offset` - offset vector. Defaults to a vector of length 0 for no offset.
 * `subset` - column indexes for `x` that should be included in the fit. Defaults to all columns.
+* `convTol` - convergence criterion for relative change in deviance. Defaults to 1.0e-6.
 
 ** Details **
 
@@ -89,20 +90,20 @@ with a `newx` matrix with the same number of columns as `x`. The coefficients co
 are not used in the fit are set to zero. If you would like to call `predict` with a `newx` matrix that includes
 only the columns that you fit on, you should subset `x` yourself before calling `lreg`.
 """
-function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2))
+function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2), convTol=1.0e-6)
     if size(x, 2) == 1
         x = reshape(x, size(x, 1), 1)
     end
     subset=sort(subset)
     fitwithoffset = length(offset) > 0
-    
+
     if subset == 1:size(x,2) || collect(1:size(x,2)) == subset
         subset = 1:size(x,2)
-        return LR(coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset)), subset, fitwithoffset)
+        return LR(coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol)), subset, fitwithoffset)
     else
         tempx = x[:, subset]
         β = zeros(eltype(x), size(x, 2))
-        β[subset] = coef(fit(GeneralizedLinearModel, tempx, y, Binomial(); wts=wts, offset=offset))
+        β[subset] = coef(fit(GeneralizedLinearModel, tempx, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
         return LR(β, subset, fitwithoffset)
     end
 end
