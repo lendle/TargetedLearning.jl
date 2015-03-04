@@ -5,7 +5,7 @@ docs:
 	mkdocs build --clean
 
 test:
-	julia --color -e 'Pkg.test("TargetedLearning")'
+	julia --color test/runtests.jl
 
 test-coverage:
 	julia --color -e 'Pkg.test("TargetedLearning", coverage=true)'
