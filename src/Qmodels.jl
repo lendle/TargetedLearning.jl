@@ -8,22 +8,27 @@ using ..Common, ..LReg, NumericExtensions, NumericFuns
 import ..LReg: linpred, predict
 import StatsBase.nobs
 
-export Qmodel, fluctuate!, defluctuate!, predict, linpred, nobs
+export Qmodel, fluctuate!, defluctuate!, predict, linpred, nobs, weightedcovar, finalfluc
 
 type Fluctuation{T<:FloatingPoint}
     hA1::Vector{T}
     hA0::Vector{T}
+    wts::Vector{T}
     epsilon::LR{T}
-    function Fluctuation(hA1, hA0, epsilon)
-        length(hA1) == length(hA0) || error(ArgumentError("lengths of hA1 and hA0 do not match"))
-        new(hA1, hA0, epsilon)
+    function Fluctuation(hA1, hA0, wts, epsilon)
+        length(hA1) == length(hA0) == length(wts) || error(ArgumentError("lengths of hA1, hA0 and wts do not match"))
+        new(hA1, hA0, wts, epsilon)
     end
 end
 
-Fluctuation{T<:FloatingPoint}(hA1::Vector{T}, hA0::Vector{T},
-                              epsilon::LR{T}) = Fluctuation{T}(hA1, hA0, epsilon)    
+Fluctuation{T<:FloatingPoint}(hA1::Vector{T}, hA0::Vector{T}, wts::Vector{T},
+                              epsilon::LR{T}) = Fluctuation{T}(hA1, hA0, wts, epsilon)
 
 nobs(fluc::Fluctuation) = length(fluc.hA1)
+
+function weightedcovar{T<:FloatingPoint}(fluc::Fluctuation{T}, a::Vector{T})
+    ifelse(a.==1, fluc.hA1, fluc.hA0) .* fluc.wts
+end
 
 function linpred{T<:FloatingPoint}(fluc::Fluctuation{T}, a::Vector{T}; offset::Vector{T}=zeros(T, 0))
     hAA = ifelse(a.==1, fluc.hA1, fluc.hA0)
@@ -44,6 +49,8 @@ Qmodel{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T}) = Qmodel{T}
 
 nobs(q::Qmodel) = length(q.logitQnA1)
 
+finalfluc(q::Qmodel) = q.flucseq[end]
+
 # Qmodel{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T}, param::Parameter{T})=
 #     Qmodel{T}(logitQnA1, logitQnA0, param, Vector{T}[], Vector{LR{Float64}}[])
 
@@ -57,14 +64,24 @@ end
 
 predict{T<:FloatingPoint}(q::Qmodel{T}, a::Vector{T}) = map1!(LogisticFun(), linpred(q,a))
 
-function computefluc(q::Qmodel, param::Parameter, gn1, a, y)
+function computefluc(q::Qmodel, param::Parameter, gn1, a, y; method=:unweighted)
     #computes fluctuation for a given q and g
     offset = linpred(q, a)
-    hA1 = fluccovar(param, ones(nobs(q)), gn1)
-    hA0 = fluccovar(param, zeros(nobs(q)), gn1)
+    if method == :unweighted
+        wts = ones(nobs(q))
+        hA1 = fluccovar(param, ones(nobs(q))) ./ gn1
+        hA0 = fluccovar(param, zeros(nobs(q))) ./ (1 .- gn1)
+    elseif method == :weighted
+        gna = ifeflse(a.==1, gn1, (1 .- gn1))
+        wts = 1 ./ gna
+        hA1 = fluccovar(param, ones(nobs(q)))
+        hA0 = fluccovar(param, zeros(nobs(q)))
+    else
+        error(ArgumentError("method $method not supported"))
+    end   
     hAA = ifelse(a.==1, hA1, hA0)
-    epsilon = lreg(hAA, y, offset=offset)
-    Fluctuation(hA1, hA0, epsilon)
+    epsilon = lreg(hAA, y, offset=offset, wts=wts)
+    Fluctuation(hA1, hA0, wts, epsilon)
 end
 
 function fluctuate!{T<:FloatingPoint}(q::Qmodel{T}, fluc::Fluctuation{T})
@@ -73,7 +90,9 @@ function fluctuate!{T<:FloatingPoint}(q::Qmodel{T}, fluc::Fluctuation{T})
     q
 end
 
-function fluctuate!{T<:FloatingPoint}(q::Qmodel{T}, param::Parameter{T}, gn1::Vector{T}, a::Vector{T}, y::Vector{T})
+function fluctuate!{T<:FloatingPoint}(q::Qmodel{T}, param::Parameter{T}, gn1::Vector{T},
+                                      a::Vector{T}, y::Vector{T};
+                                      method::Symbol=:unweighted)
     fluctuate!(q, computefluc(q, param, gn1, a, y))
 end
 
@@ -104,6 +123,5 @@ end
 #     loss
 # end
 
-# finalg(q::Qmodel) = q.gseq[end]
 
 end

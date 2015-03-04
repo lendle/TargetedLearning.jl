@@ -26,4 +26,9 @@ facts("Test TMLEs") do
 
     @fact est.psi => roughly(psi)
     @fact est.ic => roughly(ic)
+
+    context("With weighted fluctuation") do
+        @fact tmle(logitQnA1, logitQnA0, gn1, a, y, flucmethod=:weighted) => is_a(TMLE)
+        @pending "more weighted fluc tests" => nothing
+    end
 end

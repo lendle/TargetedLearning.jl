@@ -53,13 +53,12 @@ end
 ATE(d1, d0) = ATE(regimen(d1), regimen(d0))
 ATE() = ATE(1.0, 0.0)
 
-function fluccovar{T<:FloatingPoint}(param::Mean{T}, a::Vector{T}, gn1::Vector{T})
-    ifelse(param.d.a .== a, 1 ./ifelse(a .== 1, gn1, 1-gn1), zero(T))
+function fluccovar{T<:FloatingPoint}(param::Mean{T}, a::Vector{T})
+    convert(Vector{T}, a .== param.d.a)
 end
 
-function fluccovar{T<:FloatingPoint}(param::ATE{T}, a::Vector{T}, gn1::Vector{T})
-    invgna = 1./ifelse(a .== 1, gn1, 1-gn1)
-    ifelse(param.d1.a .== a, invgna, zero(T)) .-  ifelse(param.d0.a .== a, invgna, zero(T))
+function fluccovar{T<:FloatingPoint}(param::ATE{T}, a::Vector{T})
+    convert(Vector{T}, (a .== param.d1.a) .- (a .== param.d0.a))
 end
 
 function applyparam{T<:FloatingPoint}(param::Mean{T}, q::Qmodel{T}, gn1::Vector{T}, A, Y)
@@ -76,7 +75,7 @@ function applyparam{T<:FloatingPoint}(param::ATE{T}, q::Qmodel{T}, gn1::Vector{T
     QnAA = predict(q, A)
     Qndiff = QnAd1 .- QnAd0
     psi = mean(Qndiff)
-    h = fluccovar(param, A, gn1)
+    h = weightedcovar(finalfluc(q), A)
     ic = h .* (Y .- QnAA) .+ Qndiff .- psi
     (psi, ic)
 end
