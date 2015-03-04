@@ -2,7 +2,7 @@ module Common
 
 export AbstractScalarEstimate, ScalarEstimate, name!, coef, vcov, nobs, stderr, confint, coeftable
 
-using Distributions, Calculus
+using Distributions, Calculus, NumericExtensions
 
 import Base.var
 #borrowing some names from StatsBase, but not the StatsModels type
@@ -34,7 +34,9 @@ type ScalarEstimate{T <: FloatingPoint} <: AbstractScalarEstimate
     n::Int
     estimand::String
     function ScalarEstimate(psi, ic, estimand)
-        abs(mean(ic)) <= 1e-12 || error("Mean of ic should be 0")
+        meanic=mean(ic)
+        abs(meanic) <= 1e-12 || error("Mean of ic should be 0. It is $meanic.")
+        subtract!(ic, meanic)
         new(psi, ic, length(ic), estimand)
     end
 end
@@ -42,6 +44,12 @@ end
 ScalarEstimate{T<:FloatingPoint}(psi::T, ic::Vector{T}, estimand="psi") = ScalarEstimate{T}(psi,ic, estimand)
 
 name!(est::AbstractScalarEstimate, estimand) = (est.estimand=estimand; est)
+
+function Base.show(io::IO, t::AbstractScalarEstimate)
+    println(io, "Estimate")
+    show(io, coeftable(t))
+end
+
 
 +(a::AbstractScalarEstimate, b::AbstractScalarEstimate) = ScalarEstimate(a.psi + b.psi, a.ic .+ b.ic)
 +(a::AbstractScalarEstimate, b::Real) = ScalarEstimate(a.psi + b, a.ic)
