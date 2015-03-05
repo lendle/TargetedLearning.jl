@@ -64,7 +64,7 @@ end
 function applyparam{T<:FloatingPoint}(param::Mean{T}, q::Qmodel{T}, gn1::Vector{T}, A, Y)
     QnAd = predict(q, param.d)
     psi = mean(QnAd)
-    h = fluccovar(param, A, gn1)
+    h = weightedcovar(finalfluc(q), A)
     ic = h .* (Y .- QnAd) .+ QnAd .- psi
     (psi, ic)
 end
