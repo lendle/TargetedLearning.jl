@@ -1,5 +1,8 @@
 module Common
 
+using Docile
+@document
+
 export Parameter,
        fluccovar,
 
@@ -21,10 +24,44 @@ import Base.var
 #borrowing some names from StatsBase, but not the StatsModels type
 import StatsBase: coef, vcov, nobs, stderr, confint, coeftable, CoefTable
 
+"""
+Represents a parameter of interest. Subtypes of `Parameter` define a particular
+parameter of the observed data distribution.
+"""
 abstract Parameter{T<:FloatingPoint}
+"""
+Computes the fluctuation covariate for a particular parameter.
+"""
+:fluccovar
 fluccovar{T<:FloatingPoint}(param::Parameter{T}, a::Vector{T}, gn1::Vector{T}) = error("fluccovar not implemented for $T")
 
+
+"""
+Represents an estimate along with it's estimated influence curve.
+"""
 abstract Estimate
+
+"Computes the influence curve based standard error(s) of an `Estimate`"
+:stderr
+"""
+Computes influence curve based confidence interval(s) of an `Estimate`
+
+** Arguments **
+
+* `level` - defaults to 0.95
+"""
+:confint
+
+"Returns the coefficient vector of an `Estimate`"
+:coef
+"Returns the number of observations an `Estimate` is based on"
+:nobs
+"Computes the influence curve based covariance matrix of an `Estimate`"
+:vcov
+"Returns the parameter name(s) of an `Estimate`"
+:paramnames
+"Returns a table with estimate values, standard errors, and 95% confidence limits"
+:coeftable
 
 stderr(est::Estimate) = sqrt(diag(vcov(est)))
 function confint(est::Estimate, level=0.95)
@@ -33,7 +70,7 @@ end
 
 abstract AbstractScalarEstimate <: Estimate
 
-coef(est::AbstractScalarEstimate) = est.psi
+coef(est::AbstractScalarEstimate) = [est.psi]
 nobs(est::AbstractScalarEstimate) = est.n
 vcov(est::AbstractScalarEstimate) = reshape([var(est.ic)/nobs(est)], 1,1)
 paramnames(est::AbstractScalarEstimate) = [est.estimand]
@@ -61,6 +98,7 @@ end
 
 ScalarEstimate{T<:FloatingPoint}(psi::T, ic::Vector{T}, estimand="psi") = ScalarEstimate{T}(psi,ic, estimand)
 
+"Sets the parameter name of a scalar estimate"
 name!(est::AbstractScalarEstimate, estimand) = (est.estimand=estimand; est)
 
 function Base.show(io::IO, t::AbstractScalarEstimate)
