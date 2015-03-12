@@ -13,7 +13,8 @@ export Regimen,
 
        estimand,
        applyparam,
-       fluccovar
+       fluccovar,
+       regimens
 
 using ..Qmodels
 import ..Common: Parameter, fluccovar
@@ -105,7 +106,7 @@ end
 """
 Computes the parameter estimate and influence curve for a particular `Parmeter` given an estimate of Q and g.
 
-** Arguments ** 
+** Arguments **
 
 * `param` - parameter
 * `q` - an estimated `Qmodel`
@@ -117,21 +118,21 @@ Computes the parameter estimate and influence curve for a particular `Parmeter` 
 """
 :applyparam
 
-function applyparam{T<:FloatingPoint}(param::Mean{T}, q::Qmodel{T}, gn1::Vector{T}, A, Y)
+function applyparam{T<:FloatingPoint}(param::Mean{T}, q::Qmodel{T}, A, Y)
     QnAd = predict(q, param.d)
     psi = mean(QnAd)
-    h = weightedcovar(finalfluc(q), A)
+    h = weightedcovar(lastfluc(q), A)
     ic = h .* (Y .- QnAd) .+ QnAd .- psi
     (psi, ic)
 end
 
-function applyparam{T<:FloatingPoint}(param::ATE{T}, q::Qmodel{T}, gn1::Vector{T}, A, Y)
+function applyparam{T<:FloatingPoint}(param::ATE{T}, q::Qmodel{T}, A, Y)
     QnAd1 = predict(q, param.d1)
     QnAd0 = predict(q, param.d0)
     QnAA = predict(q, A)
     Qndiff = QnAd1 .- QnAd0
     psi = mean(Qndiff)
-    h = weightedcovar(finalfluc(q), A)
+    h = weightedcovar(lastfluc(q), A)
     ic = h .* (Y .- QnAA) .+ Qndiff .- psi
     (psi, ic)
 end
@@ -139,5 +140,8 @@ end
 estimand(param::Parameter) = "ψ"
 estimand(param::Mean) = "E(Y(d))"
 estimand(param::ATE) = "ATE"
+
+regimens(param::Mean) = [param.d]
+regimens(param::ATE) = [param.d1, param.d0]
 
 end

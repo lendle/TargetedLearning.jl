@@ -11,7 +11,7 @@ using ..Common, ..LReg, NumericExtensions, NumericFuns
 import ..LReg: linpred, predict
 import StatsBase.nobs
 
-export Qmodel, fluctuate!, defluctuate!, predict, linpred, nobs, weightedcovar, finalfluc
+export Qmodel, fluctuate!, defluctuate!, predict, linpred, nobs, weightedcovar, lastfluc
 
 """
 A `Fluctuation` holds fluctuation covariates and weights. The weight times the fluctuation covariate is the so called "clever covariate" in the targeted
@@ -22,14 +22,16 @@ type Fluctuation{T<:FloatingPoint}
     hA0::Vector{T}
     wts::Vector{T}
     epsilon::LR{T}
-    function Fluctuation(hA1, hA0, wts, epsilon)
+    weighted::Bool
+    function Fluctuation(hA1, hA0, wts, epsilon, weighted)
         length(hA1) == length(hA0) == length(wts) || error(ArgumentError("lengths of hA1, hA0 and wts do not match"))
-        new(hA1, hA0, wts, epsilon)
+        new(hA1, hA0, wts, epsilon, weighted)
     end
 end
 
 Fluctuation{T<:FloatingPoint}(hA1::Vector{T}, hA0::Vector{T}, wts::Vector{T},
-                              epsilon::LR{T}) = Fluctuation{T}(hA1, hA0, wts, epsilon)
+                              epsilon::LR{T}, weighted::Bool) =
+    Fluctuation{T}(hA1, hA0, wts, epsilon, weighted)
 
 nobs(fluc::Fluctuation) = length(fluc.hA1)
 
@@ -47,7 +49,7 @@ end
 """
 Computes the fluctuated linear predictor given an offset
 
-** Arguments ** 
+** Arguments **
 
 * `fluc` - fluctuation
 * `a` - treatment vector
@@ -81,7 +83,7 @@ Qmodel{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T}) = Qmodel{T}
 nobs(q::Qmodel) = length(q.logitQnA1)
 
 "Returns the last fluctuation of `q`"
-function finalfluc(q::Qmodel)
+function lastfluc(q::Qmodel)
     length(q.flucseq) > 0 || error("q has not been fluctuated")
     q.flucseq[end]
 end
@@ -114,6 +116,23 @@ end
 """
 predict{T<:FloatingPoint}(q::Qmodel{T}, a::Vector{T}) = map1!(LogisticFun(), linpred(q,a))
 
+
+function compute_h_wts(param::Parameter, gn1, A; weighted::Bool=false)
+    n = length(A)
+    n == length(gn1) || error()
+    if weighted
+        gna = ifelse(A.==1, gn1, (1 .- gn1))
+        wts = 1 ./ gna
+        hA1 = fluccovar(param, ones(n))
+        hA0 = fluccovar(param, zeros(n))
+    else
+        wts = ones(n)
+        hA1 = fluccovar(param, ones(n)) ./ gn1
+        hA0 = fluccovar(param, zeros(n)) ./ (1 .- gn1)
+    end
+    (hA1, hA0, wts)
+end
+
 """
 Computes a new fluctuation for a (possible already fluctuated) initial `Qmodel`
 
@@ -125,32 +144,27 @@ Computes a new fluctuation for a (possible already fluctuated) initial `Qmodel`
 * `A` - observed treatments
 * `Y` - observed outcomes
 
-** Keyword Arguments ** 
+** Keyword Arguments **
 
-* `method` - A symbol, either `:unweighted` (the default) or `:weighted`.
-If `:unweighted`, the "standard" fluctuation is performed, there the fluctuation covariate is divided
-by \(g_n(A_i\mid W_i)\), and weights are set to 1. 
-If `:weighted`, the fluctuation covariate is used directly, and weights are set to the reciprical
+* `weighted` - A boolean, `false` by default
+If `false`, the "standard" fluctuation is performed, there the fluctuation covariate is divided
+by \(g_n(A_i\mid W_i)\), and weights are set to 1.
+If `true`, the fluctuation covariate is used directly, and weights are set to the reciprical
 of \(g_n(A_i\mid W_i)\) where \(g_n(A_i \mid W_i)\) is computed as `gn1[i]` if `A[i]` is 1, or `1-gn1[i]` otherwise.
 """
-function computefluc(q::Qmodel, param::Parameter, gn1, A, Y; method::Symbol=:unweighted)
+function computefluc(q::Qmodel, param::Parameter, gn1, A, Y; weighted::Bool=false)
     #computes fluctuation for a given q and g
-    offset = linpred(q, A)
-    if method == :unweighted
-        wts = ones(nobs(q))
-        hA1 = fluccovar(param, ones(nobs(q))) ./ gn1
-        hA0 = fluccovar(param, zeros(nobs(q))) ./ (1 .- gn1)
-    elseif method == :weighted
-        gna = ifeflse(A.==1, gn1, (1 .- gn1))
-        wts = 1 ./ gna
-        hA1 = fluccovar(param, ones(nobs(q)))
-        hA0 = fluccovar(param, zeros(nobs(q)))
-    else
-        error(ArgumentError("method $method not supported"))
-    end   
+    hA1, hA0, wts = compute_h_wts(param, gn1, A, weighted=weighted)
     hAA = ifelse(A.==1, hA1, hA0)
+    offset = linpred(q, A)
     epsilon = lreg(hAA, Y, offset=offset, wts=wts)
-    Fluctuation(hA1, hA0, wts, epsilon)
+    Fluctuation(hA1, hA0, wts, epsilon, weighted)
+end
+
+function valfluc(fluc::Fluctuation, param::Parameter, gn1, A)
+    hA1, hA0, wts = compute_h_wts(param, gn1, A, weighted=fluc.weighted)
+    epsilon = fluc.epsilon
+    Fluctuation(hA1, hA0, wts, epsilon, weighted)
 end
 
 function fluctuate!{T<:FloatingPoint}(q::Qmodel{T}, fluc::Fluctuation{T})
@@ -171,15 +185,15 @@ Computes and adds a new fluctuation to a `Qmodel`
 * `A` - observed treatments
 * `Y` - observed outcomes
 
-** Keyword Arguments ** 
+** Keyword Arguments **
 
-* `method` - A symbol, either `:unweighted` (the default) or `:weighted`.
+* `weighted` - A boolean, `false` by default.
 See documentation for `computefluc` for details.
 """
 function fluctuate!{T<:FloatingPoint}(q::Qmodel{T}, param::Parameter{T}, gn1::Vector{T},
                                       A::Vector{T}, Y::Vector{T};
-                                      method::Symbol=:unweighted)
-    fluctuate!(q, computefluc(q, param, gn1, A, Y))
+                                      weighted::Bool=false)
+    fluctuate!(q, computefluc(q, param, gn1, A, Y, weighted=weighted))
 end
 
 function defluctuate!(q::Qmodel)
