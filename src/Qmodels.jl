@@ -11,7 +11,8 @@ using ..Common, ..LReg, NumericExtensions, NumericFuns
 import ..LReg: linpred, predict
 import StatsBase.nobs
 
-export Qmodel, fluctuate!, defluctuate!, predict, linpred, nobs, weightedcovar, lastfluc
+export Qmodel, fluctuate!, defluctuate!, predict, linpred, nobs, weightedcovar, lastfluc, risk,
+computefluc, valfluc
 
 """
 A `Fluctuation` holds fluctuation covariates and weights. The weight times the fluctuation covariate is the so called "clever covariate" in the targeted
@@ -116,6 +117,7 @@ end
 """
 predict{T<:FloatingPoint}(q::Qmodel{T}, a::Vector{T}) = map1!(LogisticFun(), linpred(q,a))
 
+risk{T<:FloatingPoint}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}) = mean(LReg.Loss(), Y, linpred(q, A))
 
 function compute_h_wts(param::Parameter, gn1, A; weighted::Bool=false)
     n = length(A)
@@ -161,7 +163,7 @@ function computefluc(q::Qmodel, param::Parameter, gn1, A, Y; weighted::Bool=fals
     Fluctuation(hA1, hA0, wts, epsilon, weighted)
 end
 
-function valfluc(fluc::Fluctuation, param::Parameter, gn1, A)
+function valfluc(fluc::Fluctuation, param::Parameter, gn1, A; weighted::Bool=false)
     hA1, hA0, wts = compute_h_wts(param, gn1, A, weighted=fluc.weighted)
     epsilon = fluc.epsilon
     Fluctuation(hA1, hA0, wts, epsilon, weighted)
