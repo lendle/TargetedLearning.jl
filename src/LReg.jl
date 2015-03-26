@@ -99,11 +99,13 @@ function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2), convTo
 
     if subset == 1:size(x,2) || collect(1:size(x,2)) == subset
         subset = 1:size(x,2)
-        return LR(coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol)), subset, fitwithoffset)
+#         return LR(coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol)), subset, fitwithoffset)
+        return LR(myfit(x, y, wts=wts, offset=offset, convTol=convTol), subset, fitwithoffset)
     else
         tempx = x[:, subset]
         β = zeros(eltype(x), size(x, 2))
-        β[subset] = coef(fit(GeneralizedLinearModel, tempx, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
+#        β[subset] = coef(fit(GeneralizedLinearModel, tempx, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
+        β[subset] = myfit(tempx, y, wts=wts, offset=offset, convTol=convTol)
         return LR(β, subset, fitwithoffset)
     end
 end
@@ -113,5 +115,21 @@ NumericExtensions.evaluate(::Loss, y, xb) =
     y == one(y)? log1pexp(-xb) :
     y == zero(y)? log1pexp(xb) :
     y * log1pexp(-xb) + (one(y)-y) * log1pexp(xb)
+
+function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
+    try coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
+    catch err
+        if isa(err, ErrorException) &&
+                isdefined(Main, :LREG_DEBUG) &&
+                Main.LREG_DEBUG
+            fname = tempname()
+            open(fname, "w") do f
+                serialize(f, (x, y, wts, offset, convTol))
+                info("Error in lreg. x, y, wts, offset and convTol written to $fname")
+            end
+        end
+        rethrow(err)
+    end
+end
 
 end
