@@ -3,7 +3,7 @@ import TargetedLearning.CTMLEs.CTMLE
 
 facts("Test CTMLEs") do
     srand(6578)
-    n,p = 100, 10
+    n,p = 100, 5
     w = [ones(n) rand(n, p)]
     a = round(rand(n))
     y = round(rand(n))
