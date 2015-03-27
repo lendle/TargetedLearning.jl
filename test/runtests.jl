@@ -1,3 +1,5 @@
+LREG_DEBUG = true
+
 module TestTargetedLearning
 
 using FactCheck

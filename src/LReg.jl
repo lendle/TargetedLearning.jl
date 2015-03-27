@@ -149,6 +149,7 @@ if GLMNET
                     serialize(f, (x, y, wts, offset, convTol))
                     info("Error in lreg. x, y, wts, offset and convTol written to $fname")
                 end
+                @show (x, y, wts, offset)
             end
             rethrow(err)
         end
