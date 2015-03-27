@@ -11,6 +11,7 @@ include("automaticics.jl")
 include("Qmodels.jl")
 include("Parameters.jl")
 include("TMLEs.jl")
+include("CTMLEs.jl")
 
 FactCheck.exitstatus()
 end

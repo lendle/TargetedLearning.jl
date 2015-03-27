@@ -1,6 +1,6 @@
 using Lexicon, TargetedLearning
 
-fmnames = [#("ctmles", TargetedLearning.CTMLEs),
+fmnames = [("ctmles", TargetedLearning.CTMLEs),
            #("strategies", TargetedLearning.CTMLEs.Strategies),
            ("common", TargetedLearning.Common),
            ("lreg", TargetedLearning.LReg),
@@ -8,5 +8,5 @@ fmnames = [#("ctmles", TargetedLearning.CTMLEs),
            ("qmodels", TargetedLearning.Qmodels)]
 
 for (fname, mod) in fmnames
-	save("docs/api/$fname.md", mod, mathjax=true)
+	save("docs/api/$fname.md", mod, mathjax=true)#, include_internal = false)
 end

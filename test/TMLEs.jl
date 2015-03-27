@@ -1,4 +1,5 @@
 using TargetedLearning.TMLEs
+import TargetedLearning.TMLEs.TMLE
 
 facts("Test TMLEs") do
     n,p = 100, 10

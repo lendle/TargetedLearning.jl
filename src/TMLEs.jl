@@ -1,5 +1,6 @@
 module TMLEs
-export TMLE, tmle
+
+export tmle
 
 using ..Qmodels, ..Parameters, ..Common
 
