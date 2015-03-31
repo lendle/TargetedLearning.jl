@@ -8,5 +8,5 @@ fmnames = [("ctmles", TargetedLearning.CTMLEs),
            ("qmodels", TargetedLearning.Qmodels)]
 
 for (fname, mod) in fmnames
-	save("docs/api/$fname.md", mod, mathjax=true)#, include_internal = false)
+	save(joinpath(Pkg.dir("TargetedLearning"), "docs", "api", "$fname.md"), mod, mathjax=true)#, include_internal = false)
 end
