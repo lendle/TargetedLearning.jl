@@ -6,7 +6,7 @@ TargetedLearing.jl is a package for [Julia](http://julialang.org) v0.3.x that im
 
 ### Contents
 
-* [Julia](user-guide/julia.md) provides some links for resources for learning Julia and has a little example with enough to get you started.
+* [Julia](user-guide/julia.md) provides some links for resources for learning Julia, links to other packages, and an example with enough to get you started.
 * [The estimation problem](user-guide/estimation.md) describes the statistical parameters that can be estimated with this package and corresponding causal parameters.
 * [TMLE and CTMLE](user-guide/ctmle.md) describes how TMLE and CTMLE work to estimate the average treatment effect.
 * [Automatic influence curves](user-guide/influencecurves.md) describes how we perform inference on arbitrary transformations of estimates.

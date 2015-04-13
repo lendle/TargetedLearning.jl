@@ -10,6 +10,7 @@ pages:
 - ['user-guide/estimation.md', 'User Guide', 'The estimation problem']
 - ['user-guide/ctmle.md', 'User Guide', '(C)TMLE']
 - ['user-guide/influencecurves.md', 'User Guide', 'Automatic influence curves']
+- ['user-guide/lalonde_example.md', 'User Guide', 'Lalonde Example']
 - ['api/common.md', 'API', 'Common']
 # - ['api/ctmles.md', 'API', 'CTMLEs']
 # - ['api/strategies.md', 'API', 'CTMLE.Strategies']
