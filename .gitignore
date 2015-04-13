@@ -3,3 +3,4 @@ docs/api
 *.jl.cov
 *.jl.mem
 examples/data
+.ipynb_checkpoints/

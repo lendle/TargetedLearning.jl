@@ -145,15 +145,7 @@ end
 
 Continuing the [example](julia.md#example) from the intro to Julia, we now demonstrate how to use TMLE to estimate the ATE from the Lalonde data set.
 
-```julia
-# W: matrix of covariates
-# treat: treatment variable
-# re78: outcome
-
-tmle(logitQnA1, logitQnA0, gn1, treat, re78, param=ATE(), weightedfluc=false)
-```
-
-The `tmle` function returns an estimate along with an estimated variance based on the EIC. It's important to note that this variance is asymptotically consistent if both $\bar{Q}_n$ and $g_n$ are consistent, and is conservative if $g_n$ is consistent but $\bar{Q}_n$ is not. If $g_n$ is not consistent, then EIC based variance estimate is not reliable.
+[The example can be found here.](http://nbviewer.ipython.org/url/lendle.github.io/TargetedLearning.jl/user-guide/lalonde_example.ipynb#TMLE-for-the-average-treatment-effect)
 
 # CTMLE
 

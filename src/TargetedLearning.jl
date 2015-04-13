@@ -15,5 +15,7 @@ include("CTMLEs.jl")
 @reexport using .CTMLEs, .TMLEs, .LReg
 import .Parameters: Mean, ATE
 export Mean, ATE
+import .Common: name!
+export name!
 
 end
