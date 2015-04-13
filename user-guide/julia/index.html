@@ -162,10 +162,6 @@
     
         <li class="main "><a href="#example">Example</a></li>
         
-            <li><a href="#using-readcsv">Using readcsv</a></li>
-        
-            <li><a href="#using-dataframe">Using DataFrame</a></li>
-        
     
     </ul>
 </div></div>
@@ -200,137 +196,7 @@ DataFrames.jl provides the <code>readtable</code> function which can read a CSV 
 <h1 id="example">Example</h1>
 <p>Throughout the user's guide, we'll use the <a href="http://users.nber.org/~rdehejia/nswdata2.html">Lalonde dataset</a>. It is originally from
 Robert Lalonde, "Evaluating the Econometric Evaluations of Training Programs," <em>American Economic Review</em>, Vol. 76, pp. 604-620. 1986. This section we'll go through a few ways of loading that data set.</p>
-<p>To download the example data set, run</p>
-<pre><code class="julia">include(joinpath(Pkg.dir(&quot;TargetedLearning&quot;), &quot;examples&quot;, &quot;fetchdata.jl&quot;))
-</code></pre>
-
-<p>This will create a CSV in <code>`Pkg.dir("TargetedLearning")`/examples/data/lalonde.csv</code>.
-This only needs to be run once.</p>
-<h2 id="using-readcsv">Using readcsv</h2>
-<p>The simplest way to read the data set is with <code>readcsv</code>. The CSV file we have has a header, so we'll pass <code>header=true</code>, and we'll get back a tuple containing a matrix with the numeric data in it (<code>readcsv</code> can figure out that it's all <code>Float64</code>s automatically) and a matrix with one row containing column names.</p>
-<pre><code class="jlcon">julia&gt; dsfname = joinpath(Pkg.dir(&quot;TargetedLearning&quot;), &quot;examples&quot;, &quot;data&quot;, &quot;lalonde.csv&quot;)
-&quot;/home/sam/.julia/v0.3/TargetedLearning/examples/data/lalonde.csv&quot;
-
-julia&gt; # the ; at the end of the next line keeps the output from printing in the REPL
-       dat, colnames = readcsv(dsfname, header=true);
-
-julia&gt; #lets inspect colnames
-       colnames
-1x9 Array{String,2}:
- &quot;treatment&quot;  &quot;age&quot;  &quot;education&quot;  &quot;black&quot;  …  &quot;married&quot;  &quot;nodegree&quot;  &quot;RE75&quot;  &quot;RE78&quot;
-
-julia&gt; #lets convert it to a vector instead of a matrix with one row
-       colnames = reshape(colnames, size(colnames, 2))
-9-element Array{String,1}:
- &quot;treatment&quot;
- &quot;age&quot;
- &quot;education&quot;
- &quot;black&quot;
- &quot;hispanic&quot;
- &quot;married&quot;
- &quot;nodegree&quot;
- &quot;RE75&quot;
- &quot;RE78&quot;
-</code></pre>
-
-<p><code>treatment</code> is obviously the treatment variable. The outcome variable is <code>RE78</code> (earnings in 1978), and <code>RE75</code> is the pretreatment value at baseline. The others are potential baseline confounders. Check the link above for more information about the dataset.  We want to slice the matrix <code>dat</code> up to extract the treatment and outcome variable. Julia uses square brackets for indexing. The first dimension of a matrix is rows and the second is columns like R. If you want everything in one dimension, you put <code>:</code> (where as in R you can leave that dimension empty). You can index with booleans, integers, vectors of integers, ranges and some other things. Here are some examples:</p>
-<pre><code>julia&gt; #we know column 1 is treatment, so get it directly, and ask for all rows with :
-       treatment = dat[:, 1];
-
-julia&gt; #suppose instead we want to find the position in colnames that has the value
-       #&quot;treatment&quot;, but we don't know it's the first one. There are a couple of ways
-       #to do that.
-       #(.== and operators starting with `.` in general indicate that we want to do
-       #   an element wise operation)
-       treatment_take2 = dat[:, colnames .== &quot;treatment&quot;, 1];
-
-julia&gt; #the last column is the outcome so we can use the keyword `end`
-       outcome = dat[:, end];
-
-julia&gt; #we can also use `end` in arithmetic, e.g.
-       outcome_prebaseline = dat[:, end-1];
-
-julia&gt; #baseline covariates are everything between the first and last column, so we could use a range:
-       baseline_covars = dat[:, 2:end-1];
-
-</code></pre>
-
-<!---
-_Skip this if you want to!_ As a bonus example, suppose we want to search for some pattern in the column names, for example, those starting with "RE". We can use a simple regular expression to find them.
-
-wzxhzdk:3
-
-There's kind of a lot going on here. `find` can do a few things (see `?find`). In this case, it's taking a function that returns true or false as it's first argument, and then calls that function on each element of the second argument (`colnames`). `find` then returns the indexes of elements for which the function evaluated to true. The `->` syntax constructs an anonymous function. `name -> ismatch(r"^RE", name)` is a function that takes a single parameter called `name`, and returns the result of `ismatch(r"^RE", name)`. `ismatch` is a function that takes a regular expression and a string, and returns true if that regex matches the string.  `r"pattern"` is how you make a regex in Julia. The pattern `^RE` is a pattern which will match on any string that starts with "RE".  We see that we wind up with `re_idxs` having the indexes `8` and `9` corresponding to the last two columns.
--->
-
-<h2 id="using-dataframe">Using DataFrame</h2>
-<p>The <code>readtable</code> function returns a <code>DataFrame</code> which allows for indexing by column names.</p>
-<pre><code class="jlcon">julia&gt; using DataFrames #like library in R
-
-julia&gt; dsfname = joinpath(Pkg.dir(&quot;TargetedLearning&quot;), &quot;examples&quot;, &quot;data&quot;, &quot;lalonde.csv&quot;)
-&quot;/home/sam/.julia/v0.3/TargetedLearning/examples/data/lalonde.csv&quot;
-
-julia&gt; df = readtable(dsfname);
-
-julia&gt; #check the column names:
-       names(df)
-9-element Array{Symbol,1}:
- :treatment
- :age
- :education
- :black
- :hispanic
- :married
- :nodegree
- :RE75
- :RE78
-</code></pre>
-
-<p>Data frames in Julia are indexed by symbols instead of strings. Symbols are no entirely unlike strings, and are created in julia with <code>:symbolname</code> or <code>Symbol("symbolname")</code>.</p>
-<p>Now let's get the treatment and outcome variables out of <code>df</code>.</p>
-<pre><code class="jlcon">julia&gt; treatment = df[:treatment];
-
-julia&gt; outcome = df[:RE78];
-
-julia&gt; #look at the first few values of outcome
-       head(outcome)
-6-element DataArray{Float64,1}:
-  9930.05
-  3595.89
- 24909.5
-  7506.15
-   289.79
-  4056.49
-</code></pre>
-
-<p>We see that variables in a data frame are actually <code>DataArray</code>s instead of regular Julia <code>Array</code>s. The functions in TargetedLearning.jl currently only work with <code>Arrays</code> of floating point numbers, so we'll convert them.</p>
-<pre><code class="jlcon">julia&gt; treatment = convert(Array{Float64}, treatment);
-
-julia&gt; outcome = convert(Array{Float64}, outcome);
-</code></pre>
-
-<p>We can also index into the data frame using ranges, just like regular matrixes (but we only index on columns). Let's get the baseline covariates. When you get more than one column out of a data frame, you get back another data frame. For some reason that I do not know, <code>convert</code> won't work for us here, but <code>array</code> will get us what we need (a Julia array instead of a DataFrame).</p>
-<pre><code class="jlcon">julia&gt; baseline_covars = array(df[2:end-1]);
-</code></pre>
-
-<h3 id="formulas">Formulas</h3>
-<p>One nice thing about DataFrames.jl is that is has support for formulas. They are similar to R's formulas, but there are some differences. Some packages, like GLM.jl take data frames with formulas as input. Those packages can be used for computing initial estimates, but TargetedLearning.jl does not support formulas and DataFrames directly.  However, you can use DataFrames.jl's functionality to take a DataFrame and a formula and get a numeric design matrix based on a formula.</p>
-<p>For example, suppose we'd like to include an age squared term and an interaction term between education and marital status. It looks like polynomial terms aren't implemented currently, so you'll have to manually make those terms.</p>
-<pre><code>julia&gt; #create age squared
-       df[:age2] = df[:age] .* df[:age];
-
-julia&gt; #suppress the intercept with -1
-       fm = treatment ~ -1 + age + age2 + education + black + hispanic + married + nodegree + RE75 + married&amp;nodegree
-Formula: treatment ~ -1 + age + age2 + education + black + hispanic + married + nodegree + RE75 + married &amp; nodegree
-
-julia&gt; #take the field named `m` from the created ModelMatrix object
-       expanded_baseline_covars = ModelMatrix(ModelFrame(fm, df)).m;
-
-</code></pre>
-
-<p>It's clunky, but will get the job done. More detailed documentation is <a href="http://dataframesjl.readthedocs.org/en/latest/formulas.html">here</a>.</p>
-<h3 id="missing-data-and-categorical-data">Missing data and categorical data</h3>
-<p><a href="http://dataframesjl.readthedocs.org/en/latest/">DataFrames.jl</a> and <a href="https://github.com/JuliaStats/DataArrays.jl">DataArrays.jl</a> have ways of handling both missing data and categorical data. TargetedLearning.jl does not, so you'll have to deal with those issues ahead of time. The documentation for those packages has more information on both.</p>
+<p><a href="http://nbviewer.ipython.org/url/lendle.github.io/TargetedLearning.jl/user-guide/lalonde_example.ipynb#Loading-the-data-set">The example can be found here.</a></p>
 </div>
         </div>
 

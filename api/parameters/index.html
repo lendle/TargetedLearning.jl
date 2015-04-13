@@ -173,13 +173,13 @@
 <li><code>Y</code> - observed outcome vector</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:119</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:119</a></p>
 <hr />
 <h4 id="regimen">regimen</h4>
 <p>Converts it's argument <code>a</code> to a <code>StaticRegime</code> if <code>a</code> is a scalar, a <code>DynamicRegime</code> if <code>a</code> is a vector,
 or returns <code>a</code> if <code>a</code> is already a <code>Regime</code>.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:60</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:60</a></p>
 <hr />
 <h4 id="atetfloatingpoint">ATE{T&lt;:FloatingPoint}</h4>
 <p>The <code>ATE</code> parameter is (E_0[E_0(Ymid A=d1, W) - E_0(Ymid A=d0, W)]).</p>
@@ -187,42 +187,42 @@ or returns <code>a</code> if <code>a</code> is already a <code>Regime</code>.</p
 the difference in mean counterfactual outcome under regimens <code>d1</code> and <code>d0</code>.  When <code>d1</code> is the static regimen setting treatment to 1
 and <code>d0</code> is the static regimen setting treatment to 0, this is called the averate treatment effect (ATE).</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:90</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:90</a></p>
 <hr />
 <h4 id="dynamicregimentfloatingpoint">DynamicRegimen{T&lt;:FloatingPoint}</h4>
 <p>A <code>DynamicRegimen</code> sets treatment for each observation to a particular value. Constructed with
 <code>DynamicRegimen(a)</code> where <code>a</code> a vector of floating point is 0 or 1s.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:46</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:46</a></p>
 <hr />
 <h4 id="meantfloatingpoint">Mean{T&lt;:FloatingPoint}</h4>
 <p>The <code>Mean</code> parameter is (E_0E_0(Ymid A=d, W)).</p>
 <p>Under causal assumptions, this can be interpreted as
 the mean of the counterfactual outcome under regimen <code>d</code>.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:77</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:77</a></p>
 <hr />
 <h4 id="regimentfloatingpoint">Regimen{T&lt;:FloatingPoint}</h4>
 <p>Represents a particular single time point treatment regimen.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:26</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:26</a></p>
 <hr />
 <h4 id="staticregimentfloatingpoint">StaticRegimen{T&lt;:FloatingPoint}</h4>
 <p>A <code>StaticRegimen</code> sets treatment to a single value for all observations. Constructed with
 <code>StaticRegimen(a)</code> where <code>a</code> is a floating point 0 or 1.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:32</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:32</a></p>
 <h2 id="internal">Internal</h2>
 <hr />
 <h4 id="predicttfloatingpointqqmodeltfloatingpoint-ddynamicregimentfloatingpoint">predict{T&lt;:FloatingPoint}(q::Qmodel{T&lt;:FloatingPoint}, d::DynamicRegimen{T&lt;:FloatingPoint})</h4>
 <p>Returns predicted values from a <code>Qmodel</code> for a <code>DynamicRegimen</code></p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:69</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:69</a></p>
 <hr />
 <h4 id="predicttfloatingpointqqmodeltfloatingpoint-dstaticregimentfloatingpoint">predict{T&lt;:FloatingPoint}(q::Qmodel{T&lt;:FloatingPoint}, d::StaticRegimen{T&lt;:FloatingPoint})</h4>
 <p>Returns predicted values from a <code>Qmodel</code> for a <code>StaticRegimen</code></p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:67</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:67</a></p>
 </div>
         </div>
 

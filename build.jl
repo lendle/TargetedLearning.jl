@@ -11,7 +11,7 @@ for (fname, mod) in fmnames
 	save(joinpath(Pkg.dir("TargetedLearning"), "docs", "api", "$fname.md"), mod, mathjax=true)#, include_internal = false)
 end
 
-nbpath = joinpath(Pkg.dir("TargetedLearning"), "examples", "lalonde_example.ipynb")
+nbpath = joinpath(Pkg.dir("TargetedLearning"), "docs", "user-guide", "lalonde_example.ipynb")
 mdpath = joinpath(Pkg.dir("TargetedLearning"), "docs", "user-guide", "lalonde_example.md")
 
 run(`ipython nbconvert --to markdown $nbpath --output=$mdpath`)

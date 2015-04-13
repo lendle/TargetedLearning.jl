@@ -181,7 +181,7 @@ If <code>true</code>, the fluctuation covariate is used directly, and weights ar
 of (g_n(A_imid W_i)) where (g_n(A_i mid W_i)) is computed as <code>gn1[i]</code> if <code>A[i]</code> is 1, or <code>1-gn1[i]</code> otherwise.</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:157</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:157</a></p>
 <hr />
 <h4 id="fluctuatetfloatingpointqqmodeltfloatingpoint-paramparametertfloatingpoint-gn1arraytfloatingpoint-1-aarraytfloatingpoint-1-yarraytfloatingpoint-1">fluctuate!{T&lt;:FloatingPoint}(q::Qmodel{T&lt;:FloatingPoint}, param::Parameter{T&lt;:FloatingPoint}, gn1::Array{T&lt;:FloatingPoint, 1}, A::Array{T&lt;:FloatingPoint, 1}, Y::Array{T&lt;:FloatingPoint, 1})</h4>
 <p>Computes and adds a new fluctuation to a <code>Qmodel</code></p>
@@ -199,12 +199,12 @@ of (g_n(A_imid W_i)) where (g_n(A_i mid W_i)) is computed as <code>gn1[i]</code>
 See documentation for <code>computefluc</code> for details.</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:195</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:195</a></p>
 <hr />
 <h4 id="lastflucqqmodeltfloatingpoint">lastfluc(q::Qmodel{T&lt;:FloatingPoint})</h4>
 <p>Returns the last fluctuation of <code>q</code></p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:87</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:87</a></p>
 <hr />
 <h4 id="linpredtfloatingpointflucfluctuationtfloatingpoint-aarraytfloatingpoint-1">linpred{T&lt;:FloatingPoint}(fluc::Fluctuation{T&lt;:FloatingPoint}, a::Array{T&lt;:FloatingPoint, 1})</h4>
 <p>Computes the fluctuated linear predictor given an offset</p>
@@ -218,7 +218,7 @@ See documentation for <code>computefluc</code> for details.</li>
 <li><code>offset</code> - offset term, defaults to zeros, but the default should generally not be used</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:62</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:62</a></p>
 <hr />
 <h4 id="linpredtfloatingpointqqmodeltfloatingpoint-aarraytfloatingpoint-1">linpred{T&lt;:FloatingPoint}(q::Qmodel{T&lt;:FloatingPoint}, a::Array{T&lt;:FloatingPoint, 1})</h4>
 <p>Computes the linear predictor of an estimated <code>Qmodel</code> given <code>a</code></p>
@@ -228,7 +228,7 @@ See documentation for <code>computefluc</code> for details.</li>
 <li><code>a</code> - vector of treatments</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:102</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:102</a></p>
 <hr />
 <h4 id="predicttfloatingpointqqmodeltfloatingpoint-aarraytfloatingpoint-1">predict{T&lt;:FloatingPoint}(q::Qmodel{T&lt;:FloatingPoint}, a::Array{T&lt;:FloatingPoint, 1})</h4>
 <p>Computes the prediction of an estimated <code>Qmodel</code> given <code>a</code></p>
@@ -238,7 +238,7 @@ See documentation for <code>computefluc</code> for details.</li>
 <li><code>a</code> - vector of treatments</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:118</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:118</a></p>
 <hr />
 <h4 id="weightedcovartfloatingpointflucfluctuationtfloatingpoint-aarraytfloatingpoint-1">weightedcovar{T&lt;:FloatingPoint}(fluc::Fluctuation{T&lt;:FloatingPoint}, a::Array{T&lt;:FloatingPoint, 1})</h4>
 <p>Computes the weight times flucutation covariate, sometimes called the "clever covariate"</p>
@@ -248,20 +248,20 @@ See documentation for <code>computefluc</code> for details.</li>
 <li><code>a</code> - treatment vector</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:46</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:46</a></p>
 <hr />
 <h4 id="qmodeltfloatingpoint">Qmodel{T&lt;:FloatingPoint}</h4>
 <p>The <code>Qmodel</code> type represents an estimate of (ar{Q}(a,w) = E(Ymid A=a, W=w)).</p>
 <p>Initial estimate and fluctuations.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:72</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:72</a></p>
 <h2 id="internal">Internal</h2>
 <hr />
 <h4 id="fluctuationtfloatingpoint">Fluctuation{T&lt;:FloatingPoint}</h4>
 <p>A <code>Fluctuation</code> holds fluctuation covariates and weights. The weight times the fluctuation covariate is the so called "clever covariate" in the targeted
 learning literature.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:21</a></p>
+<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Qmodels.jl">TargetedLearning/src/Qmodels.jl:21</a></p>
 </div>
         </div>
 
