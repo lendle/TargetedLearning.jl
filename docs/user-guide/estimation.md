@@ -9,16 +9,16 @@
 
 #The observed data structure
 
-In TargetedLearing.jl we are dealing with observed data of the form $O=(W, A, Y)$ where $W$ is a real valued vector, $A$ is binary, and $Y$ is a real number. Typically $W$ will represent baseline covariates, $A$ represents an indicator of treatment (or of missingness), and $Y$ represents an outcome. Currently, we require that $Y$ is binary or bounded between 0 and 1. If that's not the case with your data set, you can easily rescale it with 
+In TargetedLearing.jl we are dealing with observed data of the form $O=(W, A, Y)$ where $W$ is a real valued vector, $A$ is binary, and $Y$ is a real number. Typically $W$ will represent baseline covariates, $A$ represents an indicator of treatment (or of missingness), and $Y$ represents an outcome. Currently, we require that $Y$ is binary or bounded between 0 and 1. If that's not the case with your data set, you can easily rescale it with
 ```julia
 newY = (Y .- minimum(Y) ./ (maximum(Y) .- minimum(Y))
 ```
 
-We assume we observe $n$ [i.i.d.](http://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables) copies of $O$: 
+Assume we observe $n$ [i.i.d.](http://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables) copies of $O$:
 $$
 \\{O_1, O_2, \ldots O_n\\}
 $$
-where $O_i = (W_i, A_i, Y_i)$ and that a single observation $O$ has distribution $P_0$. 
+where $O_i = (W_i, A_i, Y_i)$ and that a single observation $O$ has distribution $P_0$.
 
 # Counterfactuals and causal parameters
 
@@ -36,14 +36,14 @@ These quantities are functions of the distribution of counterfactual random vari
 
 # Statistical target parameters.
 
-There are two main classes of parameters estimated by TargetedLearing.jl., which are specified `param` keyword argument of estimation functions. 
+There are two main classes of parameters estimated by TargetedLearing.jl., which are specified `param` keyword argument of estimation functions.
 
 The first class of parameters corresponds to a counterfacutal mean (under assumptions):
 $$
 E_0(E_0(Y\mid A=a, W))
 $$
 for a static regime
-or 
+or
 $$
 E_0(E_0(Y\mid A=d(W), W))
 $$
@@ -55,19 +55,19 @@ The second class of parameters corresponds to the difference in counterfactual m
 $$
 E_0(E_0(Y\mid A=1, W) - E_0(Y\mid A=0, W))
 $$
-or more generally, 
+or more generally,
 $$
 E_0(E_0(Y\mid A=d_1(W), W) - E_0(Y\mid d_0(W), W)).
 $$
 
 To specify such a parameter, pass `param=ATE(a1, a0)`, where, like above `a1` and `a0` should be scalars for static regimes or vectors for dynamic regimes.
-You can specify both static or dynamic regimes, or one of each. 
+You can specify both static or dynamic regimes, or one of each.
 By default `ATE()=ATE(1.0, 0.0)` is the usual ATE.
 
 
 
-<!-- 
 # Missing data
 
-Missing outcomes and counterfactuals are nearly identical. Suppose $Y$ is missing for some observations, and instead of $A$ being treatment, $A$ is an indicator of whever or not $Y$ is missing.  -->
+Missing outcomes and counterfactuals are nearly identical. Suppose $Y$ is missing for some observations, and instead of $A$ being treatment, $A$ is an indicator of whever or not $Y$ is missing.
 
+TODO: more details and an example.
