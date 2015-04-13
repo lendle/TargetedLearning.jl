@@ -6,10 +6,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/api/lreg/">
+        <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/api/parameters/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-        <title>LReg - TargetedLearning.jl</title>
+        <title>Parameters - TargetedLearning.jl</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -85,12 +85,12 @@
                             <a href="../common">Common</a>
                         </li>
                     
-                        <li class="active">
-                            <a href=".">LReg</a>
+                        <li >
+                            <a href="../lreg">LReg</a>
                         </li>
                     
-                        <li >
-                            <a href="../parameters">Parameters</a>
+                        <li class="active">
+                            <a href=".">Parameters</a>
                         </li>
                     
                         <li >
@@ -120,12 +120,12 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li >
-                    <a rel="next" href="../common">
+                    <a rel="next" href="../lreg">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../parameters">
+                    <a rel="prev" href="../qmodels">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -148,84 +148,81 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#targetedlearninglreg">TargetedLearning.LReg</a></li>
+        <li class="main active"><a href="#targetedlearningparameters">TargetedLearning.Parameters</a></li>
         
             <li><a href="#exported">Exported</a></li>
+        
+            <li><a href="#internal">Internal</a></li>
         
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="targetedlearninglreg">TargetedLearning.LReg</h1>
+<h1 id="targetedlearningparameters">TargetedLearning.Parameters</h1>
 <h2 id="exported">Exported</h2>
 <hr />
-<h4 id="targetedlearninglreg_1">TargetedLearning.LReg</h4>
-<p>This module wraps some functionality from <a href="https://github.com/simonster/GLMNet.jl">GLMNet.jl</a>
-for logistic regression along with <a href="https://github.com/JuliaStats/GLM.jl">GLM.jl</a>
-for intercept only models.</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:9</a></p>
-<hr />
-<h4 id="linpredlrlrtfloatingpoint-newx">linpred(lr::LR{T&lt;:FloatingPoint}, newx)</h4>
-<p>Returns the linear component of predicted values from a logistic regression fit with a new X matrix</p>
+<h4 id="applyparam">applyparam</h4>
+<p>Computes the parameter estimate and influence curve for a particular <code>Parmeter</code> given an estimate of Q and g.</p>
 <p><strong> Arguments </strong></p>
 <ul>
-<li><code>lr</code> - an object of type <code>LR</code></li>
-<li><code>newx</code> - matrix of new covariates to predict on. Should be the same dimension as the design matrix used to fit <code>lr</code></li>
-</ul>
-<p><strong> Keyword Arguments </strong></p>
-<ul>
-<li><code>offset</code> - offsets. The length should be the same as <code>size(newx, 1)</code> of <code>lr</code> was fit with an offset, or 0 otherwise.</li>
+<li><code>param</code> - parameter</li>
+<li><code>q</code> - an estimated <code>Qmodel</code></li>
+<li><code>g</code> - vector representing the estimated propensity score for each observation</li>
+<li><code>A</code> - observed treatment vector</li>
+<li><code>Y</code> - observed outcome vector</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:43</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:119</a></p>
 <hr />
-<h4 id="lregx-y">lreg(x, y)</h4>
-<p>Fits a logistic regression model</p>
-<p><strong> Arguments </strong></p>
-<ul>
-<li><code>x</code> - design matrix</li>
-<li><code>y</code> - response vector. Should have the same length as <code>size(x, 1)</code></li>
-</ul>
-<p><strong> Keyword Arguments </strong></p>
-<ul>
-<li><code>wts</code> - weight vector. Defaults to all 1s.</li>
-<li><code>offset</code> - offset vector. Defaults to a vector of length 0 for no offset.</li>
-<li><code>subset</code> - column indexes for <code>x</code> that should be included in the fit. Defaults to all columns.</li>
-<li><code>convTol</code> - convergence criterion for relative change in deviance. Defaults to 1.0e-8.</li>
-</ul>
-<p><strong> Details </strong></p>
-<p>An intercept is not included by default. If you want one, make sure the first column of your design matrix
-is all ones. Because of how <code>GLMNet</code> handles intercepts and how <code>LReg</code> interfaces with it,
-this must be the first column.
-If you do that, don't forget to add the column in the same place to <code>newx</code> when you call predict.</p>
-<p><code>subset</code> is useful if you want to include only some columns of the design matrix but you want to call <code>predict</code>
-with a <code>newx</code> matrix with the same number of columns as <code>x</code>. The coefficients corresponding to columns of <code>x</code> which
-are not used in the fit are set to zero. If you would like to call <code>predict</code> with a <code>newx</code> matrix that includes
-only the columns that you fit on, you should subset <code>x</code> yourself before calling <code>lreg</code>.</p>
+<h4 id="regimen">regimen</h4>
+<p>Converts it's argument <code>a</code> to a <code>StaticRegime</code> if <code>a</code> is a scalar, a <code>DynamicRegime</code> if <code>a</code> is a vector,
+or returns <code>a</code> if <code>a</code> is already a <code>Regime</code>.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:98</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:60</a></p>
 <hr />
-<h4 id="predictlrlrtfloatingpoint-newx">predict(lr::LR{T&lt;:FloatingPoint}, newx)</h4>
-<p>Returns the predicted on the probability scale values from a logistic regression fit with a new X matrix</p>
-<p><strong> Arguments </strong></p>
-<ul>
-<li><code>lr</code> - an object of type <code>LR</code></li>
-<li><code>newx</code> - matrix of new covariates to predict on. Should be the same dimension as the design matrix used to fit <code>lr</code></li>
-</ul>
-<p>** Keyword Arguments</p>
-<ul>
-<li><code>offset</code> - offsets. The length should be the same as <code>size(newx, 1)</code> of <code>lr</code> was fit with an offset, or 0 otherwise.</li>
-</ul>
+<h4 id="atetfloatingpoint">ATE{T&lt;:FloatingPoint}</h4>
+<p>The <code>ATE</code> parameter is (E_0[E_0(Ymid A=d1, W) - E_0(Ymid A=d0, W)]).</p>
+<p>Under causal assumptions, this can be interpreted as
+the difference in mean counterfactual outcome under regimens <code>d1</code> and <code>d0</code>.  When <code>d1</code> is the static regimen setting treatment to 1
+and <code>d0</code> is the static regimen setting treatment to 0, this is called the averate treatment effect (ATE).</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:69</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:90</a></p>
 <hr />
-<h4 id="lrtfloatingpoint">LR{T&lt;:FloatingPoint}</h4>
-<p>The <code>LR</code> type contains the coefficent vector of a logistic regression fit, as well as indexes of
-included columns in the design matrix.</p>
+<h4 id="dynamicregimentfloatingpoint">DynamicRegimen{T&lt;:FloatingPoint}</h4>
+<p>A <code>DynamicRegimen</code> sets treatment for each observation to a particular value. Constructed with
+<code>DynamicRegimen(a)</code> where <code>a</code> a vector of floating point is 0 or 1s.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:25</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:46</a></p>
+<hr />
+<h4 id="meantfloatingpoint">Mean{T&lt;:FloatingPoint}</h4>
+<p>The <code>Mean</code> parameter is (E_0E_0(Ymid A=d, W)).</p>
+<p>Under causal assumptions, this can be interpreted as
+the mean of the counterfactual outcome under regimen <code>d</code>.</p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:77</a></p>
+<hr />
+<h4 id="regimentfloatingpoint">Regimen{T&lt;:FloatingPoint}</h4>
+<p>Represents a particular single time point treatment regimen.</p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:26</a></p>
+<hr />
+<h4 id="staticregimentfloatingpoint">StaticRegimen{T&lt;:FloatingPoint}</h4>
+<p>A <code>StaticRegimen</code> sets treatment to a single value for all observations. Constructed with
+<code>StaticRegimen(a)</code> where <code>a</code> is a floating point 0 or 1.</p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:32</a></p>
+<h2 id="internal">Internal</h2>
+<hr />
+<h4 id="predicttfloatingpointqqmodeltfloatingpoint-ddynamicregimentfloatingpoint">predict{T&lt;:FloatingPoint}(q::Qmodel{T&lt;:FloatingPoint}, d::DynamicRegimen{T&lt;:FloatingPoint})</h4>
+<p>Returns predicted values from a <code>Qmodel</code> for a <code>DynamicRegimen</code></p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:69</a></p>
+<hr />
+<h4 id="predicttfloatingpointqqmodeltfloatingpoint-dstaticregimentfloatingpoint">predict{T&lt;:FloatingPoint}(q::Qmodel{T&lt;:FloatingPoint}, d::StaticRegimen{T&lt;:FloatingPoint})</h4>
+<p>Returns predicted values from a <code>Qmodel</code> for a <code>StaticRegimen</code></p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:67</a></p>
 </div>
         </div>
 

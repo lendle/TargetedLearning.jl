@@ -68,6 +68,10 @@
                             <a href=".">Automatic influence curves</a>
                         </li>
                     
+                        <li >
+                            <a href="../lalonde_example">Lalonde Example</a>
+                        </li>
+                    
                     </ul>
                 </li>
             
@@ -78,15 +82,19 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../api/ctmles">CTMLEs</a>
-                        </li>
-                    
-                        <li >
-                            <a href="../../api/strategies">CTMLE.Strategies</a>
+                            <a href="../../api/common">Common</a>
                         </li>
                     
                         <li >
                             <a href="../../api/lreg">LReg</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../api/parameters">Parameters</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../../api/qmodels">Qmodels</a>
                         </li>
                     
                     </ul>
@@ -117,7 +125,7 @@
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../../api/ctmles">
+                    <a rel="prev" href="../lalonde_example">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -189,7 +197,7 @@ such that $E_0(D)=0$ and $E_0(DD^\intercal)$ is finite and non-singular.</em> Th
 For a proof of a more general result, see Theorem 3.1 in <a href="http://www.cambridge.org/rs/academic/subjects/statistics-probability/statistical-theory-and-methods/asymptotic-statistics?format=PB">Asymptotic Statistics by van der Vaart</a>. A special case of van der Vaart Theorem 3.1 is what <a href="https://en.wikipedia.org/wiki/Delta_method">wikipedia</a> and Statistics 101 call the delta method, where it is typically assumed that $\sqrt{n}(\psi_n - \psi) \leadsto N(0, \Sigma)$. </p>
 <p>If $\psi_n$ is asymptotically linear with IC $D$, then by the continuous mapping theorem and the definition of asymptotic linearity we have </p>
 <p>\begin{align}
-\sqrt{n}(\phi(\psi_n) - \phi(\psi_0)) =&amp; \phi_{\psi_0}' \frac{1}{\sqrt{n}}\sum_{i=1}^n D(O_i) + o_p(1)\\
+\sqrt{n}(\phi(\psi_n) - \phi_0) =&amp; \phi_{\psi_0}' \frac{1}{\sqrt{n}}\sum_{i=1}^n D(O_i) + o_p(1)\\
 =&amp;  \frac{1}{\sqrt{n}}\sum_{i=1}^n \phi_{\psi_0}'D(O_i) + o_p(1)
 \end{align}</p>
 <p>This means that the IC of the transformed estimator $\phi(\psi_n)$ is $\phi_{\psi_0}'D$. Note that if $\phi_{\psi_0}'$ is $0$, this is not very interesting.</p>

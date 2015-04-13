@@ -6,10 +6,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/about/license/">
+        <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/api/common/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-        <title>License - TargetedLearning.jl</title>
+        <title>Common - TargetedLearning.jl</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -77,24 +77,24 @@
             
             
             
-                <li class="dropdown">
+                <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">API <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        <li >
-                            <a href="../../api/common">Common</a>
+                        <li class="active">
+                            <a href=".">Common</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/lreg">LReg</a>
+                            <a href="../lreg">LReg</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/parameters">Parameters</a>
+                            <a href="../parameters">Parameters</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/qmodels">Qmodels</a>
+                            <a href="../qmodels">Qmodels</a>
                         </li>
                     
                     </ul>
@@ -102,12 +102,12 @@
             
             
             
-                <li class="dropdown active">
+                <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
-                        <li class="active">
-                            <a href=".">License</a>
+                        <li >
+                            <a href="../../about/license">License</a>
                         </li>
                     
                     </ul>
@@ -120,12 +120,12 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li >
-                    <a rel="next" href="../../api/qmodels">
+                    <a rel="next" href="../../user-guide/lalonde_example">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
-                <li class="disabled">
-                    <a rel="prev" >
+                <li >
+                    <a rel="prev" href="../lreg">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -148,30 +148,80 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
+        <li class="main active"><a href="#targetedlearningcommon">TargetedLearning.Common</a></li>
+        
+            <li><a href="#exported">Exported</a></li>
+        
+            <li><a href="#internal">Internal</a></li>
+        
+    
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<p>The TargetedLearning.jl package is licensed under the MIT "Expat" License:</p>
-<blockquote>
-<p>Copyright (c) 2015: Sam Lendle.</p>
-<p>Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:</p>
-<p>The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.</p>
-<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
-</blockquote>
+<h1 id="targetedlearningcommon">TargetedLearning.Common</h1>
+<h2 id="exported">Exported</h2>
+<hr />
+<h4 id="coef">coef</h4>
+<p>Returns the coefficient vector of an <code>Estimate</code></p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:56</a></p>
+<hr />
+<h4 id="coeftable">coeftable</h4>
+<p>Returns a table with estimate values, standard errors, and 95% confidence limits</p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:64</a></p>
+<hr />
+<h4 id="confint">confint</h4>
+<p>Computes influence curve based confidence interval(s) of an <code>Estimate</code></p>
+<p><strong> Arguments </strong></p>
+<ul>
+<li><code>level</code> - defaults to 0.95</li>
+</ul>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:53</a></p>
+<hr />
+<h4 id="fluccovar">fluccovar</h4>
+<p>Computes the fluctuation covariate for a particular parameter.</p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:35</a></p>
+<hr />
+<h4 id="nobs">nobs</h4>
+<p>Returns the number of observations an <code>Estimate</code> is based on</p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:58</a></p>
+<hr />
+<h4 id="stderr">stderr</h4>
+<p>Computes the influence curve based standard error(s) of an <code>Estimate</code></p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:45</a></p>
+<hr />
+<h4 id="vcov">vcov</h4>
+<p>Computes the influence curve based covariance matrix of an <code>Estimate</code></p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:60</a></p>
+<hr />
+<h4 id="nameestabstractscalarestimate-estimand">name!(est::AbstractScalarEstimate, estimand)</h4>
+<p>Sets the parameter name of a scalar estimate</p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:102</a></p>
+<hr />
+<h4 id="estimate">Estimate</h4>
+<p>Represents an estimate along with it's estimated influence curve.</p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:42</a></p>
+<hr />
+<h4 id="parametertfloatingpoint">Parameter{T&lt;:FloatingPoint}</h4>
+<p>Represents a parameter of interest. Subtypes of <code>Parameter</code> define a particular
+parameter of the observed data distribution.</p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:31</a></p>
+<h2 id="internal">Internal</h2>
+<hr />
+<h4 id="paramnames">paramnames</h4>
+<p>Returns the parameter name(s) of an <code>Estimate</code></p>
+<p><strong>source:</strong>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:62</a></p>
 </div>
         </div>
 
