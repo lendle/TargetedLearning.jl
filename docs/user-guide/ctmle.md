@@ -169,6 +169,8 @@ Ideally, we'd want to adjust for $W_2$ first, because it is a strong confounder 
 Because $W_1$ is a confounder but $\bar{Q}\_n$ is already doing a good job of adjusting for it, and $W_3$ is not a confounder, we may already have enough to estimate $\psi_0$ without bias thanks to collaborative double robustness.
 Because $W_3$ is not a confounder, (it is an instrumental variable[^iv] in this case,) the next best choice is $W_1$, so the next estimate of $g_0$ will adjust for $W_1$ and $W_2$. This process is continued until the number of steps chosen by cross-validation is reached.
 
+In the implementation of CTMLE in TargetedLearning.jl, there are a number of hueristic [options](#search-strategies) for how estimates of $g\_0$ are chosen and ordered.
+
 [^iv]: An instrumental variable is a variable that affects only treatment but not outcome. Adjusting for an instrumental variable does not reduce bias in an estimate of $\psi_0$, and may induce a violation of the positivity assumption, which can lead to increased variance in the final estimate.
 
 ## Using `ctmle` in the TargetedLearning.jl package
@@ -189,7 +191,7 @@ The target parameter is specified by the `param` keyword argument as described i
 
 ## Search strategies
 
-Theorey requires that the sequence of estimators of $g_0$ increase in complexity up to some estimator which is consistent for $g_0$[^ctmle_paper], but there are many ways to construct this sequence. TargetedLearning.jl uses logistic regression and adds covariates sequentially to each estimate of $\g_0$. The package provides a variety of strategies for searching for the next covariate(s) to include in an estimate for $g_0$ which make different tradeoffs in statistical and computational performance.
+Theorey requires that the sequence of estimators of $g_0$ increase in complexity up to some estimator which is consistent for $g_0$[^ctmle_paper], but there are many ways to construct this sequence. TargetedLearning.jl uses logistic regression and adds covariates sequentially to each estimate of $g\_0$. The package provides a variety of strategies for searching for the next covariate(s) to include in an estimate for $g_0$ which make different tradeoffs in statistical and computational performance.
 
 **Forward stepwise** strategies choose the next covariate to add to an estimator of $g_0$ by selecting the best (in terms of some criterion) covariate among those not already used. For $p$ covariates, this requires the criterion to be computed $O(p^2)$ times, which can be costly when $p$ is bigger than a dozen or so.
 
@@ -204,7 +206,7 @@ Choices of selection criterion are:
 * `PartialCorrOrdering()` - Absolute value of partial correlation between the resudual $Y-\bar{Q}\_n(A, W)$ and each covariate in `W`, conditional on $A$. Larger values are ordered first.
 * `HDPSOrdering()` - Like the criterion for ordering covariates in the HDPS algorithm, not yet implemented.
 
-
+The `PreOrdered` search strategy has a second optional argument, `k_at_once`, which defaults to 1. At each step, the next `k_at_once` (or all available, if fewer than `k_at_once`) ordered covariates are added to the next estimate of $g\_0$. Large `k_at_once` can speed up the procedure when there are many covariates, but it may be more prone to overfitting.
 
 ## Cross validation
 
@@ -214,10 +216,11 @@ General cross-validation schemes can be specified by passing the `cvplan` keywor
 In particular `StratifiedKfold` and `StratifiedRandomSub` are exported in TargetedLearning.jl.
 `StratifiedRandomSub` is useful when you have a huge data set and want to save some time over doing K fold CV.
 
+Even more generally, you can pass a vector of vectors of training indexes to `ctmle`, constructed however you like. If you want to run `ctmle` more than once with the same CV training sets, you need to do this, because the `StratifiedKfold` and `StratifiedRandomSub` iterators will produce new random indexes each time they are used. For example, `cvplan={training_idx_1, training_idx_2, training_idx_3}` where `training_idx_#` is a vector of integer indexes for a given training set.  You can also `collect` the `StratifiedKfold` or `StratifiedRandomSub` iterators to get a vector of vectors of indexes, and call `ctmle` with that multiple times. (`mycvplan=collect(StratifiedKFold(A, 10))`)
+
 Finally, the `patience` keyword can be used to specify how long CV should continue after finding a local minimum. For example suppose `patience` is `5` and after 3 steps a minimum value of the CV loss is found. If it does not improve in another `5` steps, CV will will stop, choosing 3 steps. This can save quite a bit of time when there are many covariates.
 
 ## Example using TargetedLearning.jl
 
 Continuing the [example](julia.md#example) with the Lalonde data set, we now demonstrate how to estimate the ATE using CTMLE.
-
 [The example can be found here.](http://nbviewer.ipython.org/url/lendle.github.io/TargetedLearning.jl/user-guide/lalonde_example.ipynb#CTMLE-for-the-average-treatment-effect)
