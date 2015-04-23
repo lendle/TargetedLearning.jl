@@ -26,15 +26,32 @@ To motivate the statistical estimation problem, let's define counterfactual outc
 
 Using counterfactuals, we can define some interesting causal parameters. Examples that can be estimated by this package are listed here. Here, $E_0$ denotes expectation w.r.t. the true distribution of counterfactuals.
 
-* **Counterfactual mean under static regime**: $E_0(Y_a)$ for $a \in \\{0, 1\\}$
-* **Counterfactual mean under dynamic regime**: $E_0(Y_{d(W)})$ where $d$ is a known function of $W$ mapping to $\\{0, 1\\}$
-* **Average treatment effect (ATE)**: $E_0(Y_1) - E_0(Y_0)$ is the typical definition, or $E_0(Y_{d_1(W)})-E_0(Y_{d_0(W)})$ with two dynamic regimes
+* **Counterfactual mean under static regime**: $E_0(Y_a)$ for $a \in \\{0, 1\\}$.
+* **Counterfactual mean under dynamic regime**: $E_0(Y_{d(W)})$ where $d$ is a known function of $W$ mapping to $\\{0, 1\\}$.
+* **Average treatment effect (ATE)**: $E_0(Y_1) - E_0(Y_0)$ is the typical definition, or $E_0(Y_{d_1(W)})-E_0(Y_{d_0(W)})$ with two dynamic regimes.
 
 Other types of contrasts (*e.g.* ratios) or arbitrary transformations of counterfactual means are not estimated directly, but can be computed given estimated of the counterfacutal means.
 
+## Assumptions
+
 These quantities are functions of the distribution of counterfactual random variables. Under some causal assumptions, these parameters can be written as functions of the distribution of the observed data. (In which case, the causal parameters are said to be identifiable).
 
-# Statistical target parameters.
+For estimating a parameter that depends counterfactual means under regimes in a set $\mathcal D$,
+we make the **randomization assumption**
+$$
+Y_{d(W)} \perp A \mid W \text{ for all } d \in \mathcal {D}
+$$
+and the **positivity assumption**
+$$
+g_0(d(W) \mid W) > 0 \text{ a.e. for all } d \in \mathcal{D}.
+$$
+For a single counterfactual mean, $\mathcal{D}$ contains only one regime. The assumptions are written in terms of dynamic regimes, but a static regime is a special case of a dynamic regime $d(W)$ is constant w.r.t. $W$.
+
+The randomization assumption is sometimes called the "no unmeasured confounders" assumption. It means that any variables that can influence both the treatment and outcome are measured in $W$.  This assumption is not testable, and requires domain area knowledge to determine if it is reasonable or not.
+
+The positivity assumption is also called the experimental treatment assignment assumption. It can be interpreted as requiring that a particular treatment regime of interest has to have some chance of occuring for (almost) every value of $W$.
+
+# Statistical target parameters
 
 There are two main classes of parameters estimated by TargetedLearing.jl., which are specified `param` keyword argument of estimation functions.
 

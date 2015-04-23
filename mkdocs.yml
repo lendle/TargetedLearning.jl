@@ -2,7 +2,7 @@ site_name: TargetedLearning.jl
 theme: cosmo
 repo_url: https://github.com/lendle/TargetedLearning.jl/
 site_url: http://targetedlearningjl.readthedocs.org
-markdown_extensions: ['fenced_code']
+markdown_extensions: [fenced_code, footnotes]
 
 pages:
 - ['index.md', 'Home']

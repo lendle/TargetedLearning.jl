@@ -37,7 +37,7 @@ subset(d::DynamicRegimen, idx) = DynamicRegimen(d.a[idx])
 """
 A `Qchunk` holds (a subset of) the data set and corresponding indexes along with a `Qmodel` which can compute predictions for
 each observation, a `Parameter` (whos definition may depend on eahc observation) and the value of the emperical risk
-for the current `Qmodel`. 
+for the current `Qmodel`.
 """
 type Qchunk{T<:FloatingPoint}
     q::Qmodel{T}
@@ -120,7 +120,7 @@ Adds a fluctuation to a `QCV` given an estimated g
 * `qcv` - A `QCV`
 * `g` - A `LR`, estimate of g
 
-** Details ** 
+** Details **
 
 A new fluctuation for the training chunk is calculated along with a corresponding flucutation for the validation
 chunk, based on the estiamted `g`, then the `QCV` is updated.
@@ -172,8 +172,8 @@ CTMLE{T<:FloatingPoint}(psi::T, ic::Vector{T}, n::Int, estimand::String,
 function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                  W::Matrix{T}, A::Vector{T}, Y::Vector{T};
                                  param::Parameter{T}=ATE(),
-                                 cvplan = StratifiedRandomSub(zip(A, Y), iround(0.9 * length(Y)), 1),
                                  searchstrategy::SearchStrategy = ForwardStepwise(),
+                                 cvplan = StratifiedKfold(length(unique(Y))<3? zip(A, Y) : A, 10),
                                  patience::Int=typemax(Int)
                                  )
     n,p = size(W)
@@ -211,13 +211,13 @@ end
 
 
 """
-Determines the number of times covariates should be added using cross validation. 
+Determines the number of times covariates should be added using cross validation.
 
 ** Arguments **
 
 * `qcvs` - A vector of one or more `QCV`s
 
-** Keyword Arguments ** 
+** Keyword Arguments **
 
 * `patience` - An integer. How many more steps should we try after finding a local minimum?
 Defaults to a big number.
@@ -276,7 +276,7 @@ Adds next covariate(s) to a Qchunk based on a search strategy
 ** Details **
 
 If `used_covars` is emtpy (because this is the first time `add_covars!` has been called on this chunk,
-a fluctuation based on an intercept only model is added to Q. 
+a fluctuation based on an intercept only model is added to Q.
 Otherwise, next covariates are added where the order is determined by `searchstrategy`
 
 Returns most recent `gfit` object and a boolean which is `true` if the most recent covariates were added to a new fluctuation
@@ -310,7 +310,7 @@ Adds next covariate(s) to a QCV.
 * `qcv` - a `QCV`
 
 ** Details **
-If `qcv` has no unused covariates, none are added.  New covariates are first added to the training chunk, 
+If `qcv` has no unused covariates, none are added.  New covariates are first added to the training chunk,
 `qcv.train`. Then the validation chunk fluctuated using the newest `gfit`.
 Returns updated `qcv`.
 

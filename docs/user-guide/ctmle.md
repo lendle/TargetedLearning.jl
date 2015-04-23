@@ -149,3 +149,75 @@ Continuing the [example](julia.md#example) from the intro to Julia, we now demon
 
 # CTMLE
 
+A TMLE takes user provided estimates of $\bar{Q}\_0$ and $g_0$ and is doubly robust, meaning that the estimate of $\psi_0$ is consistent if either estimate of $\bar{Q}\_0$ and $g_0$ is consistent. Estimates of $g_0$ typically try to predict treatment given $W$ as well as possible. In finite samples and particularly when $W$ is high dimensional, this is not always helpful when the goal is to estimate $\psi_0$, and can lead to higher variance without satisfactorally reducing bias. Instead of taking a user specified estimate of $g_0$, CTMLE tries to build an estimate of $g_0$ adaptively in a way that is aimed at reducing bias in the final estimate of $\psi_0$. For technical details, see Collaborative Double Robust Targeted Maximum Likelihood Estimation by Mark van der Laan and Susan Gruber[^ctmle_paper].
+
+[^ctmle_paper]: [van der Laan, M. & Gruber, S. (2010). Collaborative Double Robust Targeted Maximum Likelihood Estimation. _The International Journal of Biostatistics_, 6(1), pp. -. Retrieved 14 Apr. 2015, from doi:10.2202/1557-4679.1181](http://www.degruyter.com/view/j/ijb.2010.6.1/ijb.2010.6.1.1181/ijb.2010.6.1.1181.xml)
+
+Recall the  [randomization assumption](estimation.md#assumptions), which requires that all potential confounders, (baseline covariates which can affect both treatment and outcome,) are included in $W$. $W$ can also include covariates that are related to either the outcome or treatment but not both, so are not confounders. CTMLE works by taking a sequence of estimators of $g_0$ which start out very simple, (an intercept only model, say,) and increase in complexity. An initial estimate of $\bar{Q}\_0$ is then fluctuated with each of $g_0$ in the sequence. This process is stopped after some number of steps determined by a cross-validated loss for $\bar{Q}\_0$.
+
+CTMLE takes advantage of the so called collaborative double robustness property[^ctmle_paper] of the estimation problem.
+In short, this means that a final CTMLE of $\psi_0$ can be consistent even if estimates of $\bar{Q}\_0$ and $g_0$ are both not consistent, but "collaborate" to  adjust for all confounding.
+The idea is that we want to choose a sequence of estimators for $g_0$ that adjust for the most important potential confounders in $W$ first. By important, we mean a covariate that helps reduce the bias in the final estimate of $\psi_0$ the most. How important a covariate is depends on how strongly it is related to both the treatment and the outcome, and also how well the initial estimate of $\bar{Q}\_0$ adjusts for that covariate.
+
+For example, suppose we have 3 covariates:
+
+* $W_1$: Strongly related to both treatment and outcome, and initial estimate $\bar{Q}\_n$ is already adjusting for it well.
+* $W_2$: Strongly related to both treatment and outcome, but initial estimate $\bar{Q}\_n$ is not adjusting for it well. For example suppose $\bar{Q}\_0$ depends on $W_2$ in some non-linear way but $\bar{Q}\_n$ only adjusts for it linearly.
+* $W_3$: Strongly related to treatment but is unrelated to outcome.
+
+Ideally, we'd want to adjust for $W_2$ first, because it is a strong confounder that we're not already handling well, so it could potentially remove the most bias from an estimate of $\psi_0$.
+Because $W_1$ is a confounder but $\bar{Q}\_n$ is already doing a good job of adjusting for it, and $W_3$ is not a confounder, we may already have enough to estimate $\psi_0$ without bias thanks to collaborative double robustness.
+Because $W_3$ is not a confounder, (it is an instrumental variable[^iv] in this case,) the next best choice is $W_1$, so the next estimate of $g_0$ will adjust for $W_1$ and $W_2$. This process is continued until the number of steps chosen by cross-validation is reached.
+
+[^iv]: An instrumental variable is a variable that affects only treatment but not outcome. Adjusting for an instrumental variable does not reduce bias in an estimate of $\psi_0$, and may induce a violation of the positivity assumption, which can lead to increased variance in the final estimate.
+
+## Using `ctmle` in the TargetedLearning.jl package
+
+The `ctmle` function is called with required arguments
+
+* `logitQnA1` Vector of initial estimates $\mbox{logit}(\bar{Q}\_n(1, W\_i))$
+* `logitQnA0` Vector of initial estimates $\mbox{logit}(\bar{Q}\_n(0, W\_i))$
+* `W` Matrix of potential confounders to be used in estimation of $g\_0$.
+* `A` Vector of treatments, 0s or 1s
+* `Y` Vector of outcomes in $\[0, 1\]$
+
+Anything can be used for initial estimates of $\bar{Q}\_0$ from a simple GLM to something more data adaptive.
+The initial estimate of $\bar{Q}\_0$ can also depend on other covariates that are not included in the `W` argument if that makes sense in your problem.
+Note that `ctmle` does not currently cross-validate the intitial estimate $\bar{Q}\_n$, so it is important that the initial esitmate of $\bar{Q}\_0$ is not overfit.
+
+The target parameter is specified by the `param` keyword argument as described in [the estimation problem](estimation.md#statistical-target-parameters). Other options are described below.
+
+## Search strategies
+
+Theorey requires that the sequence of estimators of $g_0$ increase in complexity up to some estimator which is consistent for $g_0$[^ctmle_paper], but there are many ways to construct this sequence. TargetedLearning.jl uses logistic regression and adds covariates sequentially to each estimate of $\g_0$. The package provides a variety of strategies for searching for the next covariate(s) to include in an estimate for $g_0$ which make different tradeoffs in statistical and computational performance.
+
+**Forward stepwise** strategies choose the next covariate to add to an estimator of $g_0$ by selecting the best (in terms of some criterion) covariate among those not already used. For $p$ covariates, this requires the criterion to be computed $O(p^2)$ times, which can be costly when $p$ is bigger than a dozen or so.
+
+In the `ctmle` function, the forward stepwise strategy is specified by setting the keyword argument `searchstrategy=ForwardStepwise()`.  The criterion used for choosing the next covariate is the (quasi-)binomial loss function for $\bar{Q}\_0$ after fluctuating the previous estimate of $\bar{Q}\_0$ with the a estimate of $g\_0$ including the new and previous covariates. This is essentially the same as the method described in van der Laan, M. & Gruber, S. (2010)[^ctmle_paper].
+
+**Pre-ordered** strategies compute some criterion once up front, and order covariates by that criterion. This is less agressive than a forward step wise procedure, but it only requires the criterion to be computed $p$ times for $p$ covariates.
+
+A pre-ordered strategy is specified by setting `searchstrategy=PreOrdered(ordering)`, where `ordering` defines the criterion to use for ordering covariates.
+Choices of selection criterion are:
+
+* `LogisticOrdering()` - Log(Quasi-)binomial loss for an iniital estimate of $\bar{Q}\_0$ fluctuated with an estimate of $g_0$ including a single covariate and intercept. Smaller values are ordered first.
+* `PartialCorrOrdering()` - Absolute value of partial correlation between the resudual $Y-\bar{Q}\_n(A, W)$ and each covariate in `W`, conditional on $A$. Larger values are ordered first.
+* `HDPSOrdering()` - Like the criterion for ordering covariates in the HDPS algorithm, not yet implemented.
+
+
+
+## Cross validation
+
+The number of steps to take while adding covariates to estimates of $g\_0$ is determined by cross-validation. By default, `ctmle` uses 10-fold stratified cross-validation where folds are stratified by `A` if `Y` has more than 2 unique values, or combinations of `A` and `Y` otherwise.
+
+General cross-validation schemes can be specified by passing the `cvplan` keyword argument an iterator of vectors of training set indexes. The [MLBase](https://github.com/JuliaStats/MLBase.jl) package has some [useful functions](https://mlbasejl.readthedocs.org/en/latest/crossval.html#cross-validation-schemes) to generate CV schemes.
+In particular `StratifiedKfold` and `StratifiedRandomSub` are exported in TargetedLearning.jl.
+`StratifiedRandomSub` is useful when you have a huge data set and want to save some time over doing K fold CV.
+
+Finally, the `patience` keyword can be used to specify how long CV should continue after finding a local minimum. For example suppose `patience` is `5` and after 3 steps a minimum value of the CV loss is found. If it does not improve in another `5` steps, CV will will stop, choosing 3 steps. This can save quite a bit of time when there are many covariates.
+
+## Example using TargetedLearning.jl
+
+Continuing the [example](julia.md#example) with the Lalonde data set, we now demonstrate how to estimate the ATE using CTMLE.
+
+[The example can be found here.](http://nbviewer.ipython.org/url/lendle.github.io/TargetedLearning.jl/user-guide/lalonde_example.ipynb#CTMLE-for-the-average-treatment-effect)
