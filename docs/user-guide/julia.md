@@ -1,12 +1,3 @@
-# Why Julia
-
-This package is implemented in Julia for mainly two reason:
-
-* It's *easy* to write pretty fast code without having to drop into another language like Fortran or C
-* It's *fun*
-
-For a new user, it's not too hard to pick up if you're coming from a language like python or Matlab or R, which is most likely the case for people reading this.
-
 # Getting started
 
 There are some [links](../index.md#installing) on the front page about installing Julia if you haven't done that yet.
