@@ -9,11 +9,11 @@
         <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/user-guide/ctmle/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-        <title>(C)TMLE - TargetedLearning.jl</title>
+	<title>(C)TMLE - TargetedLearning.jl</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="../../css/prettify-1.0.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -21,6 +21,8 @@
             <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
             <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
         <![endif]-->
+
+        
     </head>
 
     <body>
@@ -48,28 +50,34 @@
             <ul class="nav navbar-nav">
             
             
+                <li >
+                    <a href="../..">Home</a>
+                </li>
+            
+            
+            
                 <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../julia">Julia</a>
+                            <a href="../julia/">Julia</a>
                         </li>
                     
                         <li >
-                            <a href="../estimation">The estimation problem</a>
+                            <a href="../estimation/">The estimation problem</a>
                         </li>
                     
                         <li class="active">
-                            <a href=".">(C)TMLE</a>
+                            <a href="./">(C)TMLE</a>
                         </li>
                     
                         <li >
-                            <a href="../influencecurves">Automatic influence curves</a>
+                            <a href="../influencecurves/">Automatic influence curves</a>
                         </li>
                     
                         <li >
-                            <a href="../lalonde_example">Lalonde Example</a>
+                            <a href="../lalonde_example/">Lalonde Example</a>
                         </li>
                     
                     </ul>
@@ -82,19 +90,19 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../api/common">Common</a>
+                            <a href="../../api/common/">Common</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/lreg">LReg</a>
+                            <a href="../../api/lreg/">LReg</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/parameters">Parameters</a>
+                            <a href="../../api/parameters/">Parameters</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/qmodels">Qmodels</a>
+                            <a href="../../api/qmodels/">Qmodels</a>
                         </li>
                     
                     </ul>
@@ -107,7 +115,7 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../about/license">License</a>
+                            <a href="../../about/license/">License</a>
                         </li>
                     
                     </ul>
@@ -120,12 +128,12 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li >
-                    <a rel="next" href="../estimation">
+                    <a rel="next" href="../estimation/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../influencecurves">
+                    <a rel="prev" href="../influencecurves/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -161,6 +169,14 @@
         
     
         <li class="main "><a href="#ctmle">CTMLE</a></li>
+        
+            <li><a href="#using-ctmle-in-the-targetedlearningjl-package">Using ctmle in the TargetedLearning.jl package</a></li>
+        
+            <li><a href="#search-strategies">Search strategies</a></li>
+        
+            <li><a href="#cross-validation">Cross validation</a></li>
+        
+            <li><a href="#example-using-targetedlearningjl_1">Example using TargetedLearning.jl</a></li>
         
     
     </ul>
@@ -200,7 +216,7 @@
 <h1 id="tmle">TMLE</h1>
 <p>TMLE is a general framework for constructing regular, asymptotically linear plug-in estimators. Details about how to use the TMLE framework to construct an estimator can be found in the <a href="https://www.springer.com/statistics/statistical+theory+and+methods/book/978-1-4419-9781-4">Targeted Learning</a> book by van der Laan and Rose, or <a href="http://scholar.google.com/scholar?q=targeted+estimation+tmle">articles</a> on TMLE.</p>
 <p>Here we'll walk through an example of how to actually implement a TMLE for the average treatment effect (ATE) and skip over the details of the derivation.</p>
-<p>Using <a href="../estimation#counterfactuals-and-causal-parameters">counterfactuals</a>, we define the ATE as $E_0(Y_1 - Y_0)$. Under causal assumptions, we can write this causal parameter as a parameter of the distribution of the observed data:
+<p>Using <a href="../estimation/#counterfactuals-and-causal-parameters">counterfactuals</a>, we define the ATE as $E_0(Y_1 - Y_0)$. Under causal assumptions, we can write this causal parameter as a parameter of the distribution of the observed data:
 \begin{align}
 \psi_0 = \Psi(P_0) =&amp; E_0(E_0(Y\mid A = 1, W) - E_0(Y\mid A=0, W)) \\
 =&amp; E_{Q_{W0}}(\bar{Q}_0(1, W) - \bar{Q}_0(0, W)).
@@ -299,17 +315,78 @@ end
 </code></pre>
 
 <h2 id="example-using-targetedlearningjl">Example using TargetedLearning.jl</h2>
-<p>Continuing the <a href="../julia#example">example</a> from the intro to Julia, we now demonstrate how to use TMLE to estimate the ATE from the Lalonde data set.</p>
+<p>Continuing the <a href="../julia/#example">example</a> from the intro to Julia, we now demonstrate how to use TMLE to estimate the ATE from the Lalonde data set.</p>
 <p><a href="http://nbviewer.ipython.org/url/lendle.github.io/TargetedLearning.jl/user-guide/lalonde_example.ipynb#TMLE-for-the-average-treatment-effect">The example can be found here.</a></p>
 <h1 id="ctmle">CTMLE</h1>
-</div>
+<p>A TMLE takes user provided estimates of $\bar{Q}_0$ and $g_0$ and is doubly robust, meaning that the estimate of $\psi_0$ is consistent if either estimate of $\bar{Q}_0$ and $g_0$ is consistent. Estimates of $g_0$ typically try to predict treatment given $W$ as well as possible. In finite samples and particularly when $W$ is high dimensional, this is not always helpful when the goal is to estimate $\psi_0$, and can lead to higher variance without satisfactorally reducing bias. Instead of taking a user specified estimate of $g_0$, CTMLE tries to build an estimate of $g_0$ adaptively in a way that is aimed at reducing bias in the final estimate of $\psi_0$. For technical details, see Collaborative Double Robust Targeted Maximum Likelihood Estimation by Mark van der Laan and Susan Gruber<sup id="fnref:ctmle_paper"><a class="footnote-ref" href="#fn:ctmle_paper" rel="footnote">1</a></sup>.</p>
+<p>Recall the  <a href="../estimation/#assumptions">randomization assumption</a>, which requires that all potential confounders, (baseline covariates which can affect both treatment and outcome,) are included in $W$. $W$ can also include covariates that are related to either the outcome or treatment but not both, so are not confounders. CTMLE works by taking a sequence of estimators of $g_0$ which start out very simple, (an intercept only model, say,) and increase in complexity. An initial estimate of $\bar{Q}_0$ is then fluctuated with each of $g_0$ in the sequence. This process is stopped after some number of steps determined by a cross-validated loss for $\bar{Q}_0$.</p>
+<p>CTMLE takes advantage of the so called collaborative double robustness property<sup id="fnref:ctmle_paper"><a class="footnote-ref" href="#fn:ctmle_paper" rel="footnote">1</a></sup> of the estimation problem.
+In short, this means that a final CTMLE of $\psi_0$ can be consistent even if estimates of $\bar{Q}_0$ and $g_0$ are both not consistent, but "collaborate" to  adjust for all confounding.
+The idea is that we want to choose a sequence of estimators for $g_0$ that adjust for the most important potential confounders in $W$ first. By important, we mean a covariate that helps reduce the bias in the final estimate of $\psi_0$ the most. How important a covariate is depends on how strongly it is related to both the treatment and the outcome, and also how well the initial estimate of $\bar{Q}_0$ adjusts for that covariate.</p>
+<p>For example, suppose we have 3 covariates:</p>
+<ul>
+<li>$W_1$: Strongly related to both treatment and outcome, and initial estimate $\bar{Q}_n$ is already adjusting for it well.</li>
+<li>$W_2$: Strongly related to both treatment and outcome, but initial estimate $\bar{Q}_n$ is not adjusting for it well. For example suppose $\bar{Q}_0$ depends on $W_2$ in some non-linear way but $\bar{Q}_n$ only adjusts for it linearly.</li>
+<li>$W_3$: Strongly related to treatment but is unrelated to outcome.</li>
+</ul>
+<p>Ideally, we'd want to adjust for $W_2$ first, because it is a strong confounder that we're not already handling well, so it could potentially remove the most bias from an estimate of $\psi_0$.
+Because $W_1$ is a confounder but $\bar{Q}_n$ is already doing a good job of adjusting for it, and $W_3$ is not a confounder, we may already have enough to estimate $\psi_0$ without bias thanks to collaborative double robustness.
+Because $W_3$ is not a confounder, (it is an instrumental variable<sup id="fnref:iv"><a class="footnote-ref" href="#fn:iv" rel="footnote">2</a></sup> in this case,) the next best choice is $W_1$, so the next estimate of $g_0$ will adjust for $W_1$ and $W_2$. This process is continued until the number of steps chosen by cross-validation is reached.</p>
+<p>In the implementation of CTMLE in TargetedLearning.jl, there are a number of hueristic <a href="#search-strategies">options</a> for how estimates of $g_0$ are chosen and ordered.</p>
+<h2 id="using-ctmle-in-the-targetedlearningjl-package">Using <code>ctmle</code> in the TargetedLearning.jl package</h2>
+<p>The <code>ctmle</code> function is called with required arguments</p>
+<ul>
+<li><code>logitQnA1</code> Vector of initial estimates $\mbox{logit}(\bar{Q}_n(1, W_i))$</li>
+<li><code>logitQnA0</code> Vector of initial estimates $\mbox{logit}(\bar{Q}_n(0, W_i))$</li>
+<li><code>W</code> Matrix of potential confounders to be used in estimation of $g_0$.</li>
+<li><code>A</code> Vector of treatments, 0s or 1s</li>
+<li><code>Y</code> Vector of outcomes in $[0, 1]$</li>
+</ul>
+<p>Anything can be used for initial estimates of $\bar{Q}_0$ from a simple GLM to something more data adaptive.
+The initial estimate of $\bar{Q}_0$ can also depend on other covariates that are not included in the <code>W</code> argument if that makes sense in your problem.
+Note that <code>ctmle</code> does not currently cross-validate the intitial estimate $\bar{Q}_n$, so it is important that the initial esitmate of $\bar{Q}_0$ is not overfit.</p>
+<p>The target parameter is specified by the <code>param</code> keyword argument as described in <a href="../estimation/#statistical-target-parameters">the estimation problem</a>. Other options are described below.</p>
+<h2 id="search-strategies">Search strategies</h2>
+<p>Theorey requires that the sequence of estimators of $g_0$ increase in complexity up to some estimator which is consistent for $g_0$<sup id="fnref:ctmle_paper"><a class="footnote-ref" href="#fn:ctmle_paper" rel="footnote">1</a></sup>, but there are many ways to construct this sequence. TargetedLearning.jl uses logistic regression and adds covariates sequentially to each estimate of $g_0$. The package provides a variety of strategies for searching for the next covariate(s) to include in an estimate for $g_0$ which make different tradeoffs in statistical and computational performance.</p>
+<p><strong>Forward stepwise</strong> strategies choose the next covariate to add to an estimator of $g_0$ by selecting the best (in terms of some criterion) covariate among those not already used. For $p$ covariates, this requires the criterion to be computed $O(p^2)$ times, which can be costly when $p$ is bigger than a dozen or so.</p>
+<p>In the <code>ctmle</code> function, the forward stepwise strategy is specified by setting the keyword argument <code>searchstrategy=ForwardStepwise()</code>.  The criterion used for choosing the next covariate is the (quasi-)binomial loss function for $\bar{Q}_0$ after fluctuating the previous estimate of $\bar{Q}_0$ with the a estimate of $g_0$ including the new and previous covariates. This is essentially the same as the method described in van der Laan, M. &amp; Gruber, S. (2010)<sup id="fnref:ctmle_paper"><a class="footnote-ref" href="#fn:ctmle_paper" rel="footnote">1</a></sup>.</p>
+<p><strong>Pre-ordered</strong> strategies compute some criterion once up front, and order covariates by that criterion. This is less agressive than a forward step wise procedure, but it only requires the criterion to be computed $p$ times for $p$ covariates.</p>
+<p>A pre-ordered strategy is specified by setting <code>searchstrategy=PreOrdered(ordering)</code>, where <code>ordering</code> defines the criterion to use for ordering covariates.
+Choices of selection criterion are:</p>
+<ul>
+<li><code>LogisticOrdering()</code> - Log(Quasi-)binomial loss for an iniital estimate of $\bar{Q}_0$ fluctuated with an estimate of $g_0$ including a single covariate and intercept. Smaller values are ordered first.</li>
+<li><code>PartialCorrOrdering()</code> - Absolute value of partial correlation between the resudual $Y-\bar{Q}_n(A, W)$ and each covariate in <code>W</code>, conditional on $A$. Larger values are ordered first.</li>
+<li><code>HDPSOrdering()</code> - Like the criterion for ordering covariates in the HDPS algorithm, not yet implemented.</li>
+</ul>
+<p>The <code>PreOrdered</code> search strategy has a second optional argument, <code>k_at_once</code>, which defaults to 1. At each step, the next <code>k_at_once</code> (or all available, if fewer than <code>k_at_once</code>) ordered covariates are added to the next estimate of $g_0$. Large <code>k_at_once</code> can speed up the procedure when there are many covariates, but it may be more prone to overfitting.</p>
+<h2 id="cross-validation">Cross validation</h2>
+<p>The number of steps to take while adding covariates to estimates of $g_0$ is determined by cross-validation. By default, <code>ctmle</code> uses 10-fold stratified cross-validation where folds are stratified by <code>A</code> if <code>Y</code> has more than 2 unique values, or combinations of <code>A</code> and <code>Y</code> otherwise.</p>
+<p>General cross-validation schemes can be specified by passing the <code>cvplan</code> keyword argument an iterator of vectors of training set indexes. The <a href="https://github.com/JuliaStats/MLBase.jl">MLBase</a> package has some <a href="https://mlbasejl.readthedocs.org/en/latest/crossval.html#cross-validation-schemes">useful functions</a> to generate CV schemes.
+In particular <code>StratifiedKfold</code> and <code>StratifiedRandomSub</code> are exported in TargetedLearning.jl.
+<code>StratifiedRandomSub</code> is useful when you have a huge data set and want to save some time over doing K fold CV.</p>
+<p>Even more generally, you can pass a vector of vectors of training indexes to <code>ctmle</code>, constructed however you like. If you want to run <code>ctmle</code> more than once with the same CV training sets, you need to do this, because the <code>StratifiedKfold</code> and <code>StratifiedRandomSub</code> iterators will produce new random indexes each time they are used. For example, <code>cvplan={training_idx_1, training_idx_2, training_idx_3}</code> where <code>training_idx_#</code> is a vector of integer indexes for a given training set.  You can also <code>collect</code> the <code>StratifiedKfold</code> or <code>StratifiedRandomSub</code> iterators to get a vector of vectors of indexes, and call <code>ctmle</code> with that multiple times. (<code>mycvplan=collect(StratifiedKFold(A, 10))</code>)</p>
+<p>Finally, the <code>patience</code> keyword can be used to specify how long CV should continue after finding a local minimum. For example suppose <code>patience</code> is <code>5</code> and after 3 steps a minimum value of the CV loss is found. If it does not improve in another <code>5</code> steps, CV will will stop, choosing 3 steps. This can save quite a bit of time when there are many covariates.</p>
+<h2 id="example-using-targetedlearningjl_1">Example using TargetedLearning.jl</h2>
+<p>Continuing the <a href="../julia/#example">example</a> with the Lalonde data set, we now demonstrate how to estimate the ATE using CTMLE.
+<a href="http://nbviewer.ipython.org/url/lendle.github.io/TargetedLearning.jl/user-guide/lalonde_example.ipynb#CTMLE-for-the-average-treatment-effect">The example can be found here.</a></p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:ctmle_paper">
+<p><a href="http://www.degruyter.com/view/j/ijb.2010.6.1/ijb.2010.6.1.1181/ijb.2010.6.1.1181.xml">van der Laan, M. &amp; Gruber, S. (2010). Collaborative Double Robust Targeted Maximum Likelihood Estimation. <em>The International Journal of Biostatistics</em>, 6(1), pp. -. Retrieved 14 Apr. 2015, from doi:10.2202/1557-4679.1181</a>&#160;<a class="footnote-backref" href="#fnref:ctmle_paper" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:iv">
+<p>An instrumental variable is a variable that affects only treatment but not outcome. Adjusting for an instrumental variable does not reduce bias in an estimate of $\psi_0$, and may induce a violation of the positivity assumption, which can lead to increased variance in the final estimate.&#160;<a class="footnote-backref" href="#fnref:iv" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div></div>
         </div>
 
         
 
-        <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="../../js/jquery-1.10.2.min.js"></script>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
-        <script src="../../js/prettify-1.0.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script>
         <script src="../../js/base.js"></script>
     </body>
 </html>

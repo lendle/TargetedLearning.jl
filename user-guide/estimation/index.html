@@ -9,11 +9,11 @@
         <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/user-guide/estimation/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-        <title>The estimation problem - TargetedLearning.jl</title>
+	<title>The estimation problem - TargetedLearning.jl</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="../../css/prettify-1.0.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -21,6 +21,8 @@
             <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
             <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
         <![endif]-->
+
+        
     </head>
 
     <body>
@@ -48,28 +50,34 @@
             <ul class="nav navbar-nav">
             
             
+                <li >
+                    <a href="../..">Home</a>
+                </li>
+            
+            
+            
                 <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../julia">Julia</a>
+                            <a href="../julia/">Julia</a>
                         </li>
                     
                         <li class="active">
-                            <a href=".">The estimation problem</a>
+                            <a href="./">The estimation problem</a>
                         </li>
                     
                         <li >
-                            <a href="../ctmle">(C)TMLE</a>
+                            <a href="../ctmle/">(C)TMLE</a>
                         </li>
                     
                         <li >
-                            <a href="../influencecurves">Automatic influence curves</a>
+                            <a href="../influencecurves/">Automatic influence curves</a>
                         </li>
                     
                         <li >
-                            <a href="../lalonde_example">Lalonde Example</a>
+                            <a href="../lalonde_example/">Lalonde Example</a>
                         </li>
                     
                     </ul>
@@ -82,19 +90,19 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../api/common">Common</a>
+                            <a href="../../api/common/">Common</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/lreg">LReg</a>
+                            <a href="../../api/lreg/">LReg</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/parameters">Parameters</a>
+                            <a href="../../api/parameters/">Parameters</a>
                         </li>
                     
                         <li >
-                            <a href="../../api/qmodels">Qmodels</a>
+                            <a href="../../api/qmodels/">Qmodels</a>
                         </li>
                     
                     </ul>
@@ -107,7 +115,7 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../about/license">License</a>
+                            <a href="../../about/license/">License</a>
                         </li>
                     
                     </ul>
@@ -120,12 +128,12 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li >
-                    <a rel="next" href="../julia">
+                    <a rel="next" href="../julia/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../ctmle">
+                    <a rel="prev" href="../ctmle/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -153,8 +161,10 @@
     
         <li class="main "><a href="#counterfactuals-and-causal-parameters">Counterfactuals and causal parameters</a></li>
         
+            <li><a href="#assumptions">Assumptions</a></li>
+        
     
-        <li class="main "><a href="#statistical-target-parameters">Statistical target parameters.</a></li>
+        <li class="main "><a href="#statistical-target-parameters">Statistical target parameters</a></li>
         
     
         <li class="main "><a href="#missing-data">Missing data</a></li>
@@ -187,13 +197,26 @@ where $O_i = (W_i, A_i, Y_i)$ and that a single observation $O$ has distribution
 <p>To motivate the statistical estimation problem, let's define counterfactual outcomes. Suppose there exists some value $Y_a$ that is the outcome that would have been observed for a particular observation, had $A$ been $a \in \{0, 1\}$. Because $A$ might not have been $a$, we don't necessarily get to observe $Y_a$, and we'll never get to observe both $Y_1$ and $Y_0$ for the same observation, so we call these random variables counterfactual or potential outcomes.</p>
 <p>Using counterfactuals, we can define some interesting causal parameters. Examples that can be estimated by this package are listed here. Here, $E_0$ denotes expectation w.r.t. the true distribution of counterfactuals.</p>
 <ul>
-<li><strong>Counterfactual mean under static regime</strong>: $E_0(Y_a)$ for $a \in \{0, 1\}$</li>
-<li><strong>Counterfactual mean under dynamic regime</strong>: $E_0(Y_{d(W)})$ where $d$ is a known function of $W$ mapping to $\{0, 1\}$</li>
-<li><strong>Average treatment effect (ATE)</strong>: $E_0(Y_1) - E_0(Y_0)$ is the typical definition, or $E_0(Y_{d_1(W)})-E_0(Y_{d_0(W)})$ with two dynamic regimes</li>
+<li><strong>Counterfactual mean under static regime</strong>: $E_0(Y_a)$ for $a \in \{0, 1\}$.</li>
+<li><strong>Counterfactual mean under dynamic regime</strong>: $E_0(Y_{d(W)})$ where $d$ is a known function of $W$ mapping to $\{0, 1\}$.</li>
+<li><strong>Average treatment effect (ATE)</strong>: $E_0(Y_1) - E_0(Y_0)$ is the typical definition, or $E_0(Y_{d_1(W)})-E_0(Y_{d_0(W)})$ with two dynamic regimes.</li>
 </ul>
 <p>Other types of contrasts (<em>e.g.</em> ratios) or arbitrary transformations of counterfactual means are not estimated directly, but can be computed given estimated of the counterfacutal means.</p>
+<h2 id="assumptions">Assumptions</h2>
 <p>These quantities are functions of the distribution of counterfactual random variables. Under some causal assumptions, these parameters can be written as functions of the distribution of the observed data. (In which case, the causal parameters are said to be identifiable).</p>
-<h1 id="statistical-target-parameters">Statistical target parameters.</h1>
+<p>For estimating a parameter that depends counterfactual means under regimes in a set $\mathcal D$,
+we make the <strong>randomization assumption</strong>
+$$
+Y_{d(W)} \perp A \mid W \text{ for all } d \in \mathcal {D}
+$$
+and the <strong>positivity assumption</strong>
+$$
+g_0(d(W) \mid W) &gt; 0 \text{ a.e. for all } d \in \mathcal{D}.
+$$
+For a single counterfactual mean, $\mathcal{D}$ contains only one regime. The assumptions are written in terms of dynamic regimes, but a static regime is a special case of a dynamic regime $d(W)$ is constant w.r.t. $W$.</p>
+<p>The randomization assumption is sometimes called the "no unmeasured confounders" assumption. It means that any variables that can influence both the treatment and outcome are measured in $W$.  This assumption is not testable, and requires domain area knowledge to determine if it is reasonable or not.</p>
+<p>The positivity assumption is also called the experimental treatment assignment assumption. It can be interpreted as requiring that a particular treatment regime of interest has to have some chance of occuring for (almost) every value of $W$.</p>
+<h1 id="statistical-target-parameters">Statistical target parameters</h1>
 <p>There are two main classes of parameters estimated by TargetedLearing.jl., which are specified <code>param</code> keyword argument of estimation functions.</p>
 <p>The first class of parameters corresponds to a counterfacutal mean (under assumptions):
 $$
@@ -219,15 +242,14 @@ You can specify both static or dynamic regimes, or one of each.
 By default <code>ATE()=ATE(1.0, 0.0)</code> is the usual ATE.</p>
 <h1 id="missing-data">Missing data</h1>
 <p>Missing outcomes and counterfactuals are nearly identical. Suppose $Y$ is missing for some observations, and instead of $A$ being treatment, $A$ is an indicator of whever or not $Y$ is missing.</p>
-<p>TODO: more details and an example.</p>
-</div>
+<p>TODO: more details and an example.</p></div>
         </div>
 
         
 
-        <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="../../js/jquery-1.10.2.min.js"></script>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
-        <script src="../../js/prettify-1.0.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script>
         <script src="../../js/base.js"></script>
     </body>
 </html>

@@ -9,11 +9,11 @@
         <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/api/lreg/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-        <title>LReg - TargetedLearning.jl</title>
+	<title>LReg - TargetedLearning.jl</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="../../css/prettify-1.0.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -21,6 +21,8 @@
             <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
             <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
         <![endif]-->
+
+        
     </head>
 
     <body>
@@ -48,28 +50,34 @@
             <ul class="nav navbar-nav">
             
             
+                <li >
+                    <a href="../..">Home</a>
+                </li>
+            
+            
+            
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../user-guide/julia">Julia</a>
+                            <a href="../../user-guide/julia/">Julia</a>
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/estimation">The estimation problem</a>
+                            <a href="../../user-guide/estimation/">The estimation problem</a>
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/ctmle">(C)TMLE</a>
+                            <a href="../../user-guide/ctmle/">(C)TMLE</a>
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/influencecurves">Automatic influence curves</a>
+                            <a href="../../user-guide/influencecurves/">Automatic influence curves</a>
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/lalonde_example">Lalonde Example</a>
+                            <a href="../../user-guide/lalonde_example/">Lalonde Example</a>
                         </li>
                     
                     </ul>
@@ -82,19 +90,19 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../common">Common</a>
+                            <a href="../common/">Common</a>
                         </li>
                     
                         <li class="active">
-                            <a href=".">LReg</a>
+                            <a href="./">LReg</a>
                         </li>
                     
                         <li >
-                            <a href="../parameters">Parameters</a>
+                            <a href="../parameters/">Parameters</a>
                         </li>
                     
                         <li >
-                            <a href="../qmodels">Qmodels</a>
+                            <a href="../qmodels/">Qmodels</a>
                         </li>
                     
                     </ul>
@@ -107,7 +115,7 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../about/license">License</a>
+                            <a href="../../about/license/">License</a>
                         </li>
                     
                     </ul>
@@ -120,12 +128,12 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li >
-                    <a rel="next" href="../common">
+                    <a rel="next" href="../common/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../parameters">
+                    <a rel="prev" href="../parameters/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -165,7 +173,7 @@
 for logistic regression along with <a href="https://github.com/JuliaStats/GLM.jl">GLM.jl</a>
 for intercept only models.</p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:9</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:9</a></p>
 <hr />
 <h4 id="linpredlrlrtfloatingpoint-newx">linpred(lr::LR{T&lt;:FloatingPoint}, newx)</h4>
 <p>Returns the linear component of predicted values from a logistic regression fit with a new X matrix</p>
@@ -179,7 +187,7 @@ for intercept only models.</p>
 <li><code>offset</code> - offsets. The length should be the same as <code>size(newx, 1)</code> of <code>lr</code> was fit with an offset, or 0 otherwise.</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:43</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:43</a></p>
 <hr />
 <h4 id="lregx-y">lreg(x, y)</h4>
 <p>Fits a logistic regression model</p>
@@ -205,7 +213,7 @@ with a <code>newx</code> matrix with the same number of columns as <code>x</code
 are not used in the fit are set to zero. If you would like to call <code>predict</code> with a <code>newx</code> matrix that includes
 only the columns that you fit on, you should subset <code>x</code> yourself before calling <code>lreg</code>.</p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:98</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:98</a></p>
 <hr />
 <h4 id="predictlrlrtfloatingpoint-newx">predict(lr::LR{T&lt;:FloatingPoint}, newx)</h4>
 <p>Returns the predicted on the probability scale values from a logistic regression fit with a new X matrix</p>
@@ -219,21 +227,20 @@ only the columns that you fit on, you should subset <code>x</code> yourself befo
 <li><code>offset</code> - offsets. The length should be the same as <code>size(newx, 1)</code> of <code>lr</code> was fit with an offset, or 0 otherwise.</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:69</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:69</a></p>
 <hr />
 <h4 id="lrtfloatingpoint">LR{T&lt;:FloatingPoint}</h4>
 <p>The <code>LR</code> type contains the coefficent vector of a logistic regression fit, as well as indexes of
 included columns in the design matrix.</p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:25</a></p>
-</div>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:25</a></p></div>
         </div>
 
         
 
-        <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="../../js/jquery-1.10.2.min.js"></script>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
-        <script src="../../js/prettify-1.0.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script>
         <script src="../../js/base.js"></script>
     </body>
 </html>

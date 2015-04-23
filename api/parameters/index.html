@@ -9,11 +9,11 @@
         <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/api/parameters/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-        <title>Parameters - TargetedLearning.jl</title>
+	<title>Parameters - TargetedLearning.jl</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link href="../../css/prettify-1.0.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
         <link href="../../css/base.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -21,6 +21,8 @@
             <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
             <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
         <![endif]-->
+
+        
     </head>
 
     <body>
@@ -48,28 +50,34 @@
             <ul class="nav navbar-nav">
             
             
+                <li >
+                    <a href="../..">Home</a>
+                </li>
+            
+            
+            
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../user-guide/julia">Julia</a>
+                            <a href="../../user-guide/julia/">Julia</a>
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/estimation">The estimation problem</a>
+                            <a href="../../user-guide/estimation/">The estimation problem</a>
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/ctmle">(C)TMLE</a>
+                            <a href="../../user-guide/ctmle/">(C)TMLE</a>
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/influencecurves">Automatic influence curves</a>
+                            <a href="../../user-guide/influencecurves/">Automatic influence curves</a>
                         </li>
                     
                         <li >
-                            <a href="../../user-guide/lalonde_example">Lalonde Example</a>
+                            <a href="../../user-guide/lalonde_example/">Lalonde Example</a>
                         </li>
                     
                     </ul>
@@ -82,19 +90,19 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../common">Common</a>
+                            <a href="../common/">Common</a>
                         </li>
                     
                         <li >
-                            <a href="../lreg">LReg</a>
+                            <a href="../lreg/">LReg</a>
                         </li>
                     
                         <li class="active">
-                            <a href=".">Parameters</a>
+                            <a href="./">Parameters</a>
                         </li>
                     
                         <li >
-                            <a href="../qmodels">Qmodels</a>
+                            <a href="../qmodels/">Qmodels</a>
                         </li>
                     
                     </ul>
@@ -107,7 +115,7 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../../about/license">License</a>
+                            <a href="../../about/license/">License</a>
                         </li>
                     
                     </ul>
@@ -120,12 +128,12 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li >
-                    <a rel="next" href="../lreg">
+                    <a rel="next" href="../lreg/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../qmodels">
+                    <a rel="prev" href="../qmodels/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -173,13 +181,13 @@
 <li><code>Y</code> - observed outcome vector</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:119</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:119</a></p>
 <hr />
 <h4 id="regimen">regimen</h4>
 <p>Converts it's argument <code>a</code> to a <code>StaticRegime</code> if <code>a</code> is a scalar, a <code>DynamicRegime</code> if <code>a</code> is a vector,
 or returns <code>a</code> if <code>a</code> is already a <code>Regime</code>.</p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:60</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:60</a></p>
 <hr />
 <h4 id="atetfloatingpoint">ATE{T&lt;:FloatingPoint}</h4>
 <p>The <code>ATE</code> parameter is (E_0[E_0(Ymid A=d1, W) - E_0(Ymid A=d0, W)]).</p>
@@ -187,50 +195,49 @@ or returns <code>a</code> if <code>a</code> is already a <code>Regime</code>.</p
 the difference in mean counterfactual outcome under regimens <code>d1</code> and <code>d0</code>.  When <code>d1</code> is the static regimen setting treatment to 1
 and <code>d0</code> is the static regimen setting treatment to 0, this is called the averate treatment effect (ATE).</p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:90</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:90</a></p>
 <hr />
 <h4 id="dynamicregimentfloatingpoint">DynamicRegimen{T&lt;:FloatingPoint}</h4>
 <p>A <code>DynamicRegimen</code> sets treatment for each observation to a particular value. Constructed with
 <code>DynamicRegimen(a)</code> where <code>a</code> a vector of floating point is 0 or 1s.</p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:46</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:46</a></p>
 <hr />
 <h4 id="meantfloatingpoint">Mean{T&lt;:FloatingPoint}</h4>
 <p>The <code>Mean</code> parameter is (E_0E_0(Ymid A=d, W)).</p>
 <p>Under causal assumptions, this can be interpreted as
 the mean of the counterfactual outcome under regimen <code>d</code>.</p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:77</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:77</a></p>
 <hr />
 <h4 id="regimentfloatingpoint">Regimen{T&lt;:FloatingPoint}</h4>
 <p>Represents a particular single time point treatment regimen.</p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:26</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:26</a></p>
 <hr />
 <h4 id="staticregimentfloatingpoint">StaticRegimen{T&lt;:FloatingPoint}</h4>
 <p>A <code>StaticRegimen</code> sets treatment to a single value for all observations. Constructed with
 <code>StaticRegimen(a)</code> where <code>a</code> is a floating point 0 or 1.</p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:32</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:32</a></p>
 <h2 id="internal">Internal</h2>
 <hr />
 <h4 id="predicttfloatingpointqqmodeltfloatingpoint-ddynamicregimentfloatingpoint">predict{T&lt;:FloatingPoint}(q::Qmodel{T&lt;:FloatingPoint}, d::DynamicRegimen{T&lt;:FloatingPoint})</h4>
 <p>Returns predicted values from a <code>Qmodel</code> for a <code>DynamicRegimen</code></p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:69</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:69</a></p>
 <hr />
 <h4 id="predicttfloatingpointqqmodeltfloatingpoint-dstaticregimentfloatingpoint">predict{T&lt;:FloatingPoint}(q::Qmodel{T&lt;:FloatingPoint}, d::StaticRegimen{T&lt;:FloatingPoint})</h4>
 <p>Returns predicted values from a <code>Qmodel</code> for a <code>StaticRegimen</code></p>
 <p><strong>source:</strong>
-<a href="file:///home/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:67</a></p>
-</div>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:67</a></p></div>
         </div>
 
         
 
-        <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="../../js/jquery-1.10.2.min.js"></script>
         <script src="../../js/bootstrap-3.0.3.min.js"></script>
-        <script src="../../js/prettify-1.0.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script>
         <script src="../../js/base.js"></script>
     </body>
 </html>
