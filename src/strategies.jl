@@ -74,11 +74,13 @@ function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
     best_risk, best_j = findmin(next_covar_risk)
 
     if best_risk < prev_risk
+        @debug("Adding to old fluc, best_j:$best_j")
         new_fluc = false
         #adding one covariate to current fluc does better, then use that fluctuation
         push!(used_covars, best_j)
+        @debug("used_covars after adding best_j: $used_covars")
         delete!(unused_covars, best_j)
-        fluc = g_fluc_dict[used_covars][2]
+        gfit, fluc = g_fluc_dict[used_covars]
         fluctuate!(q, fluc)
     else
         new_fluc = true
@@ -124,7 +126,7 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
                                        used_covars::IntSet,
                                        unused_covars::IntSet,
                                        prev_risk::T)
-    
+
     if isempty(strategy.covar_order)
         append!(strategy.covar_order, order_covars(strategy.ordering, q, W, A, Y, unused_covars))
     end
@@ -142,7 +144,7 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
 
     g_fit = lreg(W, A, subset=collect(used_covars))
     gn1 = predict(g_fit, W)
-    
+
     fluc = computefluc(q, param, gn1, A, Y)
     fluctuate!(q, fluc)
     new_risk = risk(q, A, Y)
@@ -150,11 +152,11 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
     if new_risk < prev_risk
         return new_risk, g_fit, false
     end
-    
+
     defluctuate!(q)
     fluctuate!(q, fluc_now)
     fluctuate!(q, param, gn1, A, Y)
-    return risk(q, A, Y), g_fit, true    
+    return risk(q, A, Y), g_fit, true
 end
 
 function order_covars(ordering::LogisticOrdering, q, W, A, Y, available_covars)
