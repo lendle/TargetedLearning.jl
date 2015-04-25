@@ -1,8 +1,8 @@
 site_name: TargetedLearning.jl
-theme: cosmo
+theme_dir: custom_theme
 repo_url: https://github.com/lendle/TargetedLearning.jl/
 site_url: http://targetedlearningjl.readthedocs.org
-markdown_extensions: ['fenced_code']
+markdown_extensions: [fenced_code, footnotes]
 
 pages:
 - ['index.md', 'Home']
@@ -10,7 +10,11 @@ pages:
 - ['user-guide/estimation.md', 'User Guide', 'The estimation problem']
 - ['user-guide/ctmle.md', 'User Guide', '(C)TMLE']
 - ['user-guide/influencecurves.md', 'User Guide', 'Automatic influence curves']
-- ['api/ctmles.md', 'API', 'CTMLEs']
-- ['api/strategies.md', 'API', 'CTMLE.Strategies']
+- ['user-guide/lalonde_example.md', 'User Guide', 'Lalonde Example']
+- ['api/common.md', 'API', 'Common']
+# - ['api/ctmles.md', 'API', 'CTMLEs']
+# - ['api/strategies.md', 'API', 'CTMLE.Strategies']
 - ['api/lreg.md', 'API', 'LReg']
+- ['api/parameters.md', 'API', 'Parameters']
+- ['api/qmodels.md', 'API', 'Qmodels']
 - ['about/license.md', 'About', 'License']

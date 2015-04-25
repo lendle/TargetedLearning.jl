@@ -3,11 +3,14 @@ module LReg
 using Docile
 @document
 
-"""This module wraps some functionality from [GLM.jl](https://github.com/JuliaStats/GLM.jl)
-for logistic regression"""
+"""This module wraps some functionality from [GLMNet.jl](https://github.com/simonster/GLMNet.jl)
+for logistic regression along with [GLM.jl](https://github.com/JuliaStats/GLM.jl)
+for intercept only models."""
 LReg
 
-using GLM
+const GLMNET = !(isdefined(Main, :LREG_GLM) && Main.LREG_GLM)
+
+using GLMNet, Distributions, GLM
 
 using NumericExtensions, NumericFuns, StatsBase
 
@@ -78,31 +81,36 @@ Fits a logistic regression model
 * `wts` - weight vector. Defaults to all 1s.
 * `offset` - offset vector. Defaults to a vector of length 0 for no offset.
 * `subset` - column indexes for `x` that should be included in the fit. Defaults to all columns.
+* `convTol` - convergence criterion for relative change in deviance. Defaults to 1.0e-8.
 
 ** Details **
 
-An intercept is not included by default. If you want one, add a column of ones to your design matrix.
+An intercept is not included by default. If you want one, make sure the first column of your design matrix
+is all ones. Because of how `GLMNet` handles intercepts and how `LReg` interfaces with it,
+this must be the first column.
 If you do that, don't forget to add the column in the same place to `newx` when you call predict.
 
 `subset` is useful if you want to include only some columns of the design matrix but you want to call `predict`
-with a `newx` matrix with the same number of columns as `x`. The coefficients corresponding to columsn of `x` which
+with a `newx` matrix with the same number of columns as `x`. The coefficients corresponding to columns of `x` which
 are not used in the fit are set to zero. If you would like to call `predict` with a `newx` matrix that includes
 only the columns that you fit on, you should subset `x` yourself before calling `lreg`.
 """
-function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2))
+function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2), convTol=1.0e-8)
     if size(x, 2) == 1
         x = reshape(x, size(x, 1), 1)
     end
     subset=sort(subset)
     fitwithoffset = length(offset) > 0
-    
+
     if subset == 1:size(x,2) || collect(1:size(x,2)) == subset
         subset = 1:size(x,2)
-        return LR(coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset)), subset, fitwithoffset)
+#         return LR(coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol)), subset, fitwithoffset)
+        return LR(myfit(x, y, wts=wts, offset=offset, convTol=convTol), subset, fitwithoffset)
     else
         tempx = x[:, subset]
         β = zeros(eltype(x), size(x, 2))
-        β[subset] = coef(fit(GeneralizedLinearModel, tempx, y, Binomial(); wts=wts, offset=offset))
+#        β[subset] = coef(fit(GeneralizedLinearModel, tempx, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
+        β[subset] = myfit(tempx, y, wts=wts, offset=offset, convTol=convTol)
         return LR(β, subset, fitwithoffset)
     end
 end
@@ -112,5 +120,56 @@ NumericExtensions.evaluate(::Loss, y, xb) =
     y == one(y)? log1pexp(-xb) :
     y == zero(y)? log1pexp(xb) :
     y * log1pexp(-xb) + (one(y)-y) * log1pexp(xb)
+
+if GLMNET
+    function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
+        offsets = length(offset) == 0? nothing: offset
+        try 
+            #annoyingly, glmnet won't do intercept only  models for some reason, even with intercept = true
+            # and if there is a constant column in the design matrix, that will get a coefficient of zero
+            if size(x, 2) == 1 && all(x .== 1)
+                #intercept only
+                coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
+            elseif all(x[:, 1] .== 1)
+                #first column is intercept
+                est = glmnet(x[:, 2:end], [ones(length(y)) .- y y], Binomial(), weights=wts, offsets=offsets,
+                             lambda=[0.0], intercept=true, tol=convTol)
+                [est.a0, est.betas[:,1]]
+            else
+                #no intercept
+                 glmnet(x, [ones(length(y)) .- y y], Binomial(), weights=wts, offsets=offsets,
+                        lambda=[0.0], intercept=false, tol=convTol).betas[:,1]                
+            end
+        catch err
+            if isa(err, ErrorException) &&
+                    isdefined(Main, :LREG_DEBUG) &&
+                    Main.LREG_DEBUG
+                fname = tempname()
+                open(fname, "w") do f
+                    serialize(f, (x, y, wts, offset, convTol))
+                    info("Error in lreg. x, y, wts, offset and convTol written to $fname")
+                end
+            end
+            rethrow(err)
+        end
+    end
+else
+    function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
+        try coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
+        catch err
+            if isa(err, ErrorException) &&
+                    isdefined(Main, :LREG_DEBUG) &&
+                    Main.LREG_DEBUG
+                fname = tempname()
+                open(fname, "w") do f
+                    serialize(f, (x, y, wts, offset, convTol))
+                    info("Error in lreg. x, y, wts, offset and convTol written to $fname")
+                end
+            end
+            rethrow(err)
+        end
+    end
+end
+
 
 end
