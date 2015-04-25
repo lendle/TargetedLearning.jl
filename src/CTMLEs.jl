@@ -161,26 +161,33 @@ immutable FluctuationInfo
     steps::Int
     covar_order::Vector{Vector{Int}}
     new_flucseq::Vector{Bool}
-    function FluctuationInfo(steps::Int, covar_order::Vector{Vector{Int}}, new_flucseq::Vector{Bool})
+    added_each_fluc::Vector{Vector{Int}}
+    function FluctuationInfo(steps::Int, covar_order::Vector{Vector{Int}},
+                             new_flucseq::Vector{Bool},
+                             added_each_fluc::Vector{Vector{Int}})
         steps == length(covar_order) == length(new_flucseq) || throw(ArgumentError("steps should equal length of covar_order and new_flucseq"))
-        new(steps, covar_order, new_flucseq)
+        length(added_each_fluc) == sum(new_flucseq) || throw(ArgumentError("length(added_each_fluc) not equal to number of new flucs"))
+        new(steps, covar_order, new_flucseq, added_each_fluc)
     end
 end
 
 function FluctuationInfo{T}(steps::Int, gseq::Vector{LR{T}}, new_flucseq::Vector{Bool})
+    new_flucseq[1] || throw(ArgumentError("new_flucseq[1] should be true"))
     first_covars = Vector{Int}[convert(Vector{Int}, gseq[1].idx)]::Vector{Vector{Int}}
     added_covar_order = [setdiff(a.idx, b.idx)::Vector{Int} for (a, b) in zip(gseq[2:end], gseq[1:end-1])]::Vector{Vector{Int}}
     covar_order = [first_covars, added_covar_order]::Vector{Vector{Int}}
-    FluctuationInfo(steps, covar_order, new_flucseq)
+    start_new_fluc = find(new_flucseq)
+    end_fluc = [find(new_flucseq)[2:end] - 1, length(new_flucseq)]
+    added_each_fluc = [[covar_order[st:en]...]::Vector{Int}
+                       for (st, en) in zip(start_new_fluc, end_fluc)]
+    FluctuationInfo(steps, covar_order, new_flucseq, added_each_fluc)
 end
 
 function Base.show(io::IO, flucinfo::FluctuationInfo)
     println(io, "Fluctuation info:")
-    println(io, "Covariates added in $(flucinfo.steps) steps to $(sum(flucinfo.new_flucseq)) fluctuations.")
-    start_new_fluc = find(flucinfo.new_flucseq)
-    end_fluc = [find(flucinfo.new_flucseq)[2:end] - 1, length(flucinfo.new_flucseq)]
-    for (i, (st, en)) in enumerate(zip(start_new_fluc, end_fluc))
-        println(io, "Fluc $i covars added: $([flucinfo.covar_order[st:en]...])")
+    println(io, "Covariates added in $(flucinfo.steps) steps to $(length(flucinfo.added_each_fluc)) fluctuations.")
+    for (i, new_covars) in enumerate(flucinfo.added_each_fluc)
+        println(io, "Fluc $i covars added: $new_covars")
     end
 end
 

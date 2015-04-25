@@ -53,6 +53,8 @@ end
 DynamicRegimen{T<:FloatingPoint}(a::Vector{T}) = DynamicRegimen{T}(a)
 DynamicRegimen(a) = DynamicRegimen(float(a))
 
+==(d1::DynamicRegimen, d2::DynamicRegimen) = d1.a==d2.a
+
 """
 Converts it's argument `a` to a `StaticRegime` if `a` is a scalar, a `DynamicRegime` if `a` is a vector,
 or returns `a` if `a` is already a `Regime`.
@@ -87,7 +89,7 @@ Under causal assumptions, this can be interpreted as
 the difference in mean counterfactual outcome under regimens `d1` and `d0`.  When `d1` is the static regimen setting treatment to 1
 and `d0` is the static regimen setting treatment to 0, this is called the averate treatment effect (ATE).
 """
-type ATE{T<:FloatingPoint} <: Parameter{T}
+immutable ATE{T<:FloatingPoint} <: Parameter{T}
     d1::Regimen{T}
     d0::Regimen{T}
 end
