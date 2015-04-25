@@ -7,7 +7,7 @@ using Logging
 if isdefined(Main, :CTMLE_LOG_LEVEL)
     @eval @Logging.configure(level=$(Main.CTMLE_LOG_LEVEL))
 else
-    @Logging.configure(level=OFF)
+    @Logging.configure(level=WARNING)
 end
 
 export ctmle,
@@ -18,7 +18,9 @@ LogisticOrdering,
 PartialCorrOrdering,
 
 StratifiedKfold,
-StratifiedRandomSub
+StratifiedRandomSub,
+
+flucinfo
 
 using StatsBase, MLBase
 using ..LReg, ..Common, ..Parameters, ..Qmodels
@@ -152,23 +154,75 @@ function makeQCV{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     QCV(chunk_train, chunk_val, gseq, deepcopy(searchstrategy), used_covars, unused_covars)
 end
 
+immutable FluctuationInfo
+    steps::Int
+    covar_order::Vector{Vector{Int}}
+    new_flucseq::Vector{Bool}
+    function FluctuationInfo(steps::Int, covar_order::Vector{Vector{Int}}, new_flucseq::Vector{Bool})
+        steps == length(covar_order) == length(new_flucseq) || throw(ArgumentError("steps should equal length of covar_order and new_flucseq"))
+        new(steps, covar_order, new_flucseq)
+    end
+end
+
+function FluctuationInfo{T}(steps::Int, gseq::Vector{LR{T}}, new_flucseq::Vector{Bool})
+    first_covars = Vector{Int}[convert(Vector{Int}, gseq[1].idx)]::Vector{Vector{Int}}
+    added_covar_order = [setdiff(a.idx, b.idx)::Vector{Int} for (a, b) in zip(gseq[2:end], gseq[1:end-1])]::Vector{Vector{Int}}
+    covar_order = [first_covars, added_covar_order]::Vector{Vector{Int}}
+    FluctuationInfo(steps, covar_order, new_flucseq)
+end
+
+function Base.show(io::IO, flucinfo::FluctuationInfo)
+    println(io, "Fluctuation info:")
+    println(io, "Covariates added in $(flucinfo.steps) steps to $(sum(flucinfo.new_flucseq)) fluctuations.")
+    start_new_fluc = find(flucinfo.new_flucseq)
+    end_fluc = [find(flucinfo.new_flucseq)[2:end] - 1, length(flucinfo.new_flucseq)]
+    for (i, (s, e)) in enumerate(zip(start_new_fluc, end_fluc))
+        println(io, "Fluc $i covars added: $([flucinfo.covar_order[s:e]...])")
+    end
+end
+
 type CTMLE{T<:FloatingPoint} <: AbstractScalarEstimate
     psi::T
     ic::Vector{T}
     n::Int
     estimand::String
     seasrchstrategy::SearchStrategy
-    gseq::Vector{LR{T}}
-    function CTMLE(psi, ic, n, estimand, searchstrategy, gseq)
+    flucinfo::FluctuationInfo
+    function CTMLE(psi, ic, n, estimand, searchstrategy, flucinfo)
         est = ScalarEstimate(psi, ic)
-        new(est.psi, est.ic, n, estimand, searchstrategy, gseq)
+        new(est.psi, est.ic, n, estimand, searchstrategy, flucinfo)
     end
 end
 
 CTMLE{T<:FloatingPoint}(psi::T, ic::Vector{T}, n::Int, estimand::String,
-                        searchstrategy::SearchStrategy, gseq::Vector{LR{T}}) =
-    CTMLE{T}(psi, ic, n, estimand, searchstrategy, gseq)
+                        searchstrategy::SearchStrategy, flucinfo::FluctuationInfo) =
+    CTMLE{T}(psi, ic, n, estimand, searchstrategy, flucinfo)
 
+
+"""
+Computes a CTMLE
+
+** Arguments **
+
+* `logitQnA1` - Vector of length n of initial estimates of logit(\bar{Q}_n(1, W_i))
+* `logitQnA0` - Vector of length n of initial estimates of logit(\bar{Q}_n(0, W_i))
+* `W` - Matrix of covariates to be potentially used to estimate g. n rows.
+        The first column should be all ones for an intercept.
+* `A` - Vector of length n of treatments, 0.0 or 1.0
+* `Y` - Vector of length n of outcomes, bounded between 0 and 1.
+
+** Keyword Arguments **
+
+* `param` - Target parameter. See ?ATE or ?Mean. Default is ATE()
+* `searchstrategy` - Strategy for adding covariates to estimates of g. See ?SearchStrategy.
+   Defautl is ForwardStepwise()
+* `cvplan` - An iterator of vectors of Int indexes of observations in each training set for
+   cross validaiton. StratifiedKfold and StratifiedRandomSub from the MLBase package are useful
+   here. Defaults to 10 fold CV stratifying by treatment for outcomes with more than 2 levels,
+   or by treatment and outcome for binary outcomes.
+* `patience` - For how many steps should CV continue after finding a local optimum? Defaults to typemax(Int)
+
+"""
 function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                  W::Matrix{T}, A::Vector{T}, Y::Vector{T};
                                  param::Parameter{T}=ATE(),
@@ -177,6 +231,13 @@ function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                  patience::Int=typemax(Int)
                                  )
     n,p = size(W)
+    n == length(logitQnA1) ==
+        length(logitQnA0) ==
+        length(A) ==
+        length(Y) ||
+        throw(ArgumentError("logitQnA1, logitQnA0, A, and Y should have length equal to the number of rows of W."))
+
+    all(W[:, 1] .== 1) || throw(ArgumentError("The first column of W should be all ones."))
 
     #create vector of QCV objects
     cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy, idx_train)
@@ -188,27 +249,35 @@ function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     #build a chunk with the full data set
     fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, inf(T))
     gseq = LR{T}[]
+    new_flucseq = Bool[]
     used_covars = IntSet()
     unused_covars = IntSet(1:p)
     #and add covariates steps # of times, saving g fits
     @info("Fitting final estimate of Q")
     for step in 1:steps
+#         @debug("used_covars: $used_covars")
+#         @debug("unused_covars: $unused_covars")
         gfit, new_fluc = add_covars!(fullchunk, searchstrategy, used_covars, unused_covars)
         push!(gseq, gfit)
-        if length(gseq) == 1
-            @info("Step $step of $steps complete, covariate 1 added in new fluctuation.")
-        else
-            whichfluc = new_fluc? "to current" : "in new"
-            whichcovar = setdiff(gseq[end].idx, gseq[end-1].idx)
-            @info("Step $step of $steps complete, covariate $whichcovar added $whichfluc fluctuation.")
-        end
+        push!(new_flucseq, new_fluc)
+        @info(if length(gseq) == 1
+                  "Step $step of $steps complete, covariate [1] added in new fluctuation."
+              else
+                  whichfluc = new_fluc? "in new" : "to current"
+                  whichcovars = setdiff(gseq[end].idx, gseq[end-1].idx)
+                  "Step $step of $steps complete, covariates $whichcovars added $whichfluc fluctuation."
+              end)
     end
 
+    #create flucinfo
+    flucinfo = FluctuationInfo(steps, gseq, new_flucseq)
+
     q=fullchunk.q
-    CTMLE(applyparam(param, q, A, Y)..., nobs(q), estimand(param), searchstrategy, gseq)
+    CTMLE(applyparam(param, q, A, Y)..., nobs(q), estimand(param), searchstrategy, flucinfo)
 
 end
 
+flucinfo(est::CTMLE) = est.flucinfo
 
 """
 Determines the number of times covariates should be added using cross validation.
@@ -285,7 +354,7 @@ or `false` if the previous fluctuation was updated with new covariates.
 """
 function add_covars!(chunk::Qchunk, searchstrategy::SearchStrategy, used_covars, unused_covars)
     if isempty(used_covars)
-        @debug("Initial fluctuation")
+#         @debug("Initial fluctuation")
         push!(used_covars, 1)
         delete!(unused_covars, 1)
         gfit = lreg(chunk.W, chunk.A, subset=1:1)
@@ -294,7 +363,7 @@ function add_covars!(chunk::Qchunk, searchstrategy::SearchStrategy, used_covars,
         chunk.risk = risk(chunk.q,chunk.A, chunk.Y)
         return gfit, true
     else
-        @debug("Adding covariate(s)")
+#         @debug("Adding covariate(s)")
         q_risk, gfit, new_fluc = add_covars!(searchstrategy, chunk.q, chunk.param, chunk.W, chunk.A, chunk.Y,
                                    used_covars, unused_covars, chunk.risk)
         chunk.risk=q_risk
