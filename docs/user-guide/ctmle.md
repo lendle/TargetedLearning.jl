@@ -195,7 +195,7 @@ Theorey requires that the sequence of estimators of $g_0$ increase in complexity
 
 **Forward stepwise** strategies choose the next covariate to add to an estimator of $g_0$ by selecting the best (in terms of some criterion) covariate among those not already used. For $p$ covariates, this requires the criterion to be computed $O(p^2)$ times, which can be costly when $p$ is bigger than a dozen or so.
 
-In the `ctmle` function, the forward stepwise strategy is specified by setting the keyword argument `searchstrategy=ForwardStepwise()`.  The criterion used for choosing the next covariate is the (quasi-)binomial loss function for $\bar{Q}\_0$ after fluctuating the previous estimate of $\bar{Q}\_0$ with the a estimate of $g\_0$ including the new and previous covariates. This is essentially the same as the method described in van der Laan, M. & Gruber, S. (2010)[^ctmle_paper].
+In the `ctmle` function, the forward stepwise strategy is specified by setting the keyword argument `searchstrategy=ForwardStepwise()`.  The criterion used for choosing the next covariate is the (quasi-)binomial loss function for $\bar{Q}\_0$ after fluctuating the previous estimate of $\bar{Q}\_0$ with the a estimate of $g\_0$ including the new and previous covariates. This is essentially the same as the method described in van der Laan, M. & Gruber, S. (2010)[^ctmle_paper], except TargetedLearning.jl does not penalize the likelihood.
 
 **Pre-ordered** strategies compute some criterion once up front, and order covariates by that criterion. This is less agressive than a forward step wise procedure, but it only requires the criterion to be computed $p$ times for $p$ covariates.
 
