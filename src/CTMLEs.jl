@@ -12,10 +12,13 @@ end
 
 export ctmle,
 
+SearchStrategy,
 ForwardStepwise,
 PreOrdered,
+OrderingStrategy,
 LogisticOrdering,
 PartialCorrOrdering,
+HDPSOrdering,
 
 StratifiedKfold,
 StratifiedRandomSub,
@@ -134,7 +137,7 @@ function fluctuate!(qcv, g::LR)
     val = qcv.val_chunk
     gn1_train = predict(g, train.W)
     gn1_val = predict(g, val.W)
-    fluc_train = computefluc(train.q, train.param, train_gn1, train.A, train.Y)
+    fluc_train = computefluc(train.q, train.param, gn1_train, train.A, train.Y)
     fluc_val = valfluc(fluc_train, val.param, gn1_val, val.A)
     fluctuate!(qcv, g, fluc_train, fluc_val)
 end
@@ -176,8 +179,8 @@ function Base.show(io::IO, flucinfo::FluctuationInfo)
     println(io, "Covariates added in $(flucinfo.steps) steps to $(sum(flucinfo.new_flucseq)) fluctuations.")
     start_new_fluc = find(flucinfo.new_flucseq)
     end_fluc = [find(flucinfo.new_flucseq)[2:end] - 1, length(flucinfo.new_flucseq)]
-    for (i, (s, e)) in enumerate(zip(start_new_fluc, end_fluc))
-        println(io, "Fluc $i covars added: $([flucinfo.covar_order[s:e]...])")
+    for (i, (st, en)) in enumerate(zip(start_new_fluc, end_fluc))
+        println(io, "Fluc $i covars added: $([flucinfo.covar_order[st:en]...])")
     end
 end
 
@@ -254,7 +257,7 @@ function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     unused_covars = IntSet(1:p)
     #and add covariates steps # of times, saving g fits
     @info("Fitting final estimate of Q")
-    for step in 1:steps
+    for stp in 1:steps
 #         @debug("used_covars: $used_covars")
 #         @debug("unused_covars: $unused_covars")
         gfit, new_fluc = add_covars!(fullchunk, searchstrategy, used_covars, unused_covars)
@@ -305,13 +308,13 @@ or `false` if the previous fluctuation was updated with new covariates.
 
 """
 function find_steps{T<:FloatingPoint}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
-    done = false
+    notdone = true
     steps = 0
     best_steps = 0
     best_risk = Inf
 
     @info("Choosing number of steps via cross validation")
-    while !done
+    while notdone
         steps += 1
         map(add_covars!, qcvs)
         val_risk = mean(map(qcv -> qcv.chunk_val.risk, qcvs))
@@ -322,11 +325,11 @@ function find_steps{T<:FloatingPoint}(qcvs::Vector{QCV{T}}; patience::Int=typema
         @info("Step $steps validation risk: $val_risk. Best risk so far: $best_risk at step $best_steps")
         if steps - best_steps > patience
             @info("No improvement in $patience steps, stopping at step $steps.")
-            done = true
+            notdone = false
         end
         if all(map(qcv -> isempty(qcv.unused_covars), qcvs))
             @info("Crossvalidation completed after $steps steps.")
-            done = true
+            notdone = false
         end
     end
     best_steps

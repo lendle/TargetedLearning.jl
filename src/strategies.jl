@@ -1,6 +1,3 @@
-export SearchStrategy, ForwardStepwise, PreOrdered
-export OrderingStrategy, LogisticOrdering, PartialCorrOrdering, HDPSOrdering
-
 abstract OrderingStrategy
 type LogisticOrdering <: OrderingStrategy end
 type PartialCorrOrdering <: OrderingStrategy end
