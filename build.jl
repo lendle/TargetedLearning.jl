@@ -1,14 +1,16 @@
 using Lexicon, TargetedLearning
 
-fmnames = [("ctmles", TargetedLearning.CTMLEs),
+fmnames = [("tmles", TargetedLearning.TMLEs),
+           ("ctmles", TargetedLearning.CTMLEs),
            #("strategies", TargetedLearning.CTMLEs.Strategies),
            ("common", TargetedLearning.Common),
            ("lreg", TargetedLearning.LReg),
            ("parameters", TargetedLearning.Parameters),
-           ("qmodels", TargetedLearning.Qmodels)]
+           #("qmodels", TargetedLearning.Qmodels)
+           ]
 
 for (fname, mod) in fmnames
-	save(joinpath(Pkg.dir("TargetedLearning"), "docs", "api", "$fname.md"), mod, mathjax=true)#, include_internal = false)
+	save(joinpath(Pkg.dir("TargetedLearning"), "docs", "api", "$fname.md"), mod, mathjax=true, include_internal = false)
 end
 
 nbpath = joinpath(Pkg.dir("TargetedLearning"), "docs", "user-guide", "lalonde_example.ipynb")

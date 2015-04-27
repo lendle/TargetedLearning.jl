@@ -6,10 +6,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         
-        <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/api/common/">
+        <link rel="canonical" href="http://targetedlearningjl.readthedocs.org/api/ctmles/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-	<title>Common - TargetedLearning.jl</title>
+	<title>CTMLEs - TargetedLearning.jl</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -89,8 +89,12 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">API <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
+                        <li >
+                            <a href="../tmles/">TMLEs</a>
+                        </li>
+                    
                         <li class="active">
-                            <a href="./">Common</a>
+                            <a href="./">CTMLEs</a>
                         </li>
                     
                         <li >
@@ -99,10 +103,6 @@
                     
                         <li >
                             <a href="../parameters/">Parameters</a>
-                        </li>
-                    
-                        <li >
-                            <a href="../qmodels/">Qmodels</a>
                         </li>
                     
                     </ul>
@@ -128,7 +128,7 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li >
-                    <a rel="next" href="../../user-guide/lalonde_example/">
+                    <a rel="next" href="../tmles/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
@@ -156,80 +156,56 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#targetedlearningcommon">TargetedLearning.Common</a></li>
+        <li class="main active"><a href="#targetedlearningctmles">TargetedLearning.CTMLEs</a></li>
         
             <li><a href="#exported">Exported</a></li>
-        
-            <li><a href="#internal">Internal</a></li>
         
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="targetedlearningcommon">TargetedLearning.Common</h1>
+<h1 id="targetedlearningctmles">TargetedLearning.CTMLEs</h1>
 <h2 id="exported">Exported</h2>
 <hr />
-<h4 id="coef">coef</h4>
-<p>Returns the coefficient vector of an <code>Estimate</code></p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:56</a></p>
-<hr />
-<h4 id="coeftable">coeftable</h4>
-<p>Returns a table with estimate values, standard errors, and 95% confidence limits</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:64</a></p>
-<hr />
-<h4 id="confint">confint</h4>
-<p>Computes influence curve based confidence interval(s) of an <code>Estimate</code></p>
+<h4 id="ctmletfloatingpointlogitqna1arraytfloatingpoint-1-logitqna0arraytfloatingpoint-1-warraytfloatingpoint-2-aarraytfloatingpoint-1-yarraytfloatingpoint-1">ctmle{T&lt;:FloatingPoint}(logitQnA1::Array{T&lt;:FloatingPoint, 1}, logitQnA0::Array{T&lt;:FloatingPoint, 1}, W::Array{T&lt;:FloatingPoint, 2}, A::Array{T&lt;:FloatingPoint, 1}, Y::Array{T&lt;:FloatingPoint, 1})</h4>
+<p>Performs colaborative targeted minimum loss-based estimation</p>
 <p><strong> Arguments </strong></p>
 <ul>
-<li><code>level</code> - defaults to 0.95</li>
+<li><code>logitQnA1</code> - Vector of length n of initial estimates logit(ar{Q}_n(1, W_i))</li>
+<li><code>logitQnA0</code> - Vector of length n of initial estimates logit(ar{Q}_n(0, W_i))</li>
+<li><code>W</code> - Matrix of covariates to be potentially used to estimate g. n rows.
+        The first column should be all ones for an intercept.</li>
+<li><code>A</code> - Vector of length n of treatments, 0.0 or 1.0</li>
+<li><code>Y</code> - Vector of length n of outcomes, bounded between 0 and 1.</li>
+</ul>
+<p><strong> Keyword Arguments </strong></p>
+<ul>
+<li><code>param</code> - Target parameter. See ?ATE or ?Mean. Default is ATE()</li>
+<li><code>searchstrategy</code> - Strategy for adding covariates to estimates of g. See ?SearchStrategy.
+   Defautl is ForwardStepwise()</li>
+<li><code>cvplan</code> - An iterator of vectors of Int indexes of observations in each training set for
+   cross validaiton. StratifiedKfold and StratifiedRandomSub from the MLBase package are useful
+   here. Defaults to 10 fold CV stratifying by treatment for outcomes with more than 2 levels,
+   or by treatment and outcome for binary outcomes.</li>
+<li><code>patience</code> - For how many steps should CV continue after finding a local optimum? Defaults to typemax(Int)</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:53</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/CTMLEs.jl">TargetedLearning/src/CTMLEs.jl:236</a></p>
 <hr />
-<h4 id="fluccovar">fluccovar</h4>
-<p>Computes the fluctuation covariate for a particular parameter.</p>
+<h4 id="searchstrategy">SearchStrategy</h4>
+<p>Defines how the next covariate added to g is chosen</p>
+<ul>
+<li><code>ForwardStepwise</code> - default, tries each unused covariate to find the one that helps the most. Slow, O(p^2) time for p covariates.</li>
+<li><code>PreOrdered</code> - Orders covariates once then adds them in that order. Takes O(p) time for p covariates. Specify with <code>PreOrdered(ordering)</code> where <code>ordering</code> is<ul>
+<li><code>LogisticOrdering()</code> - ranks covariates based on reduction in log likelihood with intital Q as an offset if added one at a time. Basically the first step of <code>ForwardStepwise</code></li>
+<li><code>PartialCorrOrdering()</code> - ranks covariates based on partial correlation of each covariate and the residual (y - predicted y from initial Qbar) given a</li>
+<li><code>HDPSOrdering()</code> - ranks covariates based on bias reduction potential as in the hdps procedure. This ignores intial Qbar.</li>
+</ul>
+</li>
+</ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:35</a></p>
-<hr />
-<h4 id="nobs">nobs</h4>
-<p>Returns the number of observations an <code>Estimate</code> is based on</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:58</a></p>
-<hr />
-<h4 id="stderr">stderr</h4>
-<p>Computes the influence curve based standard error(s) of an <code>Estimate</code></p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:45</a></p>
-<hr />
-<h4 id="vcov">vcov</h4>
-<p>Computes the influence curve based covariance matrix of an <code>Estimate</code></p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:60</a></p>
-<hr />
-<h4 id="nameestabstractscalarestimate-estimand">name!(est::AbstractScalarEstimate, estimand)</h4>
-<p>Sets the parameter name of a scalar estimate</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:102</a></p>
-<hr />
-<h4 id="estimate">Estimate</h4>
-<p>Represents an estimate along with it's estimated influence curve.</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:42</a></p>
-<hr />
-<h4 id="parametertfloatingpoint">Parameter{T&lt;:FloatingPoint}</h4>
-<p>Represents a parameter of interest. Subtypes of <code>Parameter</code> define a particular
-parameter of the observed data distribution.</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:31</a></p>
-<h2 id="internal">Internal</h2>
-<hr />
-<h4 id="paramnames">paramnames</h4>
-<p>Returns the parameter name(s) of an <code>Estimate</code></p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Common.jl">TargetedLearning/src/Common.jl:62</a></p></div>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/strategies.jl">TargetedLearning/src/strategies.jl:15</a></p></div>
         </div>
 
         

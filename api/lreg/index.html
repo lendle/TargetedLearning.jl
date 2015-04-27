@@ -90,7 +90,11 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="../common/">Common</a>
+                            <a href="../tmles/">TMLEs</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../ctmles/">CTMLEs</a>
                         </li>
                     
                         <li class="active">
@@ -99,10 +103,6 @@
                     
                         <li >
                             <a href="../parameters/">Parameters</a>
-                        </li>
-                    
-                        <li >
-                            <a href="../qmodels/">Qmodels</a>
                         </li>
                     
                     </ul>
@@ -128,7 +128,7 @@
             <ul class="nav navbar-nav navbar-right">
                 
                 <li >
-                    <a rel="next" href="../common/">
+                    <a rel="next" href="../ctmles/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
@@ -187,7 +187,7 @@ for intercept only models.</p>
 <li><code>offset</code> - offsets. The length should be the same as <code>size(newx, 1)</code> of <code>lr</code> was fit with an offset, or 0 otherwise.</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:43</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:41</a></p>
 <hr />
 <h4 id="lregx-y">lreg(x, y)</h4>
 <p>Fits a logistic regression model</p>
@@ -213,7 +213,7 @@ with a <code>newx</code> matrix with the same number of columns as <code>x</code
 are not used in the fit are set to zero. If you would like to call <code>predict</code> with a <code>newx</code> matrix that includes
 only the columns that you fit on, you should subset <code>x</code> yourself before calling <code>lreg</code>.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:98</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:96</a></p>
 <hr />
 <h4 id="predictlrlrtfloatingpoint-newx">predict(lr::LR{T&lt;:FloatingPoint}, newx)</h4>
 <p>Returns the predicted on the probability scale values from a logistic regression fit with a new X matrix</p>
@@ -227,13 +227,13 @@ only the columns that you fit on, you should subset <code>x</code> yourself befo
 <li><code>offset</code> - offsets. The length should be the same as <code>size(newx, 1)</code> of <code>lr</code> was fit with an offset, or 0 otherwise.</li>
 </ul>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:69</a></p>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:67</a></p>
 <hr />
 <h4 id="lrtfloatingpoint">LR{T&lt;:FloatingPoint}</h4>
 <p>The <code>LR</code> type contains the coefficent vector of a logistic regression fit, as well as indexes of
 included columns in the design matrix.</p>
 <p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:25</a></p></div>
+<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:23</a></p></div>
         </div>
 
         
