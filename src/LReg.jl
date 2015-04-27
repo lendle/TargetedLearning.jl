@@ -8,8 +8,6 @@ for logistic regression along with [GLM.jl](https://github.com/JuliaStats/GLM.jl
 for intercept only models."""
 LReg
 
-const GLMNET = !(isdefined(Main, :LREG_GLM) && Main.LREG_GLM)
-
 using GLMNet, Distributions, GLM
 
 using NumericExtensions, NumericFuns, StatsBase
@@ -121,55 +119,36 @@ NumericExtensions.evaluate(::Loss, y, xb) =
     y == zero(y)? log1pexp(xb) :
     y * log1pexp(-xb) + (one(y)-y) * log1pexp(xb)
 
-if GLMNET
-    function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
-        offsets = length(offset) == 0? nothing: offset
-        try 
-            #annoyingly, glmnet won't do intercept only  models for some reason, even with intercept = true
-            # and if there is a constant column in the design matrix, that will get a coefficient of zero
-            if size(x, 2) == 1 && all(x .== 1)
-                #intercept only
-                coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
-            elseif all(x[:, 1] .== 1)
-                #first column is intercept
-                est = glmnet(x[:, 2:end], [ones(length(y)) .- y y], Binomial(), weights=wts, offsets=offsets,
-                             lambda=[0.0], intercept=true, tol=convTol)
-                [est.a0, est.betas[:,1]]
-            else
-                #no intercept
-                 glmnet(x, [ones(length(y)) .- y y], Binomial(), weights=wts, offsets=offsets,
-                        lambda=[0.0], intercept=false, tol=convTol).betas[:,1]                
-            end
-        catch err
-            if isa(err, ErrorException) &&
-                    isdefined(Main, :LREG_DEBUG) &&
-                    Main.LREG_DEBUG
-                fname = tempname()
-                open(fname, "w") do f
-                    serialize(f, (x, y, wts, offset, convTol))
-                    info("Error in lreg. x, y, wts, offset and convTol written to $fname")
-                end
-            end
-            rethrow(err)
+function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
+    offsets = length(offset) == 0? nothing: offset
+    try
+        #annoyingly, glmnet won't do intercept only  models for some reason, even with intercept = true
+        # and if there is a constant column in the design matrix, that will get a coefficient of zero
+        if size(x, 2) == 1 && all(x .== 1)
+            #intercept only
+            coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
+        elseif all(x[:, 1] .== 1)
+            #first column is intercept
+            est = glmnet(x[:, 2:end], [ones(length(y)) .- y y], Binomial(), weights=wts, offsets=offsets,
+                         lambda=[0.0], intercept=true, tol=convTol)
+            [est.a0, est.betas[:,1]]
+        else
+            #no intercept
+            glmnet(x, [ones(length(y)) .- y y], Binomial(), weights=wts, offsets=offsets,
+                   lambda=[0.0], intercept=false, tol=convTol).betas[:,1]
         end
-    end
-else
-    function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
-        try coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
-        catch err
-            if isa(err, ErrorException) &&
-                    isdefined(Main, :LREG_DEBUG) &&
-                    Main.LREG_DEBUG
-                fname = tempname()
-                open(fname, "w") do f
-                    serialize(f, (x, y, wts, offset, convTol))
-                    info("Error in lreg. x, y, wts, offset and convTol written to $fname")
-                end
+    catch err
+        if isa(err, ErrorException) &&
+                isdefined(Main, :LREG_DEBUG) &&
+                Main.LREG_DEBUG
+            fname = tempname()
+            open(fname, "w") do f
+                serialize(f, (x, y, wts, offset, convTol))
+                info("Error in lreg. x, y, wts, offset and convTol written to $fname")
             end
-            rethrow(err)
         end
+        rethrow(err)
     end
 end
-
 
 end
