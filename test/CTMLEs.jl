@@ -44,8 +44,17 @@ facts("Test CTMLEs") do
         f3 = FluctuationInfo(2, [g1b, g2], [true, true])
         @fact f3.covar_order =>  Vector{Int}[[1, 5], [3]]
         @fact f3.added_each_fluc =>  Vector{Int}[[1, 5], [3]]
+    end
 
+    context("pcor") do
+        #test pcor
+        srand(235)
+        xx = rand(100, 3)
+        yy = rand(100, 2)
+        zz = rand(100)
+        oz = [ones(100) zz]
 
+        @fact CTMLEs.pcor(xx,yy,zz) => roughly(cor(xx .- oz*(oz\xx), yy .- oz*(oz\yy)))
     end
 
     context("It runs...") do
