@@ -210,12 +210,12 @@ CTMLE{T<:FloatingPoint}(psi::T, ic::Vector{T}, n::Int, estimand::String,
 
 
 """
-Computes a CTMLE
+Performs colaborative targeted minimum loss-based estimation
 
 ** Arguments **
 
-* `logitQnA1` - Vector of length n of initial estimates of logit(\bar{Q}_n(1, W_i))
-* `logitQnA0` - Vector of length n of initial estimates of logit(\bar{Q}_n(0, W_i))
+* `logitQnA1` - Vector of length n of initial estimates logit(\bar{Q}_n(1, W_i))
+* `logitQnA0` - Vector of length n of initial estimates logit(\bar{Q}_n(0, W_i))
 * `W` - Matrix of covariates to be potentially used to estimate g. n rows.
         The first column should be all ones for an intercept.
 * `A` - Vector of length n of treatments, 0.0 or 1.0
