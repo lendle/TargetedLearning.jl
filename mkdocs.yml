@@ -1,8 +1,9 @@
 site_name: TargetedLearning.jl
 theme_dir: custom_theme
 repo_url: https://github.com/lendle/TargetedLearning.jl/
-site_url: http://targetedlearningjl.readthedocs.org
+site_url: https://lendle.github.io/TargetedLearning.jl/
 markdown_extensions: [fenced_code, footnotes]
+google_analytics: ['UA-62410095-1', 'https://lendle.github.io/TargetedLearning.jl/']
 
 pages:
 - ['index.md', 'Home']
