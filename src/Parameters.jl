@@ -124,7 +124,8 @@ function applyparam{T<:FloatingPoint}(param::Mean{T}, q::Qmodel{T}, A, Y)
     QnAd = predict(q, param.d)
     psi = mean(QnAd)
     h = weightedcovar(lastfluc(q), A)
-    ic = h .* (Y .- QnAd) .+ QnAd .- psi
+    ic = h .* (Y .- QnAd) .+ QnAd #.- psi
+    ic .-= mean(ic)
     (psi, ic)
 end
 
@@ -135,7 +136,8 @@ function applyparam{T<:FloatingPoint}(param::ATE{T}, q::Qmodel{T}, A, Y)
     Qndiff = QnAd1 .- QnAd0
     psi = mean(Qndiff)
     h = weightedcovar(lastfluc(q), A)
-    ic = h .* (Y .- QnAA) .+ Qndiff .- psi
+    ic = h .* (Y .- QnAA) .+ Qndiff # .- psi
+    ic .-= mean(ic)
     (psi, ic)
 end
 
