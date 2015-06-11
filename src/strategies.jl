@@ -45,7 +45,7 @@ function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
     @debug("used_covars: $(used_covars)")
 
     next_covar_risk = fill(Inf, maximum(unused_covars))
-    g_fluc_dict = Dict{IntSet, (LR, Fluctuation)}()
+    g_fluc_dict = Dict{IntSet, @compat Tuple{LR, Fluctuation}}()
 
     #Remove most recent fluctuation (and save for later use)
     #So that we can add one covar to the current fluctuation to see if it works

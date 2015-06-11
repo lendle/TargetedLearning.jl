@@ -44,10 +44,10 @@ function linpred(lr::LR, newx; offset=Array(eltype(newx), 0))
     end
     p = newx * lr.β
     if lr.fitwithoffset
-        length(offset) == size(newx, 1) || error(ArgumentError("fit with offset, 'offset' kw arg should have length size(newx, 1)"))
+        length(offset) == size(newx, 1) || throw(ArgumentError("fit with offset, 'offset' kw arg should have length size(newx, 1)"))
         add!(p, offset)
     else
-        length(offset) == 0 || error(ArgumentError("not fit with offset, 'offset' kw arg should have length 0"))
+        length(offset) == 0 || throw(ArgumentError("not fit with offset, 'offset' kw arg should have length 0"))
     end
     p
 end
@@ -131,7 +131,7 @@ function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
             #first column is intercept
             est = glmnet(x[:, 2:end], [ones(length(y)) .- y y], Binomial(), weights=wts, offsets=offsets,
                          lambda=[0.0], intercept=true, tol=convTol)
-            [est.a0, est.betas[:,1]]
+            [est.a0; est.betas[:,1]]
         else
             #no intercept
             glmnet(x, [ones(length(y)) .- y y], Binomial(), weights=wts, offsets=offsets,

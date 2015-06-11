@@ -1,7 +1,8 @@
 module CTMLEs
 
-using Docile
-@document
+using Compat
+
+VERSION < v"0.4-" && using Docile
 
 using Logging
 if isdefined(Main, :CTMLE_LOG_LEVEL)
@@ -41,7 +42,7 @@ subset(d::DynamicRegimen, idx) = DynamicRegimen(d.a[idx])
 
 """
 A `Qchunk` holds (a subset of) the data set and corresponding indexes along with a `Qmodel` which can compute predictions for
-each observation, a `Parameter` (whos definition may depend on eahc observation) and the value of the emperical risk
+each observation, a `Parameter` (whos definition may depend on each observation) and the value of the emperical risk
 for the current `Qmodel`.
 """
 type Qchunk{T<:FloatingPoint}
@@ -175,10 +176,10 @@ function FluctuationInfo{T}(steps::Int, gseq::Vector{LR{T}}, new_flucseq::Vector
     new_flucseq[1] || throw(ArgumentError("new_flucseq[1] should be true"))
     first_covars = Vector{Int}[convert(Vector{Int}, gseq[1].idx)]::Vector{Vector{Int}}
     added_covar_order = [setdiff(a.idx, b.idx)::Vector{Int} for (a, b) in zip(gseq[2:end], gseq[1:end-1])]::Vector{Vector{Int}}
-    covar_order = [first_covars, added_covar_order]::Vector{Vector{Int}}
+    covar_order = [first_covars; added_covar_order]::Vector{Vector{Int}}
     start_new_fluc = find(new_flucseq)
-    end_fluc = [find(new_flucseq)[2:end] - 1, length(new_flucseq)]
-    added_each_fluc = [[covar_order[st:en]...]::Vector{Int}
+    end_fluc = [find(new_flucseq)[2:end] - 1; length(new_flucseq)]
+    added_each_fluc = [vcat(covar_order[st:en]...)::Vector{Int}
                        for (st, en) in zip(start_new_fluc, end_fluc)]
     FluctuationInfo(steps, covar_order, new_flucseq, added_each_fluc)
 end
@@ -257,7 +258,7 @@ function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     steps = find_steps(cvqs, patience=patience)
 
     #build a chunk with the full data set
-    fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, inf(T))
+    fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, convert(T, Inf))
     gseq = LR{T}[]
     new_flucseq = Bool[]
     used_covars = IntSet()
@@ -314,7 +315,8 @@ Returns most recent `gfit` object and a boolean which is `true` if the most rece
 or `false` if the previous fluctuation was updated with new covariates.
 
 """
-function find_steps{T<:FloatingPoint}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
+#function find_steps{T<:FloatingPoint}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
+function find_steps(qcvs::Vector{QCV}; patience::Int=typemax(Int))
     notdone = true
     steps = 0
     best_steps = 0
@@ -374,8 +376,9 @@ function add_covars!(chunk::Qchunk, searchstrategy::SearchStrategy, used_covars,
         return gfit, true
     else
 #         @debug("Adding covariate(s)")
-        q_risk, gfit, new_fluc = add_covars!(searchstrategy, chunk.q, chunk.param, chunk.W, chunk.A, chunk.Y,
+        abc = add_covars!(searchstrategy, chunk.q, chunk.param, chunk.W, chunk.A, chunk.Y,
                                    used_covars, unused_covars, chunk.risk)
+        q_risk, gfit, new_fluc = abc
         chunk.risk=q_risk
         return gfit, new_fluc
     end

@@ -3,8 +3,7 @@
 
 module Qmodels
 
-using Docile
-@document
+VERSION < v"0.4-" && using Docile
 
 using ..Common, ..LReg, NumericExtensions, NumericFuns
 

@@ -1,7 +1,6 @@
 module TMLEs
 
-using Docile
-@document
+VERSION < v"0.4-" && using Docile
 
 export tmle
 

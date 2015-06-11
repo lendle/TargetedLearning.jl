@@ -7,25 +7,25 @@ facts("Testing Parameters") do
         @fact d.a => [1.0, 0.0, 1.0]
         @fact d === regimen(d) => true
     end
-    
+
     srand(412)
     n,p = 100, 10
     w = [ones(n) rand(n,p)]
     a = round(rand(n))
     y = round(rand(n))
     gn1 = predict(lreg(w,a), w)
-    
+
     context("fluccovar") do
         ey1 = Mean(1.0)
         @fact fluccovar(ey1, a) => a
         @fact fluccovar(ey1, ones(n)) => ones(n)
-        
+
         ate = ATE(ones(n), 0.0)
         @fact fluccovar(ate, a) => 2a-1
         @fact fluccovar(ate, ones(n)) => ones(n)
         @fact fluccovar(ate, zeros(n)) => -ones(n)
-        
-        d = [ones(div(n,2)), zeros(div(n,2))]
+
+        d = [ones(div(n,2)); zeros(div(n,2))]
         eyd = Mean(d)
         gnd = ifelse(d.==1, gn1, 1-gn1)
         hAA = ifelse(a.==d, 1./gnd, 0.0)
