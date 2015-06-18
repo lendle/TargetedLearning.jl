@@ -251,7 +251,7 @@ function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     all(W[:, 1] .== 1) || throw(ArgumentError("The first column of W should be all ones."))
 
     #create vector of QCV objects
-    cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy, idx_train)
+    cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy, idx_train)::QCV{T}
             for idx_train in cvplan]
 
     #using cross-validation, find best number of steps to take
@@ -315,8 +315,7 @@ Returns most recent `gfit` object and a boolean which is `true` if the most rece
 or `false` if the previous fluctuation was updated with new covariates.
 
 """
-#function find_steps{T<:FloatingPoint}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
-function find_steps(qcvs::Vector{QCV}; patience::Int=typemax(Int))
+function find_steps{T<:FloatingPoint}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
     notdone = true
     steps = 0
     best_steps = 0
