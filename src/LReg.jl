@@ -4,11 +4,10 @@ using Docile
 @document
 
 """This module wraps some functionality from [GLMNet.jl](https://github.com/simonster/GLMNet.jl)
-for logistic regression along with [GLM.jl](https://github.com/JuliaStats/GLM.jl)
-for intercept only models."""
+for logistic regression."""
 LReg
 
-using GLMNet, Distributions, GLM
+using GLMNet, Distributions
 
 using NumericExtensions, NumericFuns, StatsBase
 
@@ -125,8 +124,9 @@ function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
         #annoyingly, glmnet won't do intercept only  models for some reason, even with intercept = true
         # and if there is a constant column in the design matrix, that will get a coefficient of zero
         if size(x, 2) == 1 && all(x .== 1)
+            offsets==nothing || error("Fitting an intercept only model with an offset is not supported")
             #intercept only
-            coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
+            [logit(sum(y .* wts)/sum(wts))]
         elseif all(x[:, 1] .== 1)
             #first column is intercept
             est = glmnet(x[:, 2:end], [ones(length(y)) .- y y], Binomial(), weights=wts, offsets=offsets,
