@@ -50,5 +50,11 @@ facts("Testing LReg") do
         @fact lrvec => is_a(LR)
         @fact predict(lrvec, rand(10)) => is_a(Vector)
     end
+    
+    context("intercept only") do
+        @pending "without weights" => nothing
+        @pending "with weights" => nothing
+    end
+    
 end
 
