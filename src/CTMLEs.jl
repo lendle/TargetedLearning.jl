@@ -52,12 +52,13 @@ type Qchunk{T<:FloatingPoint}
     Y::Vector{T}
     param::Parameter{T}
     idx::AbstractVector{Int}
+    gbounds::Vector{T}
     risk::T
 end
 
 function make_chunk_subset{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                            W::Matrix{T}, A::Vector{T}, Y::Vector{T},
-                           param::Parameter{T}, idx::AbstractVector{Int})
+                           param::Parameter{T}, idx::AbstractVector{Int}, gbounds::Vector{T})
     length(logitQnA1) == length(logitQnA0) == size(W, 1) == length(A) == length(Y) ||
         error(ArgumentError("Input sizes do not match"))
     q = Qmodel(logitQnA1[idx], logitQnA0[idx])
@@ -66,7 +67,7 @@ function make_chunk_subset{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Ve
     A = A[idx]
     Y = Y[idx]
     q_risk = risk(q, A, Y)
-    Qchunk(q, W, A, Y, param, idx, q_risk)
+    Qchunk(q, W, A, Y, param, idx, gbounds, q_risk)
 end
 
 StatsBase.nobs(chunk::Qchunk) = nobs(chunk.q)
@@ -136,8 +137,8 @@ Returns training and validation fluctuations.
 function fluctuate!(qcv, g::LR)
     train = qcv.train_chunk
     val = qcv.val_chunk
-    gn1_train = predict(g, train.W)
-    gn1_val = predict(g, val.W)
+    gn1_train = bound!(predict(g, train.W), train.gbounds)
+    gn1_val = bound!(predict(g, val.W), val.gbounds)
     fluc_train = computefluc(train.q, train.param, gn1_train, train.A, train.Y)
     fluc_val = valfluc(fluc_train, val.param, gn1_val, val.A)
     fluctuate!(qcv, g, fluc_train, fluc_val)
@@ -146,12 +147,12 @@ end
 function makeQCV{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                    W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                                    param::Parameter{T}, searchstrategy::SearchStrategy,
-                                   idx_train::AbstractVector{Int})
+                                   idx_train::AbstractVector{Int}, gbounds::Vector{T})
     n, p = size(W)
     idx_train = sort(idx_train)
     idx_val = setdiff(1:n, idx_train)
-    chunk_train = make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_train)
-    chunk_val= make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_val)
+    chunk_train = make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_train, gbounds)
+    chunk_val= make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_val, gbounds)
     used_covars = IntSet()
     unused_covars = setdiff(IntSet(1:p), used_covars)
     gseq = LR{T}[]
@@ -225,8 +226,11 @@ Performs colaborative targeted minimum loss-based estimation
 ** Keyword Arguments **
 
 * `param` - Target parameter. See ?ATE or ?Mean. Default is ATE()
+* `gbounds` - values for bounding g. Estimates of g will be bounded by `extrema(gbounds)`.
+   To only bound away from 0 (or 1), set to e.g. `[0.01, 1.0]` (or `[0.0, 0.99]`).
+   To turn off bounding all together, set to `[0.0, 1.0]`. Defaults to `[0.01, 0.99]`.
 * `searchstrategy` - Strategy for adding covariates to estimates of g. See ?SearchStrategy.
-   Defautl is ForwardStepwise()
+   Default is ForwardStepwise()
 * `cvplan` - An iterator of vectors of Int indexes of observations in each training set for
    cross validaiton. StratifiedKfold and StratifiedRandomSub from the MLBase package are useful
    here. Defaults to 10 fold CV stratifying by treatment for outcomes with more than 2 levels,
@@ -237,6 +241,7 @@ Performs colaborative targeted minimum loss-based estimation
 function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                  W::Matrix{T}, A::Vector{T}, Y::Vector{T};
                                  param::Parameter{T}=ATE(),
+                                 gbounds::Vector{T}=[0.01, 0.99],
                                  searchstrategy::SearchStrategy = ForwardStepwise(),
                                  cvplan = StratifiedKfold(length(unique(Y))<3? zip(A, Y) : A, 10),
                                  patience::Int=typemax(Int)
@@ -251,14 +256,14 @@ function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     all(W[:, 1] .== 1) || throw(ArgumentError("The first column of W should be all ones."))
 
     #create vector of QCV objects
-    cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy, idx_train)::QCV{T}
+    cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy, idx_train, gbounds)::QCV{T}
             for idx_train in cvplan]
 
     #using cross-validation, find best number of steps to take
     steps = find_steps(cvqs, patience=patience)
 
     #build a chunk with the full data set
-    fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, convert(T, Inf))
+    fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, gbounds, convert(T, Inf))
     gseq = LR{T}[]
     new_flucseq = Bool[]
     used_covars = IntSet()
@@ -369,7 +374,7 @@ function add_covars!(chunk::Qchunk, searchstrategy::SearchStrategy, used_covars,
         push!(used_covars, 1)
         delete!(unused_covars, 1)
         gfit = lreg(chunk.W, chunk.A, subset=1:1)
-        fluc = computefluc(chunk.q, chunk.param, predict(gfit, chunk.W), chunk.A, chunk.Y)
+        fluc = computefluc(chunk.q, chunk.param, bound!(predict(gfit, chunk.W), chunk.gbounds), chunk.A, chunk.Y)
         fluctuate!(chunk.q, fluc)
         chunk.risk = risk(chunk.q,chunk.A, chunk.Y)
         return gfit, true
@@ -412,7 +417,7 @@ function add_covars!(qcv::QCV)
 
     #add newest fluctuation to val chunk and compute risk
     val = qcv.chunk_val
-    gn1_val = predict(gfit, val.W)
+    gn1_val = bound!(predict(gfit, val.W), val.gbounds)
     if !new_fluc
         defluctuate!(val.q)
     end
@@ -420,6 +425,19 @@ function add_covars!(qcv::QCV)
     val.risk = risk(val.q, val.A, val.Y)
 
     qcv
+end
+
+function bound!{T<:FloatingPoint}(gn1::Vector{T}, gbounds::Vector{T})
+    mn, mx = extrema(gbounds)
+    mn < 0.5 || ArgumentError("minimum(gbounds) should be < 0.5")
+    mx > 0.5 || ArgumentError("maximum(gbounds) should be > 0.5")
+
+    mn > 0.0 || mx < 1.0 || return gn1
+
+    for i in 1:length(gn1)
+        @inbounds gn1[i] = max(mn, min(mx,gn1[i]))
+    end
+    gn1
 end
 
 end # module
