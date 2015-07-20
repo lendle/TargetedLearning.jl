@@ -138,9 +138,8 @@ function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
                    lambda=[0.0], intercept=false, tol=convTol).betas[:,1]
         end
     catch err
-        if isa(err, ErrorException) &&
-                isdefined(Main, :LREG_DEBUG) &&
-                Main.LREG_DEBUG
+        if isdefined(Main, :LREG_DEBUG) &&
+           Main.LREG_DEBUG
             fname = tempname()
             open(fname, "w") do f
                 serialize(f, (x, y, wts, offset, convTol))

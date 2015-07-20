@@ -2,6 +2,13 @@ module TMLEs
 
 VERSION < v"0.4-" && using Docile
 
+using Logging
+if isdefined(Main, :TMLE_LOG_LEVEL)
+    @eval @Logging.configure(level=$(Main.TMLE_LOG_LEVEL))
+else
+    @Logging.configure(level=WARNING)
+end
+
 export tmle
 
 using ..Qmodels, ..Parameters, ..Common
