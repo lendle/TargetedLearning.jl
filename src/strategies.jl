@@ -40,7 +40,8 @@ function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
                                        Y::Vector{T},
                                        used_covars::IntSet,
                                        unused_covars::IntSet,
-                                       prev_risk::T)
+                                       prev_risk::T,
+                                       gbounds::Vector{T})
     @debug("unused_covars: $(unused_covars)")
     @debug("used_covars: $(used_covars)")
 
@@ -58,7 +59,7 @@ function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
         current_covars = union(used_covars, IntSet(j))
         gfit = lreg(W, A, subset=collect(current_covars)) #sslreg(w, a, current_covars)
         #fluctuate and get risk
-        fluc = computefluc(q, param, predict(gfit, W), A, Y)
+        fluc = computefluc(q, param, bound!(predict(gfit, W), gbounds), A, Y)
         fluctuate!(q, fluc)
         next_covar_risk[j] = risk(q, A, Y)
         if isnan(next_covar_risk[j])
@@ -88,7 +89,7 @@ function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
         for j in unused_covars
             current_covars = union(used_covars, IntSet(j))
             gfit = g_fluc_dict[current_covars][1]
-            fluc = computefluc(q, param, predict(gfit, W), A, Y)
+            fluc = computefluc(q, param, bound!(predict(gfit, W), gbounds), A, Y)
             fluctuate!(q, fluc)
             next_covar_risk[j] = risk(q, A, Y)
             if isnan(next_covar_risk[j])
@@ -122,7 +123,8 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
                                        Y::Vector{T},
                                        used_covars::IntSet,
                                        unused_covars::IntSet,
-                                       prev_risk::T)
+                                       prev_risk::T,
+                                       gbounds::Vector{T})
 
     if isempty(strategy.covar_order)
         append!(strategy.covar_order, order_covars(strategy.ordering, q, W, A, Y, unused_covars))
@@ -140,7 +142,7 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
     setdiff!(unused_covars, next_covars)
 
     g_fit = lreg(W, A, subset=collect(used_covars))
-    gn1 = predict(g_fit, W)
+    gn1 = bound!(predict(g_fit, W), gbounds)
 
     fluc = computefluc(q, param, gn1, A, Y)
     fluctuate!(q, fluc)

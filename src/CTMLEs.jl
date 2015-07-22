@@ -381,7 +381,7 @@ function add_covars!(chunk::Qchunk, searchstrategy::SearchStrategy, used_covars,
     else
 #         @debug("Adding covariate(s)")
         abc = add_covars!(searchstrategy, chunk.q, chunk.param, chunk.W, chunk.A, chunk.Y,
-                                   used_covars, unused_covars, chunk.risk)
+                                   used_covars, unused_covars, chunk.risk, chunk.gbounds)
         q_risk, gfit, new_fluc = abc
         chunk.risk=q_risk
         return gfit, new_fluc
