@@ -22,10 +22,12 @@ facts("Test CTMLEs") do
     end
 
     context("making chunk subsets") do
-        qc = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0])
+        qc = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0], false)
         @fact qc --> is_a(Qchunk)
         @fact CTMLEs.nobs(qc) --> 3
-        @fact qc.risk --> CTMLEs.risk(Qmodel(logitQnA1[1:3], logitQnA0[1:3]), a[1:3], y[1:3])
+        @fact qc.risk --> CTMLEs.risk(Qmodel(logitQnA1[1:3], logitQnA0[1:3]), a[1:3], y[1:3], ATE(), false)
+        qc_pen = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0], true)
+        @fact qc_pen.risk --> Inf
     end
 
     context("FluctuationInfo") do
@@ -68,7 +70,6 @@ facts("Test CTMLEs") do
         @fact est4 --> is_a(CTMLE)
         @fact_throws ErrorException ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=CTMLEs.PreOrdered(CTMLEs.ManualOrdering([2,3,4,6])))
         @fact_throws ErrorException ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=CTMLEs.PreOrdered(CTMLEs.ManualOrdering([1,2,3,5,4,6])))
-
     end
     @pending "Actually test that it works" --> nothing
 end

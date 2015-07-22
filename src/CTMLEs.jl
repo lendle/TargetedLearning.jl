@@ -49,12 +49,14 @@ type Qchunk{T<:AbstractFloat}
     param::Parameter{T}
     idx::AbstractVector{Int}
     gbounds::Vector{T}
+    penalize::Bool
     risk::T
 end
 
 function make_chunk_subset{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                            W::Matrix{T}, A::Vector{T}, Y::Vector{T},
-                           param::Parameter{T}, idx::AbstractVector{Int}, gbounds::Vector{T})
+                           param::Parameter{T}, idx::AbstractVector{Int}, gbounds::Vector{T},
+                           penalize::Bool)
     length(logitQnA1) == length(logitQnA0) == size(W, 1) == length(A) == length(Y) ||
         error(ArgumentError("Input sizes do not match"))
     q = Qmodel(logitQnA1[idx], logitQnA0[idx])
@@ -62,8 +64,10 @@ function make_chunk_subset{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Ve
     W = W[idx, :]
     A = A[idx]
     Y = Y[idx]
-    q_risk = risk(q, A, Y)
-    Qchunk(q, W, A, Y, param, idx, gbounds, q_risk)
+    #Can't compute penalized risk if q isn't fluctuated yet,
+    #so set to Inf
+    q_risk = penalize? convert(T, Inf) : risk(q, A, Y, param, false)
+    Qchunk(q, W, A, Y, param, idx, gbounds, penalize, q_risk)
 end
 
 StatsBase.nobs(chunk::Qchunk) = nobs(chunk.q)
@@ -143,12 +147,13 @@ end
 function makeQCV{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                    W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                                    param::Parameter{T}, searchstrategy::SearchStrategy,
-                                   idx_train::AbstractVector{Int}, gbounds::Vector{T})
+                                   idx_train::AbstractVector{Int}, gbounds::Vector{T},
+                                   penalize::Bool)
     n, p = size(W)
     idx_train = sort(idx_train)
     idx_val = setdiff(1:n, idx_train)
-    chunk_train = make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_train, gbounds)
-    chunk_val= make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_val, gbounds)
+    chunk_train = make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_train, gbounds, penalize)
+    chunk_val= make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_val, gbounds, false)
     used_covars = IntSet()
     unused_covars = setdiff(IntSet(1:p), used_covars)
     gseq = LR{T}[]
@@ -225,8 +230,9 @@ Performs colaborative targeted minimum loss-based estimation
 * `gbounds` - values for bounding g. Estimates of g will be bounded by `extrema(gbounds)`.
    To only bound away from 0 (or 1), set to e.g. `[0.01, 1.0]` (or `[0.0, 0.99]`).
    To turn off bounding all together, set to `[0.0, 1.0]`. Defaults to `[0.01, 0.99]`.
+* `penalize_risk` - should a penalized risk be used when choosing covariates to estimate g?
+   Defaults to false.
 * `searchstrategy` - Strategy for adding covariates to estimates of g. See ?SearchStrategy.
-   Default is ForwardStepwise()
 * `cvplan` - An iterator of vectors of Int indexes of observations in each training set for
    cross validaiton. StratifiedKfold and StratifiedRandomSub from the MLBase package are useful
    here. Defaults to 10 fold CV stratifying by treatment for outcomes with more than 2 levels,
@@ -238,10 +244,11 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                  W::Matrix{T}, A::Vector{T}, Y::Vector{T};
                                  param::Parameter{T}=ATE(),
                                  gbounds::Vector{T}=[0.01, 0.99],
+                                 penalize_risk::Bool=false,
                                  searchstrategy::SearchStrategy = ForwardStepwise(),
                                  cvplan = StratifiedKfold(length(unique(Y))<3? zip(A, Y) : A, 10),
                                  patience::Int=typemax(Int)
-                                 )
+                                )
     n,p = size(W)
     n == length(logitQnA1) ==
         length(logitQnA0) ==
@@ -252,37 +259,38 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     all(W[:, 1] .== 1) || throw(ArgumentError("The first column of W should be all ones."))
 
     #create vector of QCV objects
-    cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy, idx_train, gbounds)::QCV{T}
+    cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy,
+                    idx_train, gbounds, penalize_risk)::QCV{T}
             for idx_train in cvplan]
 
     #using cross-validation, find best number of steps to take
-    steps = find_steps(cvqs, patience=patience)
+    best_steps = find_steps(cvqs, patience=patience)
 
     #build a chunk with the full data set
-    fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, gbounds, convert(T, Inf))
+    fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, gbounds, penalize_risk, convert(T, Inf))
     gseq = LR{T}[]
     new_flucseq = Bool[]
     used_covars = IntSet()
     unused_covars = IntSet(1:p)
     #and add covariates steps # of times, saving g fits
     @info("Fitting final estimate of Q")
-    for stp in 1:steps
+    for step in 1:best_steps
 #         @debug("used_covars: $used_covars")
 #         @debug("unused_covars: $unused_covars")
         gfit, new_fluc = add_covars!(fullchunk, searchstrategy, used_covars, unused_covars)
         push!(gseq, gfit)
         push!(new_flucseq, new_fluc)
         @info(if length(gseq) == 1
-                  "Step $step of $steps complete, covariate [1] added in new fluctuation."
+                  "Step $step of $best_steps complete, covariate [1] added in new fluctuation."
               else
                   whichfluc = new_fluc? "in new" : "to current"
                   whichcovars = setdiff(gseq[end].idx, gseq[end-1].idx)
-                  "Step $step of $steps complete, covariates $whichcovars added $whichfluc fluctuation."
+                  "Step $step of $best_steps complete, covariates $whichcovars added $whichfluc fluctuation."
               end)
     end
 
     #create flucinfo
-    flucinfo = FluctuationInfo(steps, gseq, new_flucseq)
+    flucinfo = FluctuationInfo(best_steps, gseq, new_flucseq)
 
     q=fullchunk.q
     CTMLE(applyparam(param, q, A, Y)..., nobs(q), estimand(param), searchstrategy, flucinfo)
@@ -312,8 +320,7 @@ if we can do better.
 If `patience` is `0`, we stop as soon as risk starts increasing.
 If `pateince` is negative, we stop after 1 step, which is probably not a good idea.
 
-Returns most recent `gfit` object and a boolean which is `true` if the most recent covariates were added to a new fluctuation
-or `false` if the previous fluctuation was updated with new covariates.
+Returns best risk and number of steps.
 
 """
 function find_steps{T<:AbstractFloat}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
@@ -372,12 +379,12 @@ function add_covars!(chunk::Qchunk, searchstrategy::SearchStrategy, used_covars,
         gfit = lreg(chunk.W, chunk.A, subset=1:1)
         fluc = computefluc(chunk.q, chunk.param, bound!(predict(gfit, chunk.W), chunk.gbounds), chunk.A, chunk.Y)
         fluctuate!(chunk.q, fluc)
-        chunk.risk = risk(chunk.q,chunk.A, chunk.Y)
+        chunk.risk = risk(chunk.q,chunk.A, chunk.Y, chunk.param, chunk.penalize)
         return gfit, true
     else
 #         @debug("Adding covariate(s)")
         abc = add_covars!(searchstrategy, chunk.q, chunk.param, chunk.W, chunk.A, chunk.Y,
-                                   used_covars, unused_covars, chunk.risk, chunk.gbounds)
+                          used_covars, unused_covars, chunk.risk, chunk.gbounds, chunk.penalize)
         q_risk, gfit, new_fluc = abc
         chunk.risk=q_risk
         return gfit, new_fluc
@@ -418,7 +425,7 @@ function add_covars!(qcv::QCV)
         defluctuate!(val.q)
     end
     fluctuate!(val.q, valfluc(lastfluc(train.q), val.param, gn1_val, val.A))
-    val.risk = risk(val.q, val.A, val.Y)
+    val.risk = risk(val.q, val.A, val.Y, val.param, false)
 
     qcv
 end
@@ -434,6 +441,25 @@ function bound!{T<:AbstractFloat}(gn1::Vector{T}, gbounds::Vector{T})
         @inbounds gn1[i] = max(mn, min(mx,gn1[i]))
     end
     gn1
+end
+
+function risk{T<:AbstractFloat}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}, param::Parameter{T}, penalize::Bool)
+    total_loss = 0.0
+    length(Y) == nobs(q) || error()
+    lp = linpred(q, A)
+    for i in 1:nobs(q)
+      total_loss += LReg.loss(Y[i], lp[i])
+    end
+    q_risk = total_loss/nobs(q)
+
+
+    if penalize
+        ic = applyparam(param, q, A, Y)[2]
+        pen = var(ic) / length(A)
+    else
+        pen = 0.0
+    end
+    q_risk + pen
 end
 
 end # module

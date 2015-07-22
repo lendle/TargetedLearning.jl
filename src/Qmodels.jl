@@ -115,16 +115,6 @@ end
 """
 predict{T<:AbstractFloat}(q::Qmodel{T}, a::Vector{T}) = logistic(linpred(q,a))
 
-function risk{T<:AbstractFloat}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T})
-  total_loss = 0.0
-  length(Y) == nobs(q) || error()
-  lp = linpred(q, A)
-  for i in 1:nobs(q)
-    total_loss += LReg.loss(Y[i], lp[i])
-  end
-  total_loss/nobs(q)
-end
-
 function compute_h_wts(param::Parameter, gn1, A; weighted::Bool=false)
     n = length(A)
     n == length(gn1) || error()
@@ -207,29 +197,5 @@ end
 function defluctuate!(q::Qmodel)
     pop!(q.flucseq)
 end
-
-# function risk(q::Qmodel, w, a, y; pen=true)
-#     #calculate penalized log likelihood as RSS + tau(=1 here?) * var(ic)
-#     # need to implement log likelihood
-#     # note: not scaled by n. ask Susan.
-
-#     loss = sum(LReg.Loss(), y, predict(q, w, a, :link))
-
-#     if pen
-#         n = length(y)
-#         h = predict(finalg(q), w)
-#         map1!(Gatoh(), h, a)
-
-#         QnA1 = predict(q, w, ones(n), :prob)
-#         QnA0 = predict(q, w, zeros(n), :prob)
-#         QnAA = ifelse(a.==1, QnA1, QnA0)
-
-#         resid = y .- QnAA
-
-#         loss += var(h .* resid .+ QnA1 .- QnA0)
-#     end
-#     loss
-# end
-
 
 end
