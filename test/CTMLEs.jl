@@ -64,6 +64,9 @@ facts("Test CTMLEs") do
         @fact est2 => is_a(CTMLE)
         est3 = ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=CTMLEs.PreOrdered(CTMLEs.PartialCorrOrdering()))
         @fact est3 => is_a(CTMLE)
+        est4 = ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=[CTMLEs.PreOrdered(CTMLEs.LogisticOrdering()),
+                                                                    CTMLEs.PreOrdered(CTMLEs.PartialCorrOrdering())])
+        @fact est4 => is_a(CTMLE)
     end
     @pending "Actually test that it works" => nothing
 end
