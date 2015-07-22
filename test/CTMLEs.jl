@@ -22,7 +22,7 @@ facts("Test CTMLEs") do
     end
 
     context("making chunk subsets") do
-        qc = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3)
+        qc = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0])
         @fact qc => is_a(Qchunk)
         @fact CTMLEs.nobs(qc) => 3
         @fact qc.risk => CTMLEs.risk(Qmodel(logitQnA1[1:3], logitQnA0[1:3]), a[1:3], y[1:3])
