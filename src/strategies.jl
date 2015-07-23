@@ -41,7 +41,8 @@ function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
                                        used_covars::IntSet,
                                        unused_covars::IntSet,
                                        prev_risk::T,
-                                       gbounds::Vector{T})
+                                       gbounds::Vector{T},
+                                       penalize::Bool)
     @debug("unused_covars: $(unused_covars)")
     @debug("used_covars: $(used_covars)")
 
@@ -61,7 +62,7 @@ function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
         #fluctuate and get risk
         fluc = computefluc(q, param, bound!(predict(gfit, W), gbounds), A, Y)
         fluctuate!(q, fluc)
-        next_covar_risk[j] = risk(q, A, Y)
+        next_covar_risk[j] = risk(q, A, Y, param, penalize)
         if isnan(next_covar_risk[j])
             @warn("Risk is NaN. used covars: $used_covars")
         end
@@ -91,7 +92,7 @@ function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
             gfit = g_fluc_dict[current_covars][1]
             fluc = computefluc(q, param, bound!(predict(gfit, W), gbounds), A, Y)
             fluctuate!(q, fluc)
-            next_covar_risk[j] = risk(q, A, Y)
+            next_covar_risk[j] = risk(q, A, Y, param, penalize)
             if isnan(next_covar_risk[j])
                 @warn("Risk is NaN. used covars: $used_covars")
             end
@@ -124,7 +125,8 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
                                        used_covars::IntSet,
                                        unused_covars::IntSet,
                                        prev_risk::T,
-                                       gbounds::Vector{T})
+                                       gbounds::Vector{T},
+                                       penalize::Bool)
 
     if isempty(strategy.covar_order)
         append!(strategy.covar_order, order_covars(strategy.ordering, q, W, A, Y, unused_covars))
@@ -146,7 +148,7 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
 
     fluc = computefluc(q, param, gn1, A, Y)
     fluctuate!(q, fluc)
-    new_risk = risk(q, A, Y)
+    new_risk = risk(q, A, Y, param, penalize)
 
     if new_risk < prev_risk
         return new_risk, g_fit, false
@@ -155,7 +157,7 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
     defluctuate!(q)
     fluctuate!(q, fluc_now)
     fluctuate!(q, param, gn1, A, Y)
-    return risk(q, A, Y), g_fit, true
+    return risk(q, A, Y, param, penalize), g_fit, true
 end
 
 function order_covars(ordering::LogisticOrdering, q, W, A, Y, available_covars)

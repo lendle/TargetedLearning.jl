@@ -22,10 +22,10 @@ facts("Test CTMLEs") do
     end
 
     context("making chunk subsets") do
-        qc = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0])
+        qc = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0], false)
         @fact qc => is_a(Qchunk)
         @fact CTMLEs.nobs(qc) => 3
-        @fact qc.risk => CTMLEs.risk(Qmodel(logitQnA1[1:3], logitQnA0[1:3]), a[1:3], y[1:3])
+        @fact qc.risk => Inf
     end
 
     context("FluctuationInfo") do
@@ -62,7 +62,7 @@ facts("Test CTMLEs") do
         @fact est => is_a(CTMLE)
         est2 = ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=CTMLEs.PreOrdered(CTMLEs.LogisticOrdering()))
         @fact est2 => is_a(CTMLE)
-        est3 = ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=CTMLEs.PreOrdered(CTMLEs.PartialCorrOrdering()))
+        est3 = ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=CTMLEs.PreOrdered(CTMLEs.PartialCorrOrdering()), penalize_risk=true)
         @fact est3 => is_a(CTMLE)
         est4 = ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=[CTMLEs.PreOrdered(CTMLEs.LogisticOrdering()),
                                                                     CTMLEs.PreOrdered(CTMLEs.PartialCorrOrdering())])

@@ -116,8 +116,6 @@ end
 """
 predict{T<:FloatingPoint}(q::Qmodel{T}, a::Vector{T}) = map1!(LogisticFun(), linpred(q,a))
 
-risk{T<:FloatingPoint}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}) = mean(LReg.Loss(), Y, linpred(q, A))
-
 function compute_h_wts(param::Parameter, gn1, A; weighted::Bool=false)
     n = length(A)
     n == length(gn1) || error()
