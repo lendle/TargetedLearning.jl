@@ -101,7 +101,7 @@ function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
         end
         @debug("next_covar_risk: $next_covar_risk")
         best_risk, best_j = findmin(next_covar_risk)
-        if best_risk > prev_risk
+        if !penalize && best_risk > prev_risk
             @warn("Best risk is worse than previous best risk. This doesn't make sense. Continuing anyway...")
         end
         @debug("best_j: $best_j, unused_covars: $unused_covars")
