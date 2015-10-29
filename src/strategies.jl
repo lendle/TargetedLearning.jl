@@ -127,7 +127,7 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
                                        gbounds::Vector{T})
 
     if isempty(strategy.covar_order)
-        append!(strategy.covar_order, order_covars(strategy.ordering, q, W, A, Y, unused_covars))
+        append!(strategy.covar_order, order_covars(strategy.ordering, q, param, W, A, Y, unused_covars, gbounds))
     end
 
     ordered_unused_covars = filter(x -> x ∉ used_covars, strategy.covar_order)
@@ -158,26 +158,28 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
     return risk(q, A, Y), g_fit, true
 end
 
-function order_covars(ordering::LogisticOrdering, q, W, A, Y, available_covars)
+function order_covars(ordering::LogisticOrdering, q, param, W, A, Y, available_covars, gbounds)
     logitQnAA = linpred(q, A)
     scores = Dict{Int, Float64}()
-    WA = [W A]
-    aidx = size(WA, 2)
     for i in available_covars
-        fit = lreg(WA, Y, subset=[i, aidx], offset=logitQnAA)
-        scores[i] = mean(LReg.Loss(), Y, linpred(fit, WA, offset=logitQnAA))
+        g_fit = lreg(W, A, subset=[i])
+        gn1 = bound!(predict(g_fit, W), gbounds)
+        fluc = computefluc(q, param, gn1, A, Y)
+        fluctuate!(q, fluc)
+        scores[i] = risk(q, A, Y)
+        defluctuate!(q)
     end
     sort!(collect(keys(scores)), by = x -> scores[x])
 end
 
-function order_covars(ordering::PartialCorrOrdering, q, W, A, Y, available_covars)
+function order_covars(ordering::PartialCorrOrdering, q, param, W, A, Y, available_covars, gbounds)
     resid = Y .- predict(q, A)
     W_available = W[:, collect(available_covars)]
     scores = Dict(collect(zip(available_covars, abs(pcor(resid, W_available, A)))))
     return sort!(collect(keys(scores)), by = x -> scores[x], rev=true)
 end
 
-function order_covars(ordering::HDPSOrdering, q, W, A, Y, available_covars)
+function order_covars(ordering::HDPSOrdering, q, param, W, A, Y, available_covars, gbounds)
     error()
 end
 
