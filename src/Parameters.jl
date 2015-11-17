@@ -18,6 +18,7 @@ export Regimen,
 using ..Qmodels
 import ..Common: Parameter, fluccovar
 import StatsBase.predict
+import Base.==
 
 """
 Represents a particular single time point treatment regimen.

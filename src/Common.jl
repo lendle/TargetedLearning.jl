@@ -20,6 +20,7 @@ export Parameter,
 using Distributions, Calculus
 
 import Base.var
+import Base: +, -, *, /, ^
 #borrowing some names from StatsBase, but not the StatsModels type
 import StatsBase: coef, vcov, nobs, stderr, confint, coeftable, CoefTable
 
