@@ -5,10 +5,10 @@ docs:
 	mkdocs build --clean
 
 test:
-	julia --color test/runtests.jl
+	julia --color=yes test/runtests.jl
 
 test-coverage:
-	julia --color -e 'Pkg.test("TargetedLearning", coverage=true)'
+	julia --color=yes -e 'Pkg.test("TargetedLearning", coverage=true)'
 
 lint:
-	julia --color -e 'using Lint; lintpkg("TargetedLearning")'
+	julia --color=yes -e 'using Lint; lintpkg("TargetedLearning")'
