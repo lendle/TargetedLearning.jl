@@ -1,10 +1,10 @@
-using NumericExtensions
 using TargetedLearning: LReg, Qmodels, Parameters
+using StatsFuns
 
 import TargetedLearning.Qmodels: Fluctuation, computefluc
 
 facts("Testing Qmodels") do
-    
+
     srand(412)
     n,p = 100, 10
 
@@ -18,11 +18,11 @@ facts("Testing Qmodels") do
     logitQnAA = ifelse(a.==1, logitQnA1, logitQnA0)
 
     q = Qmodel(logitQnA1, logitQnA0)
-    
-    context("predict on unfluctuated Qmodel") do 
+
+    context("predict on unfluctuated Qmodel") do
         @fact predict(q, a) --> logistic(ifelse(a.==1, logitQnA1, logitQnA0))
     end
-    
+
     gn1 = predict(lreg(w,a), w)
     gna = ifelse(a.==1, gn1, 1-gn1)
     hAA = (2a-1)./gna
@@ -31,7 +31,7 @@ facts("Testing Qmodels") do
     param=ATE()
     theirfluc = computefluc(q, param, gn1, a, y)
     fluctuate!(q, param, gn1, a, y)
-        
+
     context("fluctuation") do
         @fact theirfluc.epsilon.β --> roughly(fluc.β)
         @fact q.flucseq[1].epsilon.β --> roughly(fluc.β)
@@ -40,10 +40,9 @@ facts("Testing Qmodels") do
     context("predict on fluctated Qmodel") do
         @fact predict(q, ones(n)) --> roughly(logistic(logitQnA1 + hA1 * fluc.β[1]))
     end
-    
+
     context("defluctuate!") do
         @fact defluctuate!(q) --> is_a(Fluctuation{Float64})
         @fact length(q.flucseq) --> 0
     end
 end
-

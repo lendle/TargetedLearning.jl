@@ -1,6 +1,5 @@
-
 using TargetedLearning.LReg
-using NumericExtensions
+using StatsFuns
 
 facts("Testing LReg") do
 
@@ -18,7 +17,12 @@ facts("Testing LReg") do
         @fact_throws predict(lrfit, newx, offset=rand(newn))
 
         pred = logistic(x * lrfit.β)
-        @fact mean(LReg.Loss(), y, linpred(lrfit, x)) --> roughly(mean(- y .* log(pred) .- (1-y) .* log(1 .- pred)))
+        total_loss = 0.0
+        lp=linpred(lrfit, x)
+        for i in 1:length(y) #NumericExtensions
+          total_loss += LReg.loss(y[i], lp[i])
+        end
+        @fact total_loss/length(y) --> roughly(mean(- y .* log(pred) .- (1-y) .* log(1 .- pred)))
     end
 
     context("with offset") do
@@ -50,11 +54,10 @@ facts("Testing LReg") do
         @fact lrvec --> is_a(LR)
         @fact predict(lrvec, rand(10)) --> is_a(Vector)
     end
-    
+
     context("intercept only") do
         @pending "without weights" --> nothing
         @pending "with weights" --> nothing
     end
-    
-end
 
+end

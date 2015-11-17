@@ -17,7 +17,7 @@ export Parameter,
        confint,
        coeftable
 
-using Distributions, Calculus, NumericExtensions
+using Distributions, Calculus
 
 import Base.var
 #borrowing some names from StatsBase, but not the StatsModels type
@@ -90,7 +90,9 @@ type ScalarEstimate{T <: AbstractFloat} <: AbstractScalarEstimate
         #cutoff chosen because var(ic) = mean(ic.^2) - mean(ic)^2
         #which is greater than mean(ic.^2) - eps(T), and eps(T) is pretty small
         abs(meanic) <= sqrt(eps(T)) || error("Mean of ic should be approximately 0. It is $meanic.")
-        subtract!(ic, meanic)
+        for i in 1:length(ic) #NumericExtensions
+          @inbounds ic[i] -= meanic
+        end
         new(psi, ic, length(ic), estimand)
     end
 end

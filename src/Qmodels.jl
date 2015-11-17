@@ -5,7 +5,8 @@ module Qmodels
 
 VERSION < v"0.4-" && using Docile
 
-using ..Common, ..LReg, NumericExtensions, NumericFuns
+using ..Common, ..LReg
+using StatsFuns
 
 import ..LReg: linpred, predict
 import StatsBase.nobs
@@ -114,9 +115,17 @@ end
 * `a` - vector of treatments
 
 """
-predict{T<:AbstractFloat}(q::Qmodel{T}, a::Vector{T}) = map1!(LogisticFun(), linpred(q,a))
+predict{T<:AbstractFloat}(q::Qmodel{T}, a::Vector{T}) = logistic(linpred(q,a))
 
-risk{T<:AbstractFloat}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}) = mean(LReg.Loss(), Y, linpred(q, A))
+function risk{T<:AbstractFloat}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T})
+  total_loss = 0.0
+  length(Y) == nobs(q) || error()
+  lp = linpred(q, A)
+  for i in 1:nobs(q)
+    total_loss += LReg.loss(Y[i], lp[i])
+  end
+  total_loss/nobs(q)
+end
 
 function compute_h_wts(param::Parameter, gn1, A; weighted::Bool=false)
     n = length(A)

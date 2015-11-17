@@ -9,7 +9,7 @@ LReg
 
 using GLMNet, Distributions
 
-using NumericExtensions, NumericFuns, StatsBase
+using StatsBase, StatsFuns
 
 import StatsBase: predict
 import Distributions: log1pexp
@@ -44,7 +44,9 @@ function linpred(lr::LR, newx; offset=Array(eltype(newx), 0))
     p = newx * lr.β
     if lr.fitwithoffset
         length(offset) == size(newx, 1) || throw(ArgumentError("fit with offset, 'offset' kw arg should have length size(newx, 1)"))
-        add!(p, offset)
+        for i in 1:length(p) #NumericExtensions
+          @inbounds p[i] += offset[i]
+        end
     else
         length(offset) == 0 || throw(ArgumentError("not fit with offset, 'offset' kw arg should have length 0"))
     end
@@ -63,7 +65,7 @@ Returns the predicted on the probability scale values from a logistic regression
 
 * `offset` - offsets. The length should be the same as `size(newx, 1)` of `lr` was fit with an offset, or 0 otherwise.
 """
-predict(lr::LR, newx; offset=Array(eltype(newx), 0)) = map1!(LogisticFun(), linpred(lr, newx, offset=offset))
+predict(lr::LR, newx; offset=Array(eltype(newx), 0)) = logistic(linpred(lr, newx, offset=offset))
 
 """
 Fits a logistic regression model
@@ -112,8 +114,7 @@ function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2), convTo
     end
 end
 
-type Loss <: Functor{2} end
-NumericExtensions.evaluate(::Loss, y, xb) =
+loss(y, xb) =
     y == one(y)? log1pexp(-xb) :
     y == zero(y)? log1pexp(xb) :
     y * log1pexp(-xb) + (one(y)-y) * log1pexp(xb)
