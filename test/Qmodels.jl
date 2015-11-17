@@ -20,7 +20,7 @@ facts("Testing Qmodels") do
     q = Qmodel(logitQnA1, logitQnA0)
     
     context("predict on unfluctuated Qmodel") do 
-        @fact predict(q, a) => logistic(ifelse(a.==1, logitQnA1, logitQnA0))
+        @fact predict(q, a) --> logistic(ifelse(a.==1, logitQnA1, logitQnA0))
     end
     
     gn1 = predict(lreg(w,a), w)
@@ -33,17 +33,17 @@ facts("Testing Qmodels") do
     fluctuate!(q, param, gn1, a, y)
         
     context("fluctuation") do
-        @fact theirfluc.epsilon.β => roughly(fluc.β)
-        @fact q.flucseq[1].epsilon.β => roughly(fluc.β)
+        @fact theirfluc.epsilon.β --> roughly(fluc.β)
+        @fact q.flucseq[1].epsilon.β --> roughly(fluc.β)
     end
 
     context("predict on fluctated Qmodel") do
-        @fact predict(q, ones(n)) => roughly(logistic(logitQnA1 + hA1 * fluc.β[1]))
+        @fact predict(q, ones(n)) --> roughly(logistic(logitQnA1 + hA1 * fluc.β[1]))
     end
     
     context("defluctuate!") do
-        @fact defluctuate!(q) => is_a(Fluctuation{Float64})
-        @fact length(q.flucseq) => 0
+        @fact defluctuate!(q) --> is_a(Fluctuation{Float64})
+        @fact length(q.flucseq) --> 0
     end
 end
 
