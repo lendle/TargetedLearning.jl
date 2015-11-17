@@ -45,7 +45,7 @@ A `Qchunk` holds (a subset of) the data set and corresponding indexes along with
 each observation, a `Parameter` (whos definition may depend on each observation) and the value of the emperical risk
 for the current `Qmodel`.
 """
-type Qchunk{T<:FloatingPoint}
+type Qchunk{T<:AbstractFloat}
     q::Qmodel{T}
     W::Matrix{T}
     A::Vector{T}
@@ -56,7 +56,7 @@ type Qchunk{T<:FloatingPoint}
     risk::T
 end
 
-function make_chunk_subset{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
+function make_chunk_subset{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                            W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                            param::Parameter{T}, idx::AbstractVector{Int}, gbounds::Vector{T})
     length(logitQnA1) == length(logitQnA0) == size(W, 1) == length(A) == length(Y) ||
@@ -76,7 +76,7 @@ StatsBase.nobs(chunk::Qchunk) = nobs(chunk.q)
 A `QCV` holds a training `Qchunk` and a validation `Qchunk`, a sequence of estimated gs corresponding to
 each fluctuation of the `Qchunk`s, the `SearchStrategy` in use, and indexes of used and unused covariates.
 """
-type QCV{T<:FloatingPoint}
+type QCV{T<:AbstractFloat}
     chunk_train::Qchunk{T}
     chunk_val::Qchunk{T}
     gseq::Vector{LR{T}}
@@ -144,7 +144,7 @@ function fluctuate!(qcv, g::LR)
     fluctuate!(qcv, g, fluc_train, fluc_val)
 end
 
-function makeQCV{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
+function makeQCV{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                    W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                                    param::Parameter{T}, searchstrategy::SearchStrategy,
                                    idx_train::AbstractVector{Int}, gbounds::Vector{T})
@@ -193,11 +193,11 @@ function Base.show(io::IO, flucinfo::FluctuationInfo)
     end
 end
 
-type CTMLE{T<:FloatingPoint} <: AbstractScalarEstimate
+type CTMLE{T<:AbstractFloat} <: AbstractScalarEstimate
     psi::T
     ic::Vector{T}
     n::Int
-    estimand::String
+    estimand::AbstractString
     seasrchstrategy::SearchStrategy
     flucinfo::FluctuationInfo
     function CTMLE(psi, ic, n, estimand, searchstrategy, flucinfo)
@@ -206,7 +206,7 @@ type CTMLE{T<:FloatingPoint} <: AbstractScalarEstimate
     end
 end
 
-CTMLE{T<:FloatingPoint}(psi::T, ic::Vector{T}, n::Int, estimand::String,
+CTMLE{T<:AbstractFloat}(psi::T, ic::Vector{T}, n::Int, estimand::AbstractString,
                         searchstrategy::SearchStrategy, flucinfo::FluctuationInfo) =
     CTMLE{T}(psi, ic, n, estimand, searchstrategy, flucinfo)
 
@@ -238,7 +238,7 @@ Performs colaborative targeted minimum loss-based estimation
 * `patience` - For how many steps should CV continue after finding a local optimum? Defaults to typemax(Int)
 
 """
-function ctmle{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
+function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                  W::Matrix{T}, A::Vector{T}, Y::Vector{T};
                                  param::Parameter{T}=ATE(),
                                  gbounds::Vector{T}=[0.01, 0.99],
@@ -320,7 +320,7 @@ Returns most recent `gfit` object and a boolean which is `true` if the most rece
 or `false` if the previous fluctuation was updated with new covariates.
 
 """
-function find_steps{T<:FloatingPoint}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
+function find_steps{T<:AbstractFloat}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
     notdone = true
     steps = 0
     best_steps = 0
@@ -427,7 +427,7 @@ function add_covars!(qcv::QCV)
     qcv
 end
 
-function bound!{T<:FloatingPoint}(gn1::Vector{T}, gbounds::Vector{T})
+function bound!{T<:AbstractFloat}(gn1::Vector{T}, gbounds::Vector{T})
     mn, mx = extrema(gbounds)
     mn < 0.5 || ArgumentError("minimum(gbounds) should be < 0.5")
     mx > 0.5 || ArgumentError("maximum(gbounds) should be > 0.5")

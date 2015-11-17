@@ -17,7 +17,7 @@ computefluc, valfluc
 A `Fluctuation` holds fluctuation covariates and weights. The weight times the fluctuation covariate is the so called "clever covariate" in the targeted
 learning literature.
 """
-type Fluctuation{T<:FloatingPoint}
+type Fluctuation{T<:AbstractFloat}
     hA1::Vector{T}
     hA0::Vector{T}
     wts::Vector{T}
@@ -29,7 +29,7 @@ type Fluctuation{T<:FloatingPoint}
     end
 end
 
-Fluctuation{T<:FloatingPoint}(hA1::Vector{T}, hA0::Vector{T}, wts::Vector{T},
+Fluctuation{T<:AbstractFloat}(hA1::Vector{T}, hA0::Vector{T}, wts::Vector{T},
                               epsilon::LR{T}, weighted::Bool) =
     Fluctuation{T}(hA1, hA0, wts, epsilon, weighted)
 
@@ -42,7 +42,7 @@ nobs(fluc::Fluctuation) = length(fluc.hA1)
 * `fluc` - fluctuation
 * `a` - treatment vector
 """
-function weightedcovar{T<:FloatingPoint}(fluc::Fluctuation{T}, a::Vector{T})
+function weightedcovar{T<:AbstractFloat}(fluc::Fluctuation{T}, a::Vector{T})
     ifelse(a.==1, fluc.hA1, fluc.hA0) .* fluc.wts
 end
 
@@ -58,7 +58,7 @@ Computes the fluctuated linear predictor given an offset
 
 * `offset` - offset term, defaults to zeros, but the default should generally not be used
 """
-function linpred{T<:FloatingPoint}(fluc::Fluctuation{T}, a::Vector{T}; offset::Vector{T}=zeros(T, 0))
+function linpred{T<:AbstractFloat}(fluc::Fluctuation{T}, a::Vector{T}; offset::Vector{T}=zeros(T, 0))
     hAA = ifelse(a.==1, fluc.hA1, fluc.hA0)
     linpred(fluc.epsilon, hAA, offset=offset)
 end
@@ -68,7 +68,7 @@ The `Qmodel` type represents an estimate of \(\bar{Q}(a,w) = E(Y\mid A=a, W=w)\)
 
 Initial estimate and fluctuations.
 """
-type Qmodel{T<:FloatingPoint}
+type Qmodel{T<:AbstractFloat}
     logitQnA1::Vector{T} # \logit\bar{Q}_{n}(A=1, W)
     logitQnA0::Vector{T} # \logit\bar{Q}_{n}(A=0, W)
     flucseq::Vector{Fluctuation{T}} #flucseq[i] = ith fluctuation LR
@@ -78,7 +78,7 @@ type Qmodel{T<:FloatingPoint}
     end
 end
 
-Qmodel{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T}) = Qmodel{T}(logitQnA1, logitQnA0)
+Qmodel{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T}) = Qmodel{T}(logitQnA1, logitQnA0)
 
 nobs(q::Qmodel) = length(q.logitQnA1)
 
@@ -88,7 +88,7 @@ function lastfluc(q::Qmodel)
     q.flucseq[end]
 end
 
-# Qmodel{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T}, param::Parameter{T})=
+# Qmodel{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T}, param::Parameter{T})=
 #     Qmodel{T}(logitQnA1, logitQnA0, param, Vector{T}[], Vector{LR{Float64}}[])
 """Computes the linear predictor of an estimated `Qmodel` given `a`
 
@@ -98,7 +98,7 @@ end
 * `a` - vector of treatments
 
 """
-function linpred{T<:FloatingPoint}(q::Qmodel{T}, a::Vector{T})
+function linpred{T<:AbstractFloat}(q::Qmodel{T}, a::Vector{T})
     r = ifelse(a .==1, q.logitQnA1, q.logitQnA0)
     for fluc in q.flucseq
         r = linpred(fluc, a, offset=r)
@@ -114,9 +114,9 @@ end
 * `a` - vector of treatments
 
 """
-predict{T<:FloatingPoint}(q::Qmodel{T}, a::Vector{T}) = map1!(LogisticFun(), linpred(q,a))
+predict{T<:AbstractFloat}(q::Qmodel{T}, a::Vector{T}) = map1!(LogisticFun(), linpred(q,a))
 
-risk{T<:FloatingPoint}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}) = mean(LReg.Loss(), Y, linpred(q, A))
+risk{T<:AbstractFloat}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}) = mean(LReg.Loss(), Y, linpred(q, A))
 
 function compute_h_wts(param::Parameter, gn1, A; weighted::Bool=false)
     n = length(A)
@@ -168,7 +168,7 @@ function valfluc(fluc::Fluctuation, param::Parameter, gn1, A; weighted::Bool=fal
     Fluctuation(hA1, hA0, wts, epsilon, weighted)
 end
 
-function fluctuate!{T<:FloatingPoint}(q::Qmodel{T}, fluc::Fluctuation{T})
+function fluctuate!{T<:AbstractFloat}(q::Qmodel{T}, fluc::Fluctuation{T})
     nobs(q) == nobs(fluc) || error(ArgumentError("nobs of q and fluc do not match"))
     push!(q.flucseq, fluc)
     q
@@ -191,7 +191,7 @@ Computes and adds a new fluctuation to a `Qmodel`
 * `weighted` - A boolean, `false` by default.
 See documentation for `computefluc` for details.
 """
-function fluctuate!{T<:FloatingPoint}(q::Qmodel{T}, param::Parameter{T}, gn1::Vector{T},
+function fluctuate!{T<:AbstractFloat}(q::Qmodel{T}, param::Parameter{T}, gn1::Vector{T},
                                       A::Vector{T}, Y::Vector{T};
                                       weighted::Bool=false)
     fluctuate!(q, computefluc(q, param, gn1, A, Y, weighted=weighted))

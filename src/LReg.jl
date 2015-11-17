@@ -19,7 +19,7 @@ export LR, lreg, predict, linpred
 """The `LR` type contains the coefficent vector of a logistic regression fit, as well as indexes of
 included columns in the design matrix.
 """
-immutable LR{T<:FloatingPoint}
+immutable LR{T<:AbstractFloat}
     β::Vector{T}
     idx::AbstractVector{Int}
     fitwithoffset::Bool

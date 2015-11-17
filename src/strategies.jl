@@ -32,7 +32,7 @@ end
 # added covar(s) are added to used_covars and deleted from unused_covars
 # q is fluctuated
 #return best_risk, gfit, new_fluc
-function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
+function add_covars!{T<:AbstractFloat}(::ForwardStepwise,
                                        q::Qmodel{T},
                                        param::Parameter{T},
                                        W::Matrix{T},
@@ -115,7 +115,7 @@ end
 # added covar(s) are added to used_covars and deleted from unused_covars
 # q is fluctuated
 #return best_risk, gfit, new_fluc
-function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
+function add_covars!{T<:AbstractFloat}(strategy::PreOrdered,
                                        q::Qmodel{T},
                                        param::Parameter{T},
                                        W::Matrix{T},

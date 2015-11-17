@@ -13,18 +13,18 @@ export tmle
 
 using ..Qmodels, ..Parameters, ..Common
 
-type TMLE{T<:FloatingPoint} <: AbstractScalarEstimate
+type TMLE{T<:AbstractFloat} <: AbstractScalarEstimate
     psi::T
     ic::Vector{T}
     n::Int
-    estimand::String
+    estimand::AbstractString
     function TMLE(psi, ic, n, estimand)
         est = ScalarEstimate(psi, ic)
         new(est.psi, est.ic, n, estimand)
     end
 end
 
-TMLE{T<:FloatingPoint}(psi::T, ic::Vector{T}, n, estimand) = TMLE{T}(psi, ic, n, estimand)
+TMLE{T<:AbstractFloat}(psi::T, ic::Vector{T}, n, estimand) = TMLE{T}(psi, ic, n, estimand)
 
 
 """
