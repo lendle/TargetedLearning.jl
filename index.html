@@ -186,7 +186,7 @@
 
 <h1 id="about">About</h1>
 <p>Targeted minimum loss-based estimation (TMLE) (sometimes targeted maximum likelihood estimation) is a general framework for constructing regular, asymptotically linear estimators for pathwise differentiable parameters with additional properties such as <a href="https://en.wikipedia.org/wiki/Efficiency_%28statistics%29#Asymptotic_efficiency">asymptotic efficiency</a> and double robustness. For background and details, see <a href="https://www.springer.com/statistics/statistical+theory+and+methods/book/978-1-4419-9781-4">Targeted Learning</a> by van der Laan and Rose, or <a href="http://scholar.google.com/scholar?q=targeted+estimation+tmle">articles</a> on TMLE.</p>
-<p>TargetedLearing.jl is a package for <a href="http://julialang.org">Julia</a> v0.3.x that implements a TMLE and collaborative TMLE (CTMLE) to estimate a handful of statistical parameters. In particular, we can currently estimate the (statistical parameter corresponding to the) <a href="https://en.wikipedia.org/wiki/Rubin_causal_model">counterfactual</a> mean of some outcome under a static or dynamic single time point treatment with baseline covariates or the difference in counterfactual means. Additionally, arbitrary transformations of these parameters can be estimated, and inference is performed <a href="user-guide/influencecurves/">automatically</a>.  With a little massaging, the functionality of this package can also be used to estimate the mean of an outcome subject to missingness.</p>
+<p>TargetedLearing.jl is a package for <a href="http://julialang.org">Julia</a> v0.4.x that implements a TMLE and collaborative TMLE (CTMLE) to estimate a handful of statistical parameters. In particular, we can currently estimate the (statistical parameter corresponding to the) <a href="https://en.wikipedia.org/wiki/Rubin_causal_model">counterfactual</a> mean of some outcome under a static or dynamic single time point treatment with baseline covariates or the difference in counterfactual means. Additionally, arbitrary transformations of these parameters can be estimated, and inference is performed <a href="user-guide/influencecurves/">automatically</a>.  With a little massaging, the functionality of this package can also be used to estimate the mean of an outcome subject to missingness.</p>
 <h3 id="contents">Contents</h3>
 <ul>
 <li><a href="user-guide/julia/">Julia</a> provides some links for resources for learning Julia, links to other packages, and an example with enough to get you started.</li>
@@ -200,10 +200,10 @@
 <pre><code class="jlcon">julia&gt; Pkg.clone(&quot;https://github.com/lendle/TargetedLearning.jl.git&quot;)
 </code></pre>
 
-<p>If not, <a href="http://julialang.org/downloads/">download</a> the latest version of Julia v0.3.x.</p>
+<p>If not, <a href="http://julialang.org/downloads/">download</a> the latest version of Julia v0.4.x.</p>
 <p>If you're on OSX and use homebrew, there's a <a href="https://github.com/staticfloat/homebrew-julia#homebrew-julia">tap</a> for that.</p>
 <p>Many linux distributions can install Julia via the package manager, but may be out of date. If you wind up with v0.2.x, you're definitely out of date.</p>
-<p>If you <a href="https://github.com/julialang/julia#source-download-and-compilation">build from source</a>, make sure you <code>git checkout release-0.3</code> so you don't wind up with the development version.</p>
+<p>If you <a href="https://github.com/julialang/julia#source-download-and-compilation">build from source</a>, make sure you <code>git checkout release-0.4</code> so you don't wind up with the development version.</p>
 <h1 id="bugs-questions">Bugs? Questions?</h1>
 <p>Chances are someone else has the same issue, so don't email me. Instead, look at the <a href="https://github.com/lendle/TargetedLearning.jl/issues">issues page</a> to see if you can find anyone else talking about it, or open a new issue.</p>
 <h1 id="want-to-contribute">Want to contribute?</h1>
