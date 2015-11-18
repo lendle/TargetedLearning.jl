@@ -178,7 +178,8 @@
 <h1 id="targetedlearningparameters">TargetedLearning.Parameters</h1>
 <h2 id="exported">Exported</h2>
 <hr />
-<h4 id="applyparam">applyparam</h4>
+<p><a id="function__applyparam.1" class="lexicon_definition"></a></p>
+<h4 id="targetedlearningparametersapplyparam">TargetedLearning.Parameters.applyparam <a href="#function__applyparam.1">¶</a></h4>
 <p>Computes the parameter estimate and influence curve for a particular <code>Parmeter</code> given an estimate of Q and g.</p>
 <p><strong> Arguments </strong></p>
 <ul>
@@ -188,46 +189,52 @@
 <li><code>A</code> - observed treatment vector</li>
 <li><code>Y</code> - observed outcome vector</li>
 </ul>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:121</a></p>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:126</a></p>
 <hr />
-<h4 id="regimen">regimen</h4>
+<p><a id="function__regimen.1" class="lexicon_definition"></a></p>
+<h4 id="targetedlearningparametersregimen">TargetedLearning.Parameters.regimen <a href="#function__regimen.1">¶</a></h4>
 <p>Converts it's argument <code>a</code> to a <code>StaticRegime</code> if <code>a</code> is a scalar, a <code>DynamicRegime</code> if <code>a</code> is a vector,
 or returns <code>a</code> if <code>a</code> is already a <code>Regime</code>.</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:62</a></p>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:62</a></p>
 <hr />
-<h4 id="atetfloatingpoint">ATE{T&lt;:FloatingPoint}</h4>
+<p><a id="type__ate.1" class="lexicon_definition"></a></p>
+<h4 id="targetedlearningparametersatetabstractfloat">TargetedLearning.Parameters.ATE{T&lt;:AbstractFloat} <a href="#type__ate.1">¶</a></h4>
 <p>The <code>ATE</code> parameter is (E_0[E_0(Ymid A=d1, W) - E_0(Ymid A=d0, W)]).</p>
 <p>Under causal assumptions, this can be interpreted as
 the difference in mean counterfactual outcome under regimens <code>d1</code> and <code>d0</code>.  When <code>d1</code> is the static regimen setting treatment to 1
 and <code>d0</code> is the static regimen setting treatment to 0, this is called the averate treatment effect (ATE).</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:92</a></p>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:94</a></p>
 <hr />
-<h4 id="dynamicregimentfloatingpoint">DynamicRegimen{T&lt;:FloatingPoint}</h4>
+<p><a id="type__dynamicregimen.1" class="lexicon_definition"></a></p>
+<h4 id="targetedlearningparametersdynamicregimentabstractfloat">TargetedLearning.Parameters.DynamicRegimen{T&lt;:AbstractFloat} <a href="#type__dynamicregimen.1">¶</a></h4>
 <p>A <code>DynamicRegimen</code> sets treatment for each observation to a particular value. Constructed with
 <code>DynamicRegimen(a)</code> where <code>a</code> a vector of floating point is 0 or 1s.</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:46</a></p>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:46</a></p>
 <hr />
-<h4 id="meantfloatingpoint">Mean{T&lt;:FloatingPoint}</h4>
+<p><a id="type__mean.1" class="lexicon_definition"></a></p>
+<h4 id="targetedlearningparametersmeantabstractfloat">TargetedLearning.Parameters.Mean{T&lt;:AbstractFloat} <a href="#type__mean.1">¶</a></h4>
 <p>The <code>Mean</code> parameter is (E_0E_0(Ymid A=d, W)).</p>
 <p>Under causal assumptions, this can be interpreted as
 the mean of the counterfactual outcome under regimen <code>d</code>.</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:79</a></p>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:80</a></p>
 <hr />
-<h4 id="regimentfloatingpoint">Regimen{T&lt;:FloatingPoint}</h4>
+<p><a id="type__regimen.1" class="lexicon_definition"></a></p>
+<h4 id="targetedlearningparametersregimentabstractfloat">TargetedLearning.Parameters.Regimen{T&lt;:AbstractFloat} <a href="#type__regimen.1">¶</a></h4>
 <p>Represents a particular single time point treatment regimen.</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:26</a></p>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:25</a></p>
 <hr />
-<h4 id="staticregimentfloatingpoint">StaticRegimen{T&lt;:FloatingPoint}</h4>
+<p><a id="type__staticregimen.1" class="lexicon_definition"></a></p>
+<h4 id="targetedlearningparametersstaticregimentabstractfloat">TargetedLearning.Parameters.StaticRegimen{T&lt;:AbstractFloat} <a href="#type__staticregimen.1">¶</a></h4>
 <p>A <code>StaticRegimen</code> sets treatment to a single value for all observations. Constructed with
 <code>StaticRegimen(a)</code> where <code>a</code> is a floating point 0 or 1.</p>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:32</a></p></div>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/Parameters.jl">TargetedLearning/src/Parameters.jl:32</a></p></div>
         </div>
 
         

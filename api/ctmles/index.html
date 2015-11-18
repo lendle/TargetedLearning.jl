@@ -178,32 +178,8 @@
 <h1 id="targetedlearningctmles">TargetedLearning.CTMLEs</h1>
 <h2 id="exported">Exported</h2>
 <hr />
-<h4 id="ctmletfloatingpointlogitqna1arraytfloatingpoint-1-logitqna0arraytfloatingpoint-1-warraytfloatingpoint-2-aarraytfloatingpoint-1-yarraytfloatingpoint-1">ctmle{T&lt;:FloatingPoint}(logitQnA1::Array{T&lt;:FloatingPoint, 1}, logitQnA0::Array{T&lt;:FloatingPoint, 1}, W::Array{T&lt;:FloatingPoint, 2}, A::Array{T&lt;:FloatingPoint, 1}, Y::Array{T&lt;:FloatingPoint, 1})</h4>
-<p>Performs colaborative targeted minimum loss-based estimation</p>
-<p><strong> Arguments </strong></p>
-<ul>
-<li><code>logitQnA1</code> - Vector of length n of initial estimates logit(ar{Q}_n(1, W_i))</li>
-<li><code>logitQnA0</code> - Vector of length n of initial estimates logit(ar{Q}_n(0, W_i))</li>
-<li><code>W</code> - Matrix of covariates to be potentially used to estimate g. n rows.
-        The first column should be all ones for an intercept.</li>
-<li><code>A</code> - Vector of length n of treatments, 0.0 or 1.0</li>
-<li><code>Y</code> - Vector of length n of outcomes, bounded between 0 and 1.</li>
-</ul>
-<p><strong> Keyword Arguments </strong></p>
-<ul>
-<li><code>param</code> - Target parameter. See ?ATE or ?Mean. Default is ATE()</li>
-<li><code>searchstrategy</code> - Strategy for adding covariates to estimates of g. See ?SearchStrategy.
-   Defautl is ForwardStepwise()</li>
-<li><code>cvplan</code> - An iterator of vectors of Int indexes of observations in each training set for
-   cross validaiton. StratifiedKfold and StratifiedRandomSub from the MLBase package are useful
-   here. Defaults to 10 fold CV stratifying by treatment for outcomes with more than 2 levels,
-   or by treatment and outcome for binary outcomes.</li>
-<li><code>patience</code> - For how many steps should CV continue after finding a local optimum? Defaults to typemax(Int)</li>
-</ul>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/CTMLEs.jl">TargetedLearning/src/CTMLEs.jl:236</a></p>
-<hr />
-<h4 id="searchstrategy">SearchStrategy</h4>
+<p><a id="type__searchstrategy.1" class="lexicon_definition"></a></p>
+<h4 id="targetedlearningctmlessearchstrategy">TargetedLearning.CTMLEs.SearchStrategy <a href="#type__searchstrategy.1">¶</a></h4>
 <p>Defines how the next covariate added to g is chosen</p>
 <ul>
 <li><code>ForwardStepwise</code> - default, tries each unused covariate to find the one that helps the most. Slow, O(p^2) time for p covariates.</li>
@@ -214,8 +190,8 @@
 </ul>
 </li>
 </ul>
-<p><strong>source:</strong>
-<a href="file:///Users/sam/.julia/v0.3/TargetedLearning/src/strategies.jl">TargetedLearning/src/strategies.jl:15</a></p></div>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/strategies.jl">TargetedLearning/src/strategies.jl:15</a></p></div>
         </div>
 
         

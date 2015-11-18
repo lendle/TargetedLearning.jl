@@ -203,29 +203,22 @@ fetchdata(ds=&quot;lalonde_dw&quot;)
 <h1 id="loading-the-data-set">Loading the data set</h1>
 <h2 id="using-readcsv">Using readcsv</h2>
 <p>The simplest way to read the data set is with <code>readcsv</code>. The CSV file we have has a header, so we'll pass <code>header=true</code>, and we'll get back a tuple containing a matrix with the numeric data in it (<code>readcsv</code> can figure out that it's all <code>Float64</code>s automatically) and a matrix with one row containing column names.</p>
-<pre><code>dsfname = joinpath(Pkg.dir("TargetedLearning"), "examples", "data", "lalonde_dw.csv")
+<pre><code class="julia">dsfname = joinpath(Pkg.dir(&quot;TargetedLearning&quot;), &quot;examples&quot;, &quot;data&quot;, &quot;lalonde_dw.csv&quot;)
 
 dat, colnames = readcsv(dsfname, header=true)
 
 #lets inspect colnames
 colnames
+</code></pre>
 
-
-
-
-1x10 Array{String,2}:
+<pre><code>1x10 Array{String,2}:
  "treatment"  "age"  "education"  …  "nodegree"  "RE74"  "RE75"  "RE78"
-
-
-
-
-#convert colnames to a vector instead of a matrix with one row
+</code></pre>
+<pre><code class="julia">#convert colnames to a vector instead of a matrix with one row
 colnames = reshape(colnames, size(colnames, 2))
+</code></pre>
 
-
-
-
-10-element Array{String,1}:
+<pre><code>10-element Array{String,1}:
  "treatment"
  "age"      
  "education"
@@ -238,13 +231,11 @@ colnames = reshape(colnames, size(colnames, 2))
  "RE78"
 </code></pre>
 <p><code>treatment</code> is obviously the treatment variable. The outcome variable is <code>RE78</code> (earnings in 1978), and <code>RE74</code> and <code>RE75</code> are earnings values prior to treatment. The others are potential baseline confounders. Check the link above for more information about the dataset.  We want to slice the matrix <code>dat</code> up to extract the treatment and outcome variable. Julia uses square brackets for indexing. The first dimension of a matrix is rows and the second is columns like R. If you want everything in one dimension, you put <code>:</code> (where as in R you can leave that dimension empty). You can index with booleans, integers, vectors of integers, ranges and some other things. Here are some examples:</p>
-<pre><code>#we know column 1 is treatment, so get it directly, and ask for all rows with :
+<pre><code class="julia">#we know column 1 is treatment, so get it directly, and ask for all rows with :
 treatment = dat[:, 1]
+</code></pre>
 
-
-
-
-445-element Array{Float64,1}:
+<pre><code>445-element Array{Float64,1}:
  1.0
  1.0
  1.0
@@ -271,30 +262,25 @@ treatment = dat[:, 1]
  0.0
  0.0
  0.0
-
-
-
-
-#suppose instead we want to find the position in colnames that has the value
-#"treatment", but we don't know it's the first one. There are a couple of ways
+</code></pre>
+<pre><code class="julia">#suppose instead we want to find the position in colnames that has the value
+#&quot;treatment&quot;, but we don't know it's the first one. There are a couple of ways
 #to do that.
 #(.== and operators starting with `.` in general indicate that we want to do
 #   an element wise operation)
 
 #(the ; at the end of the line suppresses output)
-treatment_take2 = dat[:, colnames .== "treatment", 1];
+treatment_take2 = dat[:, colnames .== &quot;treatment&quot;, 1];
+</code></pre>
 
-
-#the last column is the outcome so we can use the keyword `end`
+<pre><code class="julia">#the last column is the outcome so we can use the keyword `end`
 outcome = dat[:, end]
 
 #we can also use `end` in arithmetic, e.g.
 outcome_prebaseline = dat[:, end-1]
+</code></pre>
 
-
-
-
-445-element Array{Float64,1}:
+<pre><code>445-element Array{Float64,1}:
      0.0 
      0.0 
      0.0 
@@ -321,17 +307,12 @@ outcome_prebaseline = dat[:, end-1]
  16341.2 
  16946.6 
  23032.0
-
-
-
-
-#baseline covariates are everything between the first and last column, so we could use a range:
+</code></pre>
+<pre><code class="julia">#baseline covariates are everything between the first and last column, so we could use a range:
 baseline_covars = dat[:, 2:end-1]
+</code></pre>
 
-
-
-
-445x8 Array{Float64,2}:
+<pre><code>445x8 Array{Float64,2}:
  37.0  11.0  1.0  0.0  1.0  1.0      0.0        0.0 
  22.0   9.0  0.0  1.0  0.0  1.0      0.0        0.0 
  30.0  12.0  1.0  0.0  0.0  0.0      0.0        0.0 
@@ -361,19 +342,17 @@ baseline_covars = dat[:, 2:end-1]
 </code></pre>
 <h2 id="using-dataframe">Using DataFrame</h2>
 <p>The <code>readtable</code> function returns a <code>DataFrame</code> which allows for indexing by column names.</p>
-<pre><code>using DataFrames #`using` is like `library` in R
+<pre><code class="julia">using DataFrames #`using` is like `library` in R
 
-dsfname = joinpath(Pkg.dir("TargetedLearning"), "examples", "data", "lalonde_dw.csv")
+dsfname = joinpath(Pkg.dir(&quot;TargetedLearning&quot;), &quot;examples&quot;, &quot;data&quot;, &quot;lalonde_dw.csv&quot;)
 
 df = readtable(dsfname)
 
 #check the column names:
 names(df)
+</code></pre>
 
-
-
-
-10-element Array{Symbol,1}:
+<pre><code>10-element Array{Symbol,1}:
  :treatment
  :age      
  :education
@@ -387,13 +366,11 @@ names(df)
 </code></pre>
 <p>Data frames in Julia are indexed by symbols instead of strings. Symbols are no entirely unlike strings, and are created in julia with <code>:symbolname</code> or <code>Symbol("symbolname")</code>.</p>
 <p>Now let's get the treatment and outcome variables out of <code>df</code>.</p>
-<pre><code>treatment = df[:treatment]
+<pre><code class="julia">treatment = df[:treatment]
 outcome = df[:RE78]
+</code></pre>
 
-
-
-
-445-element DataArray{Float64,1}:
+<pre><code>445-element DataArray{Float64,1}:
   9930.05
   3595.89
  24909.5 
@@ -422,22 +399,18 @@ outcome = df[:RE78]
   5448.8
 </code></pre>
 <p>We see that variables in a data frame are actually <code>DataArray</code>s instead of regular Julia <code>Array</code>s. The functions in TargetedLearning.jl currently only work with <code>Arrays</code> of floating point numbers, so we'll convert them.</p>
-<pre><code>treatment = convert(Array{Float64}, treatment)
+<pre><code class="julia">treatment = convert(Array{Float64}, treatment)
 outcome = convert(Array{Float64}, outcome)
 typeof(outcome)
+</code></pre>
 
-
-
-
-Array{Float64,1}
+<pre><code>Array{Float64,1}
 </code></pre>
 <p>We can also index into the data frame using ranges, just like regular matrixes (but we only index on columns). Let's get the baseline covariates. When you get more than one column out of a data frame, you get back another data frame. For some reason that I do not know, <code>convert</code> won't work for us here, but <code>array</code> will get us what we need (a Julia array instead of a DataFrame).</p>
-<pre><code>baseline_covars = array(df[2:end-1])
+<pre><code class="julia">baseline_covars = array(df[2:end-1])
+</code></pre>
 
-
-
-
-445x8 Array{Real,2}:
+<pre><code>445x8 Array{Real,2}:
  37  11  1  0  1  1      0.0        0.0 
  22   9  0  1  0  1      0.0        0.0 
  30  12  1  0  0  0      0.0        0.0 
@@ -468,28 +441,21 @@ Array{Float64,1}
 <h3 id="formulas">Formulas</h3>
 <p>One nice thing about DataFrames.jl is that is has support for formulas. They are similar to R's formulas, but there are some differences. Some packages, like GLM.jl take data frames with formulas as input. Those packages can be used for computing initial estimates, but TargetedLearning.jl does not support formulas and DataFrames directly.  However, you can use DataFrames.jl's functionality to take a DataFrame and a formula and get a numeric design matrix based on a formula.</p>
 <p>For example, suppose we'd like to include an age squared term and an interaction term between education and marital status. It looks like polynomial terms aren't implemented currently, so you'll have to manually make those terms.</p>
-<pre><code>#create age squared
+<pre><code class="julia">#create age squared
 df[:age2] = df[:age] .* df[:age];
 
 #if you want to suppress the intercept, use with -1
 # by default the first column will be a column of 1s, which we want.
 fm = treatment ~ age + age2 + education + black + hispanic + married + nodegree + RE74 + RE75 + married&amp;nodegree
+</code></pre>
 
-
-
-
-Formula: treatment ~ age + age2 + education + black + hispanic + married + nodegree + RE74 + RE75 + married &amp; nodegree
-
-
-
-
-#take the field named `m` from the created ModelMatrix object
+<pre><code>Formula: treatment ~ age + age2 + education + black + hispanic + married + nodegree + RE74 + RE75 + married &amp; nodegree
+</code></pre>
+<pre><code class="julia">#take the field named `m` from the created ModelMatrix object
 expanded_baseline_covars = ModelMatrix(ModelFrame(fm, df)).m
+</code></pre>
 
-
-
-
-445x11 Array{Float64,2}:
+<pre><code>445x11 Array{Float64,2}:
  1.0  37.0  1369.0  11.0  1.0  0.0  1.0  1.0      0.0        0.0   1.0
  1.0  22.0   484.0   9.0  0.0  1.0  0.0  1.0      0.0        0.0   0.0
  1.0  30.0   900.0  12.0  1.0  0.0  0.0  0.0      0.0        0.0   0.0
@@ -522,16 +488,14 @@ expanded_baseline_covars = ModelMatrix(ModelFrame(fm, df)).m
 <p><a href="http://dataframesjl.readthedocs.org/en/latest/">DataFrames.jl</a> and <a href="https://github.com/JuliaStats/DataArrays.jl">DataArrays.jl</a> have ways of handling both missing data and categorical data. TargetedLearning.jl does not, so you'll have to deal with those issues ahead of time. The documentation for those packages has more information on both.</p>
 <h1 id="tmle-for-the-average-treatment-effect">TMLE for the average treatment effect</h1>
 <p>To use TargetedLearning.jl, we first need to scale the outcome to be between 0 and 1.</p>
-<pre><code>scaled_outcome = (outcome .- minimum(outcome)) ./ (maximum(outcome) - minimum(outcome))
+<pre><code class="julia">scaled_outcome = (outcome .- minimum(outcome)) ./ (maximum(outcome) - minimum(outcome))
 extrema(scaled_outcome)
+</code></pre>
 
-
-
-
-(0.0,1.0)
+<pre><code>(0.0,1.0)
 </code></pre>
 <p>We now need to estimate $\bar{Q}_0$ and $g_0$.  We'll use logistic regression for both, regressing on the columns created using the formula <a href="#Formulas">above</a>.</p>
-<pre><code>using TargetedLearning
+<pre><code class="julia">using TargetedLearning
 
 n = size(expanded_baseline_covars, 1)
 
@@ -547,80 +511,69 @@ logitQnA0 = linpred(Qfit, [expanded_baseline_covars zeros(n)])
 gfit = lreg(expanded_baseline_covars, treatment)
 #compute estimated probabilities of treatment
 gn1 = predict(gfit, expanded_baseline_covars);
+</code></pre>
 
-Warning: could not import Base.add! into NumericExtensions
+<pre><code>Warning: could not import Base.add! into NumericExtensions
 </code></pre>
 <p>Given initial estimates $\bar{Q}_n$ and $g_n$, we just need to call the <code>tmle</code> function:</p>
-<pre><code>scaled_estimate = tmle(logitQnA1, logitQnA0, gn1, treatment, scaled_outcome, param=ATE(), weightedfluc=false)
+<pre><code class="julia">scaled_estimate = tmle(logitQnA1, logitQnA0, gn1, treatment, scaled_outcome, param=ATE(), weightedfluc=false)
+</code></pre>
 
-
-
-
-Estimate
+<pre><code>Estimate
       Estimate Std. Error Lower 95% CL Upper 95% CL
 ATE  0.0271417  0.0112603   0.00507195    0.0492115
 </code></pre>
 <p>The <code>tmle</code> function returns an estimate along with an estimated variance based on the EIC. It's important to note that this variance is asymptotically consistent if both $\bar{Q}_n$ and $g_n$ are consistent, and is conservative if $g_n$ is consistent but $\bar{Q}_n$ is not. If $g_n$ is not consistent, then EIC based variance estimate is not reliable.</p>
 <p>The outcome in the original data set represented earnings, but this estimate is for the ATE of an outcome scaled between 0 and 1. To get it back to the original scale, we can just multiply by the scaling factor.</p>
-<pre><code>estimate_orig_scale = scaled_estimate * (maximum(outcome) - minimum(outcome))
+<pre><code class="julia">estimate_orig_scale = scaled_estimate * (maximum(outcome) - minimum(outcome))
+</code></pre>
 
-
-
-
-Estimate
+<pre><code>Estimate
      Estimate Std. Error Lower 95% CL Upper 95% CL
 psi   1636.86    679.085      305.879      2967.84
 </code></pre>
 <p>After transforming the original estimate, the estimand name is now called "psi" instead of "ATE". To make the output look nicer, we can rename it:</p>
-<pre><code>name!(estimate_orig_scale, "ATE on earnings")
+<pre><code class="julia">name!(estimate_orig_scale, &quot;ATE on earnings&quot;)
+</code></pre>
 
-
-
-
-Estimate
+<pre><code>Estimate
                  Estimate Std. Error Lower 95% CL Upper 95% CL
 ATE on earnings   1636.86    679.085      305.879      2967.84
 </code></pre>
 <h1 id="ctmle-for-the-average-treatment-effect">CTMLE for the average treatment effect</h1>
 <p>To use CTMLE to estimate the ATE, we'll use the same initial estimate of $\mbox{logit}\bar{Q}_n$ as above, stored in <code>logitQnA1</code> and <code>logitQnA0</code>.  We'll also use the same covariates created by <a href="#Formulas">expanding</a> the original variables in the data set via a formula, with a first column of ones.</p>
 <p>First, we create a CV plan which we can use for multiple calls to <code>ctmle</code>, so results don't change based on different CV folds.  By default, the CV plan is generated inside the <code>ctmle</code> function, and can be different if you don't reset the seed random seed before each run.</p>
-<pre><code>srand(20) #set the random seed
+<pre><code class="julia">srand(20) #set the random seed
 
 #collect the treatment indexes from the StratifiedKfold object. 
 cvplan = collect(StratifiedKfold(treatment, 10)) #10 fold cv stratified by treatment;
+</code></pre>
 
+<pre><code class="julia">ctmle_est = ctmle(logitQnA1, logitQnA0, expanded_baseline_covars, treatment, scaled_outcome, cvplan=cvplan)
+</code></pre>
 
-ctmle_est = ctmle(logitQnA1, logitQnA0, expanded_baseline_covars, treatment, scaled_outcome, cvplan=cvplan)
-
-
-
-
-Estimate
+<pre><code>Estimate
      Estimate Std. Error Lower 95% CL Upper 95% CL
 ATE  0.027733  0.0108727   0.00642292    0.0490431
 </code></pre>
 <p>To see what covariates were added in fluctuations, call <code>flucinfo</code> on the estimate:</p>
-<pre><code>flucinfo(ctmle_est)
+<pre><code class="julia">flucinfo(ctmle_est)
+</code></pre>
 
-
-
-
-Fluctuation info:
+<pre><code>Fluctuation info:
 Covariates added in 1 steps to 1 fluctuations.
 Fluc 1 covars added: [1]
 </code></pre>
 <p>In this case, there is only one fluctuation, and $g_0$ is only estimated using the intercept. As above, we can rescale the estimate back to the original scale. </p>
-<pre><code>scaled_estimate * (maximum(outcome) - minimum(outcome))
+<pre><code class="julia">scaled_estimate * (maximum(outcome) - minimum(outcome))
+</code></pre>
 
-
-
-
-Estimate
+<pre><code>Estimate
      Estimate Std. Error Lower 95% CL Upper 95% CL
 psi   1636.86    679.085      305.879      2967.84
 </code></pre>
 <p>Let's see what happens with an unadjusted initial $\bar{Q}_n$. Here we'll just use the mean of the outcome by treatment. </p>
-<pre><code>unadjusted_logitQnA1 = fill(logit(mean(scaled_outcome[treatment.==1])), n)
+<pre><code class="julia">unadjusted_logitQnA1 = fill(logit(mean(scaled_outcome[treatment.==1])), n)
 unadjusted_logitQnA0 = fill(logit(mean(scaled_outcome[treatment.==0])), n)
 unadjusted_ctmle_est = ctmle(unadjusted_logitQnA1,
                             unadjusted_logitQnA0,
@@ -628,24 +581,16 @@ unadjusted_ctmle_est = ctmle(unadjusted_logitQnA1,
                             treatment,
                             scaled_outcome,
                             cvplan=cvplan)
+</code></pre>
 
-
-
-
-Estimate
+<pre><code>Estimate
       Estimate Std. Error Lower 95% CL Upper 95% CL
 ATE  0.0275032  0.0115604   0.00484526    0.0501612
+</code></pre>
+<pre><code class="julia">flucinfo(unadjusted_ctmle_est)
+</code></pre>
 
-
-
-
-
-flucinfo(unadjusted_ctmle_est)
-
-
-
-
-Fluctuation info:
+<pre><code>Fluctuation info:
 Covariates added in 10 steps to 3 fluctuations.
 Fluc 1 covars added: [1,8,10,2,11]
 Fluc 2 covars added: [6,4,9,7]
