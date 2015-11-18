@@ -24,12 +24,14 @@ This only needs to be run once.
 The simplest way to read the data set is with `readcsv`. The CSV file we have has a header, so we'll pass `header=true`, and we'll get back a tuple containing a matrix with the numeric data in it (`readcsv` can figure out that it's all `Float64`s automatically) and a matrix with one row containing column names.
 
 
-    dsfname = joinpath(Pkg.dir("TargetedLearning"), "examples", "data", "lalonde_dw.csv")
-    
-    dat, colnames = readcsv(dsfname, header=true)
-    
-    #lets inspect colnames
-    colnames
+```julia
+dsfname = joinpath(Pkg.dir("TargetedLearning"), "examples", "data", "lalonde_dw.csv")
+
+dat, colnames = readcsv(dsfname, header=true)
+
+#lets inspect colnames
+colnames
+```
 
 
 
@@ -40,8 +42,10 @@ The simplest way to read the data set is with `readcsv`. The CSV file we have ha
 
 
 
-    #convert colnames to a vector instead of a matrix with one row
-    colnames = reshape(colnames, size(colnames, 2))
+```julia
+#convert colnames to a vector instead of a matrix with one row
+colnames = reshape(colnames, size(colnames, 2))
+```
 
 
 
@@ -63,8 +67,10 @@ The simplest way to read the data set is with `readcsv`. The CSV file we have ha
 `treatment` is obviously the treatment variable. The outcome variable is `RE78` (earnings in 1978), and `RE74` and `RE75` are earnings values prior to treatment. The others are potential baseline confounders. Check the link above for more information about the dataset.  We want to slice the matrix `dat` up to extract the treatment and outcome variable. Julia uses square brackets for indexing. The first dimension of a matrix is rows and the second is columns like R. If you want everything in one dimension, you put `:` (where as in R you can leave that dimension empty). You can index with booleans, integers, vectors of integers, ranges and some other things. Here are some examples:
 
 
-    #we know column 1 is treatment, so get it directly, and ask for all rows with :
-    treatment = dat[:, 1]
+```julia
+#we know column 1 is treatment, so get it directly, and ask for all rows with :
+treatment = dat[:, 1]
+```
 
 
 
@@ -100,21 +106,25 @@ The simplest way to read the data set is with `readcsv`. The CSV file we have ha
 
 
 
-    #suppose instead we want to find the position in colnames that has the value
-    #"treatment", but we don't know it's the first one. There are a couple of ways
-    #to do that.
-    #(.== and operators starting with `.` in general indicate that we want to do
-    #   an element wise operation)
-    
-    #(the ; at the end of the line suppresses output)
-    treatment_take2 = dat[:, colnames .== "treatment", 1];
+```julia
+#suppose instead we want to find the position in colnames that has the value
+#"treatment", but we don't know it's the first one. There are a couple of ways
+#to do that.
+#(.== and operators starting with `.` in general indicate that we want to do
+#   an element wise operation)
+
+#(the ; at the end of the line suppresses output)
+treatment_take2 = dat[:, colnames .== "treatment", 1];
+```
 
 
-    #the last column is the outcome so we can use the keyword `end`
-    outcome = dat[:, end]
-    
-    #we can also use `end` in arithmetic, e.g.
-    outcome_prebaseline = dat[:, end-1]
+```julia
+#the last column is the outcome so we can use the keyword `end`
+outcome = dat[:, end]
+
+#we can also use `end` in arithmetic, e.g.
+outcome_prebaseline = dat[:, end-1]
+```
 
 
 
@@ -150,8 +160,10 @@ The simplest way to read the data set is with `readcsv`. The CSV file we have ha
 
 
 
-    #baseline covariates are everything between the first and last column, so we could use a range:
-    baseline_covars = dat[:, 2:end-1]
+```julia
+#baseline covariates are everything between the first and last column, so we could use a range:
+baseline_covars = dat[:, 2:end-1]
+```
 
 
 
@@ -191,14 +203,16 @@ The simplest way to read the data set is with `readcsv`. The CSV file we have ha
 The `readtable` function returns a `DataFrame` which allows for indexing by column names.
 
 
-    using DataFrames #`using` is like `library` in R
-    
-    dsfname = joinpath(Pkg.dir("TargetedLearning"), "examples", "data", "lalonde_dw.csv")
-    
-    df = readtable(dsfname)
-    
-    #check the column names:
-    names(df)
+```julia
+using DataFrames #`using` is like `library` in R
+
+dsfname = joinpath(Pkg.dir("TargetedLearning"), "examples", "data", "lalonde_dw.csv")
+
+df = readtable(dsfname)
+
+#check the column names:
+names(df)
+```
 
 
 
@@ -222,8 +236,10 @@ Data frames in Julia are indexed by symbols instead of strings. Symbols are no e
 Now let's get the treatment and outcome variables out of `df`.
 
 
-    treatment = df[:treatment]
-    outcome = df[:RE78]
+```julia
+treatment = df[:treatment]
+outcome = df[:RE78]
+```
 
 
 
@@ -262,9 +278,11 @@ We see that variables in a data frame are actually `DataArray`s instead of regul
 
 
 
-    treatment = convert(Array{Float64}, treatment)
-    outcome = convert(Array{Float64}, outcome)
-    typeof(outcome)
+```julia
+treatment = convert(Array{Float64}, treatment)
+outcome = convert(Array{Float64}, outcome)
+typeof(outcome)
+```
 
 
 
@@ -276,7 +294,9 @@ We see that variables in a data frame are actually `DataArray`s instead of regul
 We can also index into the data frame using ranges, just like regular matrixes (but we only index on columns). Let's get the baseline covariates. When you get more than one column out of a data frame, you get back another data frame. For some reason that I do not know, `convert` won't work for us here, but `array` will get us what we need (a Julia array instead of a DataFrame).
 
 
-    baseline_covars = array(df[2:end-1])
+```julia
+baseline_covars = array(df[2:end-1])
+```
 
 
 
@@ -318,12 +338,14 @@ One nice thing about DataFrames.jl is that is has support for formulas. They are
 For example, suppose we'd like to include an age squared term and an interaction term between education and marital status. It looks like polynomial terms aren't implemented currently, so you'll have to manually make those terms.
 
 
-    #create age squared
-    df[:age2] = df[:age] .* df[:age];
-    
-    #if you want to suppress the intercept, use with -1
-    # by default the first column will be a column of 1s, which we want.
-    fm = treatment ~ age + age2 + education + black + hispanic + married + nodegree + RE74 + RE75 + married&nodegree
+```julia
+#create age squared
+df[:age2] = df[:age] .* df[:age];
+
+#if you want to suppress the intercept, use with -1
+# by default the first column will be a column of 1s, which we want.
+fm = treatment ~ age + age2 + education + black + hispanic + married + nodegree + RE74 + RE75 + married&nodegree
+```
 
 
 
@@ -333,8 +355,10 @@ For example, suppose we'd like to include an age squared term and an interaction
 
 
 
-    #take the field named `m` from the created ModelMatrix object
-    expanded_baseline_covars = ModelMatrix(ModelFrame(fm, df)).m
+```julia
+#take the field named `m` from the created ModelMatrix object
+expanded_baseline_covars = ModelMatrix(ModelFrame(fm, df)).m
+```
 
 
 
@@ -380,8 +404,10 @@ It's clunky, but will get the job done. More detailed documentation is [here](ht
 To use TargetedLearning.jl, we first need to scale the outcome to be between 0 and 1.
 
 
-    scaled_outcome = (outcome .- minimum(outcome)) ./ (maximum(outcome) - minimum(outcome))
-    extrema(scaled_outcome)
+```julia
+scaled_outcome = (outcome .- minimum(outcome)) ./ (maximum(outcome) - minimum(outcome))
+extrema(scaled_outcome)
+```
 
 
 
@@ -393,22 +419,24 @@ To use TargetedLearning.jl, we first need to scale the outcome to be between 0 a
 We now need to estimate $\bar{Q}_0$ and $g_0$.  We'll use logistic regression for both, regressing on the columns created using the formula [above](#Formulas).
 
 
-    using TargetedLearning
-    
-    n = size(expanded_baseline_covars, 1)
-    
-    #estimate \bar{Q} by regressing on baseline covars and treatment
-    Qfit = lreg([expanded_baseline_covars treatment], scaled_outcome)
-    
-    #computed estimates of logit(\bar{Q}_n(a,W) for a=1 and 0
-    #linpred returns the linear part of the prediction, which is in the logit scale for logistic regression
-    logitQnA1 = linpred(Qfit, [expanded_baseline_covars ones(n)])
-    logitQnA0 = linpred(Qfit, [expanded_baseline_covars zeros(n)])
-    
-    #esitmate g by regressing on W
-    gfit = lreg(expanded_baseline_covars, treatment)
-    #compute estimated probabilities of treatment
-    gn1 = predict(gfit, expanded_baseline_covars);
+```julia
+using TargetedLearning
+
+n = size(expanded_baseline_covars, 1)
+
+#estimate \bar{Q} by regressing on baseline covars and treatment
+Qfit = lreg([expanded_baseline_covars treatment], scaled_outcome)
+
+#computed estimates of logit(\bar{Q}_n(a,W) for a=1 and 0
+#linpred returns the linear part of the prediction, which is in the logit scale for logistic regression
+logitQnA1 = linpred(Qfit, [expanded_baseline_covars ones(n)])
+logitQnA0 = linpred(Qfit, [expanded_baseline_covars zeros(n)])
+
+#esitmate g by regressing on W
+gfit = lreg(expanded_baseline_covars, treatment)
+#compute estimated probabilities of treatment
+gn1 = predict(gfit, expanded_baseline_covars);
+```
 
     Warning: could not import Base.add! into NumericExtensions
 
@@ -416,7 +444,9 @@ We now need to estimate $\bar{Q}_0$ and $g_0$.  We'll use logistic regression fo
 Given initial estimates $\bar{Q}_n$ and $g_n$, we just need to call the `tmle` function:
 
 
-    scaled_estimate = tmle(logitQnA1, logitQnA0, gn1, treatment, scaled_outcome, param=ATE(), weightedfluc=false)
+```julia
+scaled_estimate = tmle(logitQnA1, logitQnA0, gn1, treatment, scaled_outcome, param=ATE(), weightedfluc=false)
+```
 
 
 
@@ -433,7 +463,9 @@ The `tmle` function returns an estimate along with an estimated variance based o
 The outcome in the original data set represented earnings, but this estimate is for the ATE of an outcome scaled between 0 and 1. To get it back to the original scale, we can just multiply by the scaling factor.
 
 
-    estimate_orig_scale = scaled_estimate * (maximum(outcome) - minimum(outcome))
+```julia
+estimate_orig_scale = scaled_estimate * (maximum(outcome) - minimum(outcome))
+```
 
 
 
@@ -448,7 +480,9 @@ The outcome in the original data set represented earnings, but this estimate is 
 After transforming the original estimate, the estimand name is now called "psi" instead of "ATE". To make the output look nicer, we can rename it:
 
 
-    name!(estimate_orig_scale, "ATE on earnings")
+```julia
+name!(estimate_orig_scale, "ATE on earnings")
+```
 
 
 
@@ -467,13 +501,17 @@ To use CTMLE to estimate the ATE, we'll use the same initial estimate of $\mbox{
 First, we create a CV plan which we can use for multiple calls to `ctmle`, so results don't change based on different CV folds.  By default, the CV plan is generated inside the `ctmle` function, and can be different if you don't reset the seed random seed before each run.
 
 
-    srand(20) #set the random seed
-    
-    #collect the treatment indexes from the StratifiedKfold object. 
-    cvplan = collect(StratifiedKfold(treatment, 10)) #10 fold cv stratified by treatment;
+```julia
+srand(20) #set the random seed
+
+#collect the treatment indexes from the StratifiedKfold object. 
+cvplan = collect(StratifiedKfold(treatment, 10)) #10 fold cv stratified by treatment;
+```
 
 
-    ctmle_est = ctmle(logitQnA1, logitQnA0, expanded_baseline_covars, treatment, scaled_outcome, cvplan=cvplan)
+```julia
+ctmle_est = ctmle(logitQnA1, logitQnA0, expanded_baseline_covars, treatment, scaled_outcome, cvplan=cvplan)
+```
 
 
 
@@ -488,7 +526,9 @@ First, we create a CV plan which we can use for multiple calls to `ctmle`, so re
 To see what covariates were added in fluctuations, call `flucinfo` on the estimate:
 
 
-    flucinfo(ctmle_est)
+```julia
+flucinfo(ctmle_est)
+```
 
 
 
@@ -503,7 +543,9 @@ To see what covariates were added in fluctuations, call `flucinfo` on the estima
 In this case, there is only one fluctuation, and $g_0$ is only estimated using the intercept. As above, we can rescale the estimate back to the original scale. 
 
 
-    scaled_estimate * (maximum(outcome) - minimum(outcome))
+```julia
+scaled_estimate * (maximum(outcome) - minimum(outcome))
+```
 
 
 
@@ -518,14 +560,16 @@ In this case, there is only one fluctuation, and $g_0$ is only estimated using t
 Let's see what happens with an unadjusted initial $\bar{Q}_n$. Here we'll just use the mean of the outcome by treatment. 
 
 
-    unadjusted_logitQnA1 = fill(logit(mean(scaled_outcome[treatment.==1])), n)
-    unadjusted_logitQnA0 = fill(logit(mean(scaled_outcome[treatment.==0])), n)
-    unadjusted_ctmle_est = ctmle(unadjusted_logitQnA1,
-                                unadjusted_logitQnA0,
-                                expanded_baseline_covars,
-                                treatment,
-                                scaled_outcome,
-                                cvplan=cvplan)
+```julia
+unadjusted_logitQnA1 = fill(logit(mean(scaled_outcome[treatment.==1])), n)
+unadjusted_logitQnA0 = fill(logit(mean(scaled_outcome[treatment.==0])), n)
+unadjusted_ctmle_est = ctmle(unadjusted_logitQnA1,
+                            unadjusted_logitQnA0,
+                            expanded_baseline_covars,
+                            treatment,
+                            scaled_outcome,
+                            cvplan=cvplan)
+```
 
 
 
@@ -538,7 +582,9 @@ Let's see what happens with an unadjusted initial $\bar{Q}_n$. Here we'll just u
 
 
 
-    flucinfo(unadjusted_ctmle_est)
+```julia
+flucinfo(unadjusted_ctmle_est)
+```
 
 
 
