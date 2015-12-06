@@ -7,6 +7,7 @@ os:
 #  - sudo apt-get install -qq gfortran
 before_install:
   - if [ "$TRAVIS_OS_NAME" -eq  "osx"]; then brew update; brew outdated gcc || brew upgrade gcc; fi
+  - if [ "$TRAVIS_OS_NAME" -eq  "linux"]; then sudo apt-get update -qq && sudo apt-get install -qq gfortran; fi
 julia:
   - release
   # - nightly
