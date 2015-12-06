@@ -2,6 +2,10 @@ abstract OrderingStrategy
 type LogisticOrdering <: OrderingStrategy end
 type PartialCorrOrdering <: OrderingStrategy end
 type HDPSOrdering <: OrderingStrategy end
+type ManualOrdering <: OrderingStrategy
+  indexes::Vector{Int}
+  ManualOrdering(indexes) = new(copy(indexes))
+end
 
 """
 Defines how the next covariate added to g is chosen
@@ -11,6 +15,7 @@ Defines how the next covariate added to g is chosen
     * `LogisticOrdering()` - ranks covariates based on reduction in log likelihood with intital Q as an offset if added one at a time. Basically the first step of `ForwardStepwise`
     * `PartialCorrOrdering()` - ranks covariates based on partial correlation of each covariate and the residual (y - predicted y from initial Qbar) given a
     * `HDPSOrdering()` - ranks covariates based on bias reduction potential as in the hdps procedure. This ignores intial Qbar.
+    * `ManualOrdering(ord)` - orders covars based on specified `indexes`, a `Vector{Int}`, of column indexes of W, not including 1, the intercept.
 """
 abstract SearchStrategy
 type ForwardStepwise <: SearchStrategy end
@@ -183,3 +188,8 @@ function order_covars(ordering::HDPSOrdering, q, param, W, A, Y, available_covar
     error()
 end
 
+function order_covars(ordering::ManualOrdering, q, param, W, A, Y, available_covars, gbounds)
+    collect(available_covars) == sort(ordering.indexes) ||
+      error("ManualOrdering indexes do not match available covariates")
+    ordering.indexes
+end
