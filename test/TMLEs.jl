@@ -14,7 +14,7 @@ facts("Test TMLEs") do
 
     est=tmle(logitQnA1, logitQnA0, gn1, a, y, param=ATE(1,0))
 
-    @fact est => is_a(TMLE)
+    @fact est --> is_a(TMLE)
 
     hA1 = 1./gn1
     hA0 = -1./(1 - gn1)
@@ -25,11 +25,11 @@ facts("Test TMLEs") do
     psi = mean(QstarA1 .- QstarA0)
     ic = hAA .* (y .- ifelse(a.==1, QstarA1, QstarA0)) .+ QstarA1 .- QstarA0 .- psi
 
-    @fact est.psi => roughly(psi)
-    @fact est.ic => roughly(ic)
+    @fact est.psi --> roughly(psi)
+    @fact est.ic --> roughly(ic)
 
     context("With weighted fluctuation") do
-        @fact tmle(logitQnA1, logitQnA0, gn1, a, y, weightedfluc=true) => is_a(TMLE)
-        @pending "more weighted fluc tests" => nothing
+        @fact tmle(logitQnA1, logitQnA0, gn1, a, y, weightedfluc=true) --> is_a(TMLE)
+        @pending "more weighted fluc tests" --> nothing
     end
 end

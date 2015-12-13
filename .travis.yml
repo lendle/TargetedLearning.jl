@@ -2,17 +2,20 @@ language: julia
 os:
   - linux
   - osx
+#before_install:
+#  - sudo apt-get update -qq
+#  - sudo apt-get install -qq gfortran
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq gfortran
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; brew outdated gcc || brew upgrade gcc; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update -qq && sudo apt-get install -qq gfortran; fi
 julia:
   - release
   # - nightly
 notifications:
   email: false
 # uncomment the following lines to override the default test script
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("TargetedLearning"); Pkg.test("TargetedLearning"; coverage=true)'
+#script:
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("TargetedLearning"); Pkg.test("TargetedLearning"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("TargetedLearning")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

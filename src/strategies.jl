@@ -2,6 +2,10 @@ abstract OrderingStrategy
 type LogisticOrdering <: OrderingStrategy end
 type PartialCorrOrdering <: OrderingStrategy end
 type HDPSOrdering <: OrderingStrategy end
+type ManualOrdering <: OrderingStrategy
+  indexes::Vector{Int}
+  ManualOrdering(indexes) = new(copy(indexes))
+end
 
 """
 Defines how the next covariate added to g is chosen
@@ -11,6 +15,7 @@ Defines how the next covariate added to g is chosen
     * `LogisticOrdering()` - ranks covariates based on reduction in log likelihood with intital Q as an offset if added one at a time. Basically the first step of `ForwardStepwise`
     * `PartialCorrOrdering()` - ranks covariates based on partial correlation of each covariate and the residual (y - predicted y from initial Qbar) given a
     * `HDPSOrdering()` - ranks covariates based on bias reduction potential as in the hdps procedure. This ignores intial Qbar.
+    * `ManualOrdering(ord)` - orders covars based on specified `indexes`, a `Vector{Int}`, of column indexes of W, not including 1, the intercept.
 """
 abstract SearchStrategy
 type ForwardStepwise <: SearchStrategy end
@@ -32,7 +37,7 @@ end
 # added covar(s) are added to used_covars and deleted from unused_covars
 # q is fluctuated
 #return best_risk, gfit, new_fluc
-function add_covars!{T<:FloatingPoint}(::ForwardStepwise,
+function add_covars!{T<:AbstractFloat}(::ForwardStepwise,
                                        q::Qmodel{T},
                                        param::Parameter{T},
                                        W::Matrix{T},
@@ -116,7 +121,7 @@ end
 # added covar(s) are added to used_covars and deleted from unused_covars
 # q is fluctuated
 #return best_risk, gfit, new_fluc
-function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
+function add_covars!{T<:AbstractFloat}(strategy::PreOrdered,
                                        q::Qmodel{T},
                                        param::Parameter{T},
                                        W::Matrix{T},
@@ -129,7 +134,7 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
                                        penalize::Bool)
 
     if isempty(strategy.covar_order)
-        append!(strategy.covar_order, order_covars(strategy.ordering, q, W, A, Y, unused_covars))
+        append!(strategy.covar_order, order_covars(strategy.ordering, q, param, W, A, Y, unused_covars, gbounds, penalize))
     end
 
     ordered_unused_covars = filter(x -> x ∉ used_covars, strategy.covar_order)
@@ -160,26 +165,33 @@ function add_covars!{T<:FloatingPoint}(strategy::PreOrdered,
     return risk(q, A, Y, param, penalize), g_fit, true
 end
 
-function order_covars(ordering::LogisticOrdering, q, W, A, Y, available_covars)
+function order_covars(ordering::LogisticOrdering, q, param, W, A, Y, available_covars, gbounds, penalize)
     logitQnAA = linpred(q, A)
     scores = Dict{Int, Float64}()
-    WA = [W A]
-    aidx = size(WA, 2)
     for i in available_covars
-        fit = lreg(WA, Y, subset=[i, aidx], offset=logitQnAA)
-        scores[i] = mean(LReg.Loss(), Y, linpred(fit, WA, offset=logitQnAA))
+        g_fit = lreg(W, A, subset=[i])
+        gn1 = bound!(predict(g_fit, W), gbounds)
+        fluc = computefluc(q, param, gn1, A, Y)
+        fluctuate!(q, fluc)
+        scores[i] = risk(q, A, Y, param, penalize)
+        defluctuate!(q)
     end
     sort!(collect(keys(scores)), by = x -> scores[x])
 end
 
-function order_covars(ordering::PartialCorrOrdering, q, W, A, Y, available_covars)
+function order_covars(ordering::PartialCorrOrdering, q, param, W, A, Y, available_covars, gbounds, penalize)
     resid = Y .- predict(q, A)
     W_available = W[:, collect(available_covars)]
     scores = Dict(collect(zip(available_covars, abs(pcor(resid, W_available, A)))))
     return sort!(collect(keys(scores)), by = x -> scores[x], rev=true)
 end
 
-function order_covars(ordering::HDPSOrdering, q, W, A, Y, available_covars)
+function order_covars(ordering::HDPSOrdering, q, param, W, A, Y, available_covars, gbounds, penalize)
     error()
 end
 
+function order_covars(ordering::ManualOrdering, q, param, W, A, Y, available_covars, gbounds, penalize)
+    collect(available_covars) == sort(ordering.indexes) ||
+      error("ManualOrdering indexes do not match available covariates")
+    ordering.indexes
+end

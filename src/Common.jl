@@ -17,9 +17,10 @@ export Parameter,
        confint,
        coeftable
 
-using Distributions, Calculus, NumericExtensions
+using Distributions, Calculus
 
 import Base.var
+import Base: +, -, *, /, ^
 #borrowing some names from StatsBase, but not the StatsModels type
 import StatsBase: coef, vcov, nobs, stderr, confint, coeftable, CoefTable
 
@@ -27,12 +28,12 @@ import StatsBase: coef, vcov, nobs, stderr, confint, coeftable, CoefTable
 Represents a parameter of interest. Subtypes of `Parameter` define a particular
 parameter of the observed data distribution.
 """
-abstract Parameter{T<:FloatingPoint}
+abstract Parameter{T<:AbstractFloat}
 """
 Computes the fluctuation covariate for a particular parameter.
 """
 :fluccovar
-fluccovar{T<:FloatingPoint}(param::Parameter{T}, a::Vector{T}, gn1::Vector{T}) = error("fluccovar not implemented for $T")
+fluccovar{T<:AbstractFloat}(param::Parameter{T}, a::Vector{T}, gn1::Vector{T}) = error("fluccovar not implemented for $T")
 
 
 """
@@ -80,22 +81,24 @@ function coeftable(est::AbstractScalarEstimate)
               paramnames(est))
 end
 
-type ScalarEstimate{T <: FloatingPoint} <: AbstractScalarEstimate
+type ScalarEstimate{T <: AbstractFloat} <: AbstractScalarEstimate
     psi::T
     ic::Vector{T}
     n::Int
-    estimand::String
+    estimand::AbstractString
     function ScalarEstimate(psi, ic, estimand)
         meanic=mean(ic)
         #cutoff chosen because var(ic) = mean(ic.^2) - mean(ic)^2
         #which is greater than mean(ic.^2) - eps(T), and eps(T) is pretty small
         abs(meanic) <= sqrt(eps(T)) || error("Mean of ic should be approximately 0. It is $meanic.")
-        subtract!(ic, meanic)
+        for i in 1:length(ic) #NumericExtensions
+          @inbounds ic[i] -= meanic
+        end
         new(psi, ic, length(ic), estimand)
     end
 end
 
-ScalarEstimate{T<:FloatingPoint}(psi::T, ic::Vector{T}, estimand="psi") = ScalarEstimate{T}(psi,ic, estimand)
+ScalarEstimate{T<:AbstractFloat}(psi::T, ic::Vector{T}, estimand="psi") = ScalarEstimate{T}(psi,ic, estimand)
 
 "Sets the parameter name of a scalar estimate"
 name!(est::AbstractScalarEstimate, estimand) = (est.estimand=estimand; est)

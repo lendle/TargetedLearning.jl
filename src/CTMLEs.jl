@@ -34,7 +34,7 @@ import ..Qmodels: fluctuate!, defluctuate!, Fluctuation
 include("pcor.jl")
 include("strategies.jl")
 
-typealias ScalarOrVec{T} Union(T, Vector{T})
+typealias ScalarOrVec{T} Union{T, Vector{T}}
 
 subset{P<:Parameter}(param::P, idx::AbstractVector{Int}) =
     P(map(d -> subset(d, idx), regimens(param))...)
@@ -47,7 +47,7 @@ A `Qchunk` holds (a subset of) the data set and corresponding indexes along with
 each observation, a `Parameter` (whos definition may depend on each observation) and the value of the emperical risk
 for the current `Qmodel`.
 """
-type Qchunk{T<:FloatingPoint}
+type Qchunk{T<:AbstractFloat}
     q::Qmodel{T}
     W::Matrix{T}
     A::Vector{T}
@@ -59,7 +59,7 @@ type Qchunk{T<:FloatingPoint}
     risk::T
 end
 
-function make_chunk_subset{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
+function make_chunk_subset{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                            W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                            param::Parameter{T}, idx::AbstractVector{Int}, gbounds::Vector{T},
                            penalize::Bool)
@@ -70,7 +70,8 @@ function make_chunk_subset{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Ve
     W = W[idx, :]
     A = A[idx]
     Y = Y[idx]
-    Qchunk(q, W, A, Y, param, idx, gbounds, penalize, convert(T, Inf))
+    q_risk = risk(q, A, Y, param, penalize)
+    Qchunk(q, W, A, Y, param, idx, gbounds, penalize, q_risk)
 end
 
 StatsBase.nobs(chunk::Qchunk) = nobs(chunk.q)
@@ -79,7 +80,7 @@ StatsBase.nobs(chunk::Qchunk) = nobs(chunk.q)
 A `QCV` holds a training `Qchunk` and a validation `Qchunk`, a sequence of estimated gs corresponding to
 each fluctuation of the `Qchunk`s, the `SearchStrategy` in use, and indexes of used and unused covariates.
 """
-type QCV{T<:FloatingPoint}
+type QCV{T<:AbstractFloat}
     chunk_train::Qchunk{T}
     chunk_val::Qchunk{T}
     gseq::Vector{LR{T}}
@@ -147,7 +148,7 @@ function fluctuate!(qcv, g::LR)
     fluctuate!(qcv, g, fluc_train, fluc_val)
 end
 
-function makeQCV{T<:FloatingPoint}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
+function makeQCV{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                    W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                                    param::Parameter{T}, searchstrategy::SearchStrategy,
                                    idx_train::AbstractVector{Int}, gbounds::Vector{T},
@@ -197,11 +198,11 @@ function Base.show(io::IO, flucinfo::FluctuationInfo)
     end
 end
 
-type CTMLE{T<:FloatingPoint} <: AbstractScalarEstimate
+type CTMLE{T<:AbstractFloat} <: AbstractScalarEstimate
     psi::T
     ic::Vector{T}
     n::Int
-    estimand::String
+    estimand::AbstractString
     seasrchstrategy::SearchStrategy
     flucinfo::FluctuationInfo
     function CTMLE(psi, ic, n, estimand, searchstrategy, flucinfo)
@@ -210,7 +211,7 @@ type CTMLE{T<:FloatingPoint} <: AbstractScalarEstimate
     end
 end
 
-CTMLE{T<:FloatingPoint}(psi::T, ic::Vector{T}, n::Int, estimand::String,
+CTMLE{T<:AbstractFloat}(psi::T, ic::Vector{T}, n::Int, estimand::AbstractString,
                         searchstrategy::SearchStrategy, flucinfo::FluctuationInfo) =
     CTMLE{T}(psi, ic, n, estimand, searchstrategy, flucinfo)
 
@@ -245,7 +246,7 @@ Performs colaborative targeted minimum loss-based estimation
 * `patience` - For how many steps should CV continue after finding a local optimum? Defaults to typemax(Int)
 
 """
-function ctmle{T<:FloatingPoint,
+function ctmle{T<:AbstractFloat,
                S<:SearchStrategy}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                   W::Matrix{T}, A::Vector{T}, Y::Vector{T};
                                   param::Parameter{T}=ATE(),
@@ -367,6 +368,7 @@ function find_strat_steps{T<:FloatingPoint}(qcvs::Matrix{QCV{T}}; patience::Int=
     end |> x -> zip(x...)
 
     best_strat_idx = findmin(risks)[2]
+
     best_steps = steps[best_strat_idx]
     (best_strat_idx, best_steps)
 end
@@ -450,7 +452,7 @@ function add_covars!(qcv::QCV)
     qcv
 end
 
-function bound!{T<:FloatingPoint}(gn1::Vector{T}, gbounds::Vector{T})
+function bound!{T<:AbstractFloat}(gn1::Vector{T}, gbounds::Vector{T})
     mn, mx = extrema(gbounds)
     mn < 0.5 || ArgumentError("minimum(gbounds) should be < 0.5")
     mx > 0.5 || ArgumentError("maximum(gbounds) should be > 0.5")
@@ -464,7 +466,14 @@ function bound!{T<:FloatingPoint}(gn1::Vector{T}, gbounds::Vector{T})
 end
 
 function risk{T<:FloatingPoint}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}, param::Parameter{T}, penalize::Bool)
-    q_risk =  mean(LReg.Loss(), Y, linpred(q, A))
+    total_loss = 0.0
+    length(Y) == nobs(q) || error()
+    lp = linpred(q, A)
+    for i in 1:nobs(q)
+      total_loss += LReg.loss(Y[i], lp[i])
+    end
+    q_risk = total_loss/nobs(q)
+
 
     if penalize
         ic = applyparam(param, q, A, Y)[2]
@@ -476,5 +485,3 @@ function risk{T<:FloatingPoint}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}, param:
 end
 
 end # module
-
-
