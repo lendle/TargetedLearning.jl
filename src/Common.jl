@@ -1,7 +1,5 @@
 module Common
 
-VERSION < v"0.4-" && using Docile
-
 export Parameter,
        fluccovar,
 

@@ -1,7 +1,5 @@
 module TargetedLearning
 
-VERSION < v"0.4-" && using Docile
-
 using Reexport
 
 include("Common.jl")

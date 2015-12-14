@@ -1,7 +1,5 @@
 module TMLEs
 
-VERSION < v"0.4-" && using Docile
-
 using Logging
 if isdefined(Main, :TMLE_LOG_LEVEL)
     @eval @Logging.configure(level=$(Main.TMLE_LOG_LEVEL))

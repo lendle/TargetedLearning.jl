@@ -1,8 +1,5 @@
 module LReg
 
-using Docile
-@document
-
 """This module wraps some functionality from [GLMNet.jl](https://github.com/simonster/GLMNet.jl)
 for logistic regression."""
 LReg

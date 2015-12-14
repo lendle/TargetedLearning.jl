@@ -1,9 +1,5 @@
 module CTMLEs
 
-using Compat
-
-VERSION < v"0.4-" && using Docile
-
 using Logging
 if isdefined(Main, :CTMLE_LOG_LEVEL)
     @eval @Logging.configure(level=$(Main.CTMLE_LOG_LEVEL))
@@ -441,5 +437,3 @@ function bound!{T<:AbstractFloat}(gn1::Vector{T}, gbounds::Vector{T})
 end
 
 end # module
-
-

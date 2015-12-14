@@ -3,8 +3,6 @@
 
 module Qmodels
 
-VERSION < v"0.4-" && using Docile
-
 using ..Common, ..LReg
 using StatsFuns
 
