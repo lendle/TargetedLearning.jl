@@ -70,7 +70,9 @@ function make_chunk_subset{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Ve
     W = W[idx, :]
     A = A[idx]
     Y = Y[idx]
-    q_risk = risk(q, A, Y, param, penalize)
+    #Can't compute penalized risk if q isn't fluctuated yet,
+    #so set to Inf
+    q_risk = penalize? convert(T, Inf) : risk(q, A, Y, param, false)
     Qchunk(q, W, A, Y, param, idx, gbounds, penalize, q_risk)
 end
 
@@ -334,7 +336,7 @@ If `pateince` is negative, we stop after 1 step, which is probably not a good id
 Returns best risk and number of steps.
 
 """
-function find_steps{T<:FloatingPoint}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
+function find_steps{T<:AbstractFloat}(qcvs::Vector{QCV{T}}; patience::Int=typemax(Int))
     notdone = true
     steps = 0
     best_steps = 0
@@ -362,7 +364,7 @@ function find_steps{T<:FloatingPoint}(qcvs::Vector{QCV{T}}; patience::Int=typema
     (best_risk, best_steps)
 end
 
-function find_strat_steps{T<:FloatingPoint}(qcvs::Matrix{QCV{T}}; patience::Int=typemax(Int))
+function find_strat_steps{T<:AbstractFloat}(qcvs::Matrix{QCV{T}}; patience::Int=typemax(Int))
     risks, steps = mapslices(qcvs,1) do qcvcol
         find_steps(qcvcol, patience=patience)
     end |> x -> zip(x...)
@@ -465,7 +467,7 @@ function bound!{T<:AbstractFloat}(gn1::Vector{T}, gbounds::Vector{T})
     gn1
 end
 
-function risk{T<:FloatingPoint}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}, param::Parameter{T}, penalize::Bool)
+function risk{T<:AbstractFloat}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}, param::Parameter{T}, penalize::Bool)
     total_loss = 0.0
     length(Y) == nobs(q) || error()
     lp = linpred(q, A)

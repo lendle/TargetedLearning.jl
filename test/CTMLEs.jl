@@ -26,6 +26,8 @@ facts("Test CTMLEs") do
         @fact qc --> is_a(Qchunk)
         @fact CTMLEs.nobs(qc) --> 3
         @fact qc.risk --> CTMLEs.risk(Qmodel(logitQnA1[1:3], logitQnA0[1:3]), a[1:3], y[1:3], ATE(), false)
+        qc_pen = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0], true)
+        @fact qc_pen.risk --> Inf
     end
 
     context("FluctuationInfo") do
