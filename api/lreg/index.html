@@ -183,14 +183,71 @@
 <p>This module wraps some functionality from <a href="https://github.com/simonster/GLMNet.jl">GLMNet.jl</a>
 for logistic regression.</p>
 <p><em>source:</em>
-<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:9</a></p>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:6</a></p>
+<hr />
+<p><a id="method__linpred.1" class="lexicon_definition"></a></p>
+<h4 id="linpredlrtargetedlearninglreglrtabstractfloat-newx">linpred(lr::TargetedLearning.LReg.LR{T&lt;:AbstractFloat},  newx) <a href="#method__linpred.1">¶</a></h4>
+<p>Returns the linear component of predicted values from a logistic regression fit with a new X matrix</p>
+<p><strong> Arguments </strong></p>
+<ul>
+<li><code>lr</code> - an object of type <code>LR</code></li>
+<li><code>newx</code> - matrix of new covariates to predict on. Should be the same dimension as the design matrix used to fit <code>lr</code></li>
+</ul>
+<p><strong> Keyword Arguments </strong></p>
+<ul>
+<li><code>offset</code> - offsets. The length should be the same as <code>size(newx, 1)</code> of <code>lr</code> was fit with an offset, or 0 otherwise.</li>
+</ul>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:41</a></p>
+<hr />
+<p><a id="method__lreg.1" class="lexicon_definition"></a></p>
+<h4 id="lregx-y">lreg(x,  y) <a href="#method__lreg.1">¶</a></h4>
+<p>Fits a logistic regression model</p>
+<p><strong> Arguments </strong></p>
+<ul>
+<li><code>x</code> - design matrix</li>
+<li><code>y</code> - response vector. Should have the same length as <code>size(x, 1)</code></li>
+</ul>
+<p><strong> Keyword Arguments </strong></p>
+<ul>
+<li><code>wts</code> - weight vector. Defaults to all 1s.</li>
+<li><code>offset</code> - offset vector. Defaults to a vector of length 0 for no offset.</li>
+<li><code>subset</code> - column indexes for <code>x</code> that should be included in the fit. Defaults to all columns.</li>
+<li><code>convTol</code> - convergence criterion for relative change in deviance. Defaults to 1.0e-8.</li>
+</ul>
+<p><strong> Details </strong></p>
+<p>An intercept is not included by default. If you want one, make sure the first column of your design matrix
+is all ones. Because of how <code>GLMNet</code> handles intercepts and how <code>LReg</code> interfaces with it,
+this must be the first column.
+If you do that, don't forget to add the column in the same place to <code>newx</code> when you call predict.</p>
+<p><code>subset</code> is useful if you want to include only some columns of the design matrix but you want to call <code>predict</code>
+with a <code>newx</code> matrix with the same number of columns as <code>x</code>. The coefficients corresponding to columns of <code>x</code> which
+are not used in the fit are set to zero. If you would like to call <code>predict</code> with a <code>newx</code> matrix that includes
+only the columns that you fit on, you should subset <code>x</code> yourself before calling <code>lreg</code>.</p>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:110</a></p>
+<hr />
+<p><a id="method__predict.1" class="lexicon_definition"></a></p>
+<h4 id="predictlrtargetedlearninglreglrtabstractfloat-newx">predict(lr::TargetedLearning.LReg.LR{T&lt;:AbstractFloat},  newx) <a href="#method__predict.1">¶</a></h4>
+<p>Returns the predicted on the probability scale values from a logistic regression fit with a new X matrix</p>
+<p><strong> Arguments </strong></p>
+<ul>
+<li><code>lr</code> - an object of type <code>LR</code></li>
+<li><code>newx</code> - matrix of new covariates to predict on. Should be the same dimension as the design matrix used to fit <code>lr</code></li>
+</ul>
+<p>** Keyword Arguments</p>
+<ul>
+<li><code>offset</code> - offsets. The length should be the same as <code>size(newx, 1)</code> of <code>lr</code> was fit with an offset, or 0 otherwise.</li>
+</ul>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:69</a></p>
 <hr />
 <p><a id="type__lr.1" class="lexicon_definition"></a></p>
 <h4 id="targetedlearninglreglrtabstractfloat">TargetedLearning.LReg.LR{T&lt;:AbstractFloat} <a href="#type__lr.1">¶</a></h4>
 <p>The <code>LR</code> type contains the coefficent vector of a logistic regression fit, as well as indexes of
 included columns in the design matrix.</p>
 <p><em>source:</em>
-<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:23</a></p></div>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/LReg.jl">TargetedLearning/src/LReg.jl:20</a></p></div>
         </div>
 
         

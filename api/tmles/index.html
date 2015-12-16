@@ -168,12 +168,38 @@
     
         <li class="main active"><a href="#targetedlearningtmles">TargetedLearning.TMLEs</a></li>
         
+            <li><a href="#exported">Exported</a></li>
+        
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="targetedlearningtmles">TargetedLearning.TMLEs</h1></div>
+<h1 id="targetedlearningtmles">TargetedLearning.TMLEs</h1>
+<h2 id="exported">Exported</h2>
+<hr />
+<p><a id="method__tmle.1" class="lexicon_definition"></a></p>
+<h4 id="tmlelogitqna1arrayt-1-logitqna0arrayt-1-gn1arrayt-1-a-y">tmle(logitQnA1::Array{T, 1},  logitQnA0::Array{T, 1},  gn1::Array{T, 1},  A,  Y) <a href="#method__tmle.1">¶</a></h4>
+<p>Performs targeted minimum loss-based estimation</p>
+<p><strong> Arguments </strong></p>
+<ul>
+<li><code>logitQnA1</code> - Vector of length n of initial estimates logit(ar{Q}_n(1, W_i))</li>
+<li><code>logitQnA0</code> - Vector of length n of initial estimates logit(ar{Q}_n(0, W_i))</li>
+<li><code>gn1</code> - Vector of length n of initial estimats g_n(1, W_i)</li>
+<li><code>A</code> - Vector of length n of treatments, 0.0 or 1.0</li>
+<li><code>Y</code> - Vector of length n of outcomes, bounded between 0 and 1.</li>
+</ul>
+<p><strong> Keyword Arguments </strong></p>
+<ul>
+<li><code>param</code> - Target parameter. See ?ATE or ?Mean. Default is ATE()</li>
+<li><code>weightedfluc</code> - A boolean, <code>false</code> by default.
+If <code>false</code>, the "standard" fluctuation is performed, there the fluctuation covariate is divided
+by (g_n(A_imid W_i)), and weights are set to 1.
+If <code>true</code>, the fluctuation covariate is used directly, and weights are set to the reciprical
+of (g_n(A_imid W_i)) where (g_n(A_i mid W_i)) is computed as <code>gn1[i]</code> if <code>A[i]</code> is 1, or <code>1-gn1[i]</code> otherwise.</li>
+</ul>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/TMLEs.jl">TargetedLearning/src/TMLEs.jl:61</a></p></div>
         </div>
 
         

@@ -178,6 +178,35 @@
 <h1 id="targetedlearningctmles">TargetedLearning.CTMLEs</h1>
 <h2 id="exported">Exported</h2>
 <hr />
+<p><a id="method__ctmle.1" class="lexicon_definition"></a></p>
+<h4 id="ctmletabstractfloatlogitqna1arraytabstractfloat-1-logitqna0arraytabstractfloat-1-warraytabstractfloat-2-aarraytabstractfloat-1-yarraytabstractfloat-1">ctmle{T&lt;:AbstractFloat}(logitQnA1::Array{T&lt;:AbstractFloat, 1},  logitQnA0::Array{T&lt;:AbstractFloat, 1},  W::Array{T&lt;:AbstractFloat, 2},  A::Array{T&lt;:AbstractFloat, 1},  Y::Array{T&lt;:AbstractFloat, 1}) <a href="#method__ctmle.1">¶</a></h4>
+<p>Performs colaborative targeted minimum loss-based estimation</p>
+<p><strong> Arguments </strong></p>
+<ul>
+<li><code>logitQnA1</code> - Vector of length n of initial estimates logit(ar{Q}_n(1, W_i))</li>
+<li><code>logitQnA0</code> - Vector of length n of initial estimates logit(ar{Q}_n(0, W_i))</li>
+<li><code>W</code> - Matrix of covariates to be potentially used to estimate g. n rows.
+        The first column should be all ones for an intercept.</li>
+<li><code>A</code> - Vector of length n of treatments, 0.0 or 1.0</li>
+<li><code>Y</code> - Vector of length n of outcomes, bounded between 0 and 1.</li>
+</ul>
+<p><strong> Keyword Arguments </strong></p>
+<ul>
+<li><code>param</code> - Target parameter. See ?ATE or ?Mean. Default is ATE()</li>
+<li><code>gbounds</code> - values for bounding g. Estimates of g will be bounded by <code>extrema(gbounds)</code>.
+   To only bound away from 0 (or 1), set to e.g. <code>[0.01, 1.0]</code> (or <code>[0.0, 0.99]</code>).
+   To turn off bounding all together, set to <code>[0.0, 1.0]</code>. Defaults to <code>[0.01, 0.99]</code>.</li>
+<li><code>searchstrategy</code> - Strategy for adding covariates to estimates of g. See ?SearchStrategy.
+   Default is ForwardStepwise()</li>
+<li><code>cvplan</code> - An iterator of vectors of Int indexes of observations in each training set for
+   cross validaiton. StratifiedKfold and StratifiedRandomSub from the MLBase package are useful
+   here. Defaults to 10 fold CV stratifying by treatment for outcomes with more than 2 levels,
+   or by treatment and outcome for binary outcomes.</li>
+<li><code>patience</code> - For how many steps should CV continue after finding a local optimum? Defaults to typemax(Int)</li>
+</ul>
+<p><em>source:</em>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/CTMLEs.jl">TargetedLearning/src/CTMLEs.jl:255</a></p>
+<hr />
 <p><a id="type__searchstrategy.1" class="lexicon_definition"></a></p>
 <h4 id="targetedlearningctmlessearchstrategy">TargetedLearning.CTMLEs.SearchStrategy <a href="#type__searchstrategy.1">¶</a></h4>
 <p>Defines how the next covariate added to g is chosen</p>
@@ -187,11 +216,12 @@
 <li><code>LogisticOrdering()</code> - ranks covariates based on reduction in log likelihood with intital Q as an offset if added one at a time. Basically the first step of <code>ForwardStepwise</code></li>
 <li><code>PartialCorrOrdering()</code> - ranks covariates based on partial correlation of each covariate and the residual (y - predicted y from initial Qbar) given a</li>
 <li><code>HDPSOrdering()</code> - ranks covariates based on bias reduction potential as in the hdps procedure. This ignores intial Qbar.</li>
+<li><code>ManualOrdering(ord)</code> - orders covars based on specified <code>indexes</code>, a <code>Vector{Int}</code>, of column indexes of W, not including 1, the intercept.</li>
 </ul>
 </li>
 </ul>
 <p><em>source:</em>
-<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/strategies.jl">TargetedLearning/src/strategies.jl:15</a></p></div>
+<a href="file:///Users/sam/.julia/v0.4/TargetedLearning/src/strategies.jl">TargetedLearning/src/strategies.jl:20</a></p></div>
         </div>
 
         
