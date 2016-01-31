@@ -46,7 +46,8 @@ function add_covars!{T<:AbstractFloat}(::ForwardStepwise,
                                        used_covars::IntSet,
                                        unused_covars::IntSet,
                                        prev_risk::T,
-                                       gbounds::Vector{T})
+                                       gbounds::Vector{T},
+                                       penalize::Bool)
     @debug("unused_covars: $(unused_covars)")
     @debug("used_covars: $(used_covars)")
 
@@ -66,7 +67,7 @@ function add_covars!{T<:AbstractFloat}(::ForwardStepwise,
         #fluctuate and get risk
         fluc = computefluc(q, param, bound!(predict(gfit, W), gbounds), A, Y)
         fluctuate!(q, fluc)
-        next_covar_risk[j] = risk(q, A, Y)
+        next_covar_risk[j] = risk(q, A, Y, param, penalize)
         if isnan(next_covar_risk[j])
             @warn("Risk is NaN. used covars: $used_covars")
         end
@@ -96,7 +97,7 @@ function add_covars!{T<:AbstractFloat}(::ForwardStepwise,
             gfit = g_fluc_dict[current_covars][1]
             fluc = computefluc(q, param, bound!(predict(gfit, W), gbounds), A, Y)
             fluctuate!(q, fluc)
-            next_covar_risk[j] = risk(q, A, Y)
+            next_covar_risk[j] = risk(q, A, Y, param, penalize)
             if isnan(next_covar_risk[j])
                 @warn("Risk is NaN. used covars: $used_covars")
             end
@@ -105,7 +106,7 @@ function add_covars!{T<:AbstractFloat}(::ForwardStepwise,
         end
         @debug("next_covar_risk: $next_covar_risk")
         best_risk, best_j = findmin(next_covar_risk)
-        if best_risk > prev_risk
+        if !penalize && best_risk > prev_risk
             @warn("Best risk is worse than previous best risk. This doesn't make sense. Continuing anyway...")
         end
         @debug("best_j: $best_j, unused_covars: $unused_covars")
@@ -129,10 +130,11 @@ function add_covars!{T<:AbstractFloat}(strategy::PreOrdered,
                                        used_covars::IntSet,
                                        unused_covars::IntSet,
                                        prev_risk::T,
-                                       gbounds::Vector{T})
+                                       gbounds::Vector{T},
+                                       penalize::Bool)
 
     if isempty(strategy.covar_order)
-        append!(strategy.covar_order, order_covars(strategy.ordering, q, param, W, A, Y, unused_covars, gbounds))
+        append!(strategy.covar_order, order_covars(strategy.ordering, q, param, W, A, Y, unused_covars, gbounds, penalize))
     end
 
     ordered_unused_covars = filter(x -> x ∉ used_covars, strategy.covar_order)
@@ -151,7 +153,7 @@ function add_covars!{T<:AbstractFloat}(strategy::PreOrdered,
 
     fluc = computefluc(q, param, gn1, A, Y)
     fluctuate!(q, fluc)
-    new_risk = risk(q, A, Y)
+    new_risk = risk(q, A, Y, param, penalize)
 
     if new_risk < prev_risk
         return new_risk, g_fit, false
@@ -160,10 +162,10 @@ function add_covars!{T<:AbstractFloat}(strategy::PreOrdered,
     defluctuate!(q)
     fluctuate!(q, fluc_now)
     fluctuate!(q, param, gn1, A, Y)
-    return risk(q, A, Y), g_fit, true
+    return risk(q, A, Y, param, penalize), g_fit, true
 end
 
-function order_covars(ordering::LogisticOrdering, q, param, W, A, Y, available_covars, gbounds)
+function order_covars(ordering::LogisticOrdering, q, param, W, A, Y, available_covars, gbounds, penalize)
     logitQnAA = linpred(q, A)
     scores = Dict{Int, Float64}()
     for i in available_covars
@@ -171,24 +173,24 @@ function order_covars(ordering::LogisticOrdering, q, param, W, A, Y, available_c
         gn1 = bound!(predict(g_fit, W), gbounds)
         fluc = computefluc(q, param, gn1, A, Y)
         fluctuate!(q, fluc)
-        scores[i] = risk(q, A, Y)
+        scores[i] = risk(q, A, Y, param, penalize)
         defluctuate!(q)
     end
     sort!(collect(keys(scores)), by = x -> scores[x])
 end
 
-function order_covars(ordering::PartialCorrOrdering, q, param, W, A, Y, available_covars, gbounds)
+function order_covars(ordering::PartialCorrOrdering, q, param, W, A, Y, available_covars, gbounds, penalize)
     resid = Y .- predict(q, A)
     W_available = W[:, collect(available_covars)]
     scores = Dict(collect(zip(available_covars, abs(pcor(resid, W_available, A)))))
     return sort!(collect(keys(scores)), by = x -> scores[x], rev=true)
 end
 
-function order_covars(ordering::HDPSOrdering, q, param, W, A, Y, available_covars, gbounds)
+function order_covars(ordering::HDPSOrdering, q, param, W, A, Y, available_covars, gbounds, penalize)
     error()
 end
 
-function order_covars(ordering::ManualOrdering, q, param, W, A, Y, available_covars, gbounds)
+function order_covars(ordering::ManualOrdering, q, param, W, A, Y, available_covars, gbounds, penalize)
     collect(available_covars) == sort(ordering.indexes) ||
       error("ManualOrdering indexes do not match available covariates")
     ordering.indexes
