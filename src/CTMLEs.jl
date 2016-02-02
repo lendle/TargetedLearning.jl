@@ -30,6 +30,8 @@ import ..Qmodels: fluctuate!, defluctuate!, Fluctuation
 include("pcor.jl")
 include("strategies.jl")
 
+typealias ScalarOrVec{T} Union{T, Vector{T}}
+
 subset{P<:Parameter}(param::P, idx::AbstractVector{Int}) =
     P(map(d -> subset(d, idx), regimens(param))...)
 
@@ -232,7 +234,9 @@ Performs colaborative targeted minimum loss-based estimation
    To turn off bounding all together, set to `[0.0, 1.0]`. Defaults to `[0.01, 0.99]`.
 * `penalize_risk` - should a penalized risk be used when choosing covariates to estimate g?
    Defaults to false.
-* `searchstrategy` - Strategy for adding covariates to estimates of g. See ?SearchStrategy.
+* `searchstrategy` - Strategy or a vector of strategies for adding covariates to estimates of g.
+   See ?SearchStrategy. If a vector, then the best strategy is selected via cross-validation.
+   Default is ForwardStepwise()
 * `cvplan` - An iterator of vectors of Int indexes of observations in each training set for
    cross validaiton. StratifiedKfold and StratifiedRandomSub from the MLBase package are useful
    here. Defaults to 10 fold CV stratifying by treatment for outcomes with more than 2 levels,
@@ -240,15 +244,16 @@ Performs colaborative targeted minimum loss-based estimation
 * `patience` - For how many steps should CV continue after finding a local optimum? Defaults to typemax(Int)
 
 """
-function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
-                                 W::Matrix{T}, A::Vector{T}, Y::Vector{T};
-                                 param::Parameter{T}=ATE(),
-                                 gbounds::Vector{T}=[0.01, 0.99],
-                                 penalize_risk::Bool=false,
-                                 searchstrategy::SearchStrategy = ForwardStepwise(),
-                                 cvplan = StratifiedKfold(length(unique(Y))<3? zip(A, Y) : A, 10),
-                                 patience::Int=typemax(Int)
-                                )
+function ctmle{T<:AbstractFloat,
+               S<:SearchStrategy}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
+                                  W::Matrix{T}, A::Vector{T}, Y::Vector{T};
+                                  param::Parameter{T}=ATE(),
+                                  gbounds::Vector{T}=[0.01, 0.99],
+                                  penalize_risk::Bool=false,
+                                  searchstrategy::ScalarOrVec{S} = ForwardStepwise(),
+                                  cvplan = StratifiedKfold(length(unique(Y))<3? zip(A, Y) : A, 10),
+                                  patience::Int=typemax(Int)
+                                  )
     n,p = size(W)
     n == length(logitQnA1) ==
         length(logitQnA0) ==
@@ -258,13 +263,17 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
 
     all(W[:, 1] .== 1) || throw(ArgumentError("The first column of W should be all ones."))
 
+    strategies = isa(searchstrategy, Vector)? searchstrategy : [searchstrategy]
+
     #create vector of QCV objects
     cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy,
                     idx_train, gbounds, penalize_risk)::QCV{T}
-            for idx_train in cvplan]
+            for idx_train in cvplan, searchstrategy in strategies]
 
     #using cross-validation, find best number of steps to take
-    best_steps = find_steps(cvqs, patience=patience)
+    best_strat_idx, best_steps = find_strat_steps(cvqs, patience=patience)
+
+    best_strategy = strategies[best_strat_idx]
 
     #build a chunk with the full data set
     fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, gbounds, penalize_risk, convert(T, Inf))
@@ -277,7 +286,7 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     for step in 1:best_steps
 #         @debug("used_covars: $used_covars")
 #         @debug("unused_covars: $unused_covars")
-        gfit, new_fluc = add_covars!(fullchunk, searchstrategy, used_covars, unused_covars)
+        gfit, new_fluc = add_covars!(fullchunk, best_strategy, used_covars, unused_covars)
         push!(gseq, gfit)
         push!(new_flucseq, new_fluc)
         @info(if length(gseq) == 1
@@ -293,7 +302,7 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     flucinfo = FluctuationInfo(best_steps, gseq, new_flucseq)
 
     q=fullchunk.q
-    CTMLE(applyparam(param, q, A, Y)..., nobs(q), estimand(param), searchstrategy, flucinfo)
+    CTMLE(applyparam(param, q, A, Y)..., nobs(q), estimand(param), best_strategy, flucinfo)
 
 end
 
@@ -348,7 +357,18 @@ function find_steps{T<:AbstractFloat}(qcvs::Vector{QCV{T}}; patience::Int=typema
             notdone = false
         end
     end
-    best_steps
+    (best_risk, best_steps)
+end
+
+function find_strat_steps{T<:AbstractFloat}(qcvs::Matrix{QCV{T}}; patience::Int=typemax(Int))
+    risks, steps = mapslices(qcvs,1) do qcvcol
+        find_steps(qcvcol, patience=patience)
+    end |> x -> zip(x...)
+
+    best_strat_idx = findmin(risks)[2]
+
+    best_steps = steps[best_strat_idx]
+    (best_strat_idx, best_steps)
 end
 
 """

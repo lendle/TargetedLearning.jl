@@ -70,6 +70,10 @@ facts("Test CTMLEs") do
         @fact est4 --> is_a(CTMLE)
         @fact_throws ErrorException ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=CTMLEs.PreOrdered(CTMLEs.ManualOrdering([2,3,4,6])))
         @fact_throws ErrorException ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=CTMLEs.PreOrdered(CTMLEs.ManualOrdering([1,2,3,5,4,6])))
+        est5 = ctmle(logitQnA1, logitQnA0, w, a, y, searchstrategy=[CTMLEs.PreOrdered(CTMLEs.LogisticOrdering()),
+                                                                    CTMLEs.PreOrdered(CTMLEs.PartialCorrOrdering())])
+        @fact est5 --> is_a(CTMLE)
+
     end
     @pending "Actually test that it works" --> nothing
 end
