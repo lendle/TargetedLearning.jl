@@ -20,7 +20,7 @@ facts("Testing LReg") do
         total_loss = 0.0
         lp=linpred(lrfit, x)
         for i in 1:length(y) #NumericExtensions
-          total_loss += LReg.loss(y[i], lp[i])
+          total_loss += LReg.loss(Logistic(), y[i], lp[i])
         end
         @fact total_loss/length(y) --> roughly(mean(- y .* log(pred) .- (1-y) .* log(1 .- pred)))
     end

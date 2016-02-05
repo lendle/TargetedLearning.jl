@@ -446,12 +446,12 @@ function bound!{T<:AbstractFloat}(gn1::Vector{T}, gbounds::Vector{T})
     gn1
 end
 
-function risk{T<:AbstractFloat}(q::Qmodel{T}, A::Vector{T}, Y::Vector{T}, param::Parameter{T}, penalize::Bool)
+function risk{T<:AbstractFloat, L<:Link}(q::Qmodel{T, L}, A::Vector{T}, Y::Vector{T}, param::Parameter{T}, penalize::Bool)
     total_loss = 0.0
     length(Y) == nobs(q) || error()
     lp = linpred(q, A)
     for i in 1:nobs(q)
-      total_loss += LReg.loss(Y[i], lp[i])
+      total_loss += LReg.loss(L(), Y[i], lp[i])
     end
     q_risk = total_loss/nobs(q)
 

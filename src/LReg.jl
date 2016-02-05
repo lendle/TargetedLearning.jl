@@ -119,10 +119,12 @@ function logisticreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2),
     end
 end
 
-loss(y, xb) =
+loss(::Logistic, y, xb) =
     y == one(y)? log1pexp(-xb) :
     y == zero(y)? log1pexp(xb) :
     y * log1pexp(-xb) + (one(y)-y) * log1pexp(xb)
+
+loss(::Linear, y, xb) = (r = y-xb; r*r)
 
 function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
     offsets = length(offset) == 0? nothing: offset
