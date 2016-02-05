@@ -8,7 +8,7 @@ facts("Test CTMLEs") do
     a = round(rand(n))
     y = round(rand(n))
 
-    qfit = lreg([w a], y)
+    qfit = logisticreg([w a], y)
     logitQnA1 = linpred(qfit, [w ones(n)])
     logitQnA0 = linpred(qfit, [w zeros(n)])
 

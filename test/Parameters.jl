@@ -13,7 +13,7 @@ facts("Testing Parameters") do
     w = [ones(n) rand(n,p)]
     a = round(rand(n))
     y = round(rand(n))
-    gn1 = predict(lreg(w,a), w)
+    gn1 = predict(logisticreg(w,a), w)
 
     context("fluccovar") do
         ey1 = Mean(1.0)

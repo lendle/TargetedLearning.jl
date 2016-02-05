@@ -376,7 +376,7 @@ function add_covars!(chunk::Qchunk, searchstrategy::SearchStrategy, used_covars,
 #         @debug("Initial fluctuation")
         push!(used_covars, 1)
         delete!(unused_covars, 1)
-        gfit = lreg(chunk.W, chunk.A, subset=1:1)
+        gfit = logisticreg(chunk.W, chunk.A, subset=1:1)
         fluc = computefluc(chunk.q, chunk.param, bound!(predict(gfit, chunk.W), chunk.gbounds), chunk.A, chunk.Y)
         fluctuate!(chunk.q, fluc)
         chunk.risk = risk(chunk.q,chunk.A, chunk.Y, chunk.param, chunk.penalize)

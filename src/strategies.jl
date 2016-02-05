@@ -63,7 +63,7 @@ function add_covars!{T<:AbstractFloat}(::ForwardStepwise,
         #estimate g with additional covariate j
         #println("Vars: $(union(used_covars, IntSet(j)))")
         current_covars = union(used_covars, IntSet(j))
-        gfit = lreg(W, A, subset=collect(current_covars)) #sslreg(w, a, current_covars)
+        gfit = logisticreg(W, A, subset=collect(current_covars))
         #fluctuate and get risk
         fluc = computefluc(q, param, bound!(predict(gfit, W), gbounds), A, Y)
         fluctuate!(q, fluc)
@@ -148,7 +148,7 @@ function add_covars!{T<:AbstractFloat}(strategy::PreOrdered,
     union!(used_covars, next_covars)
     setdiff!(unused_covars, next_covars)
 
-    g_fit = lreg(W, A, subset=collect(used_covars))
+    g_fit = logisticreg(W, A, subset=collect(used_covars))
     gn1 = bound!(predict(g_fit, W), gbounds)
 
     fluc = computefluc(q, param, gn1, A, Y)
@@ -169,7 +169,7 @@ function order_covars(ordering::LogisticOrdering, q, param, W, A, Y, available_c
     logitQnAA = linpred(q, A)
     scores = Dict{Int, Float64}()
     for i in available_covars
-        g_fit = lreg(W, A, subset=[i])
+        g_fit = logisticreg(W, A, subset=[i])
         gn1 = bound!(predict(g_fit, W), gbounds)
         fluc = computefluc(q, param, gn1, A, Y)
         fluctuate!(q, fluc)

@@ -11,7 +11,7 @@ using StatsBase, StatsFuns
 import StatsBase: predict
 import Distributions: log1pexp
 
-export LR, lreg, predict, linpred
+export LR, logisticreg, predict, linpred
 
 """The `LR` type contains the coefficent vector of a logistic regression fit, as well as indexes of
 included columns in the design matrix.
@@ -89,9 +89,9 @@ If you do that, don't forget to add the column in the same place to `newx` when 
 `subset` is useful if you want to include only some columns of the design matrix but you want to call `predict`
 with a `newx` matrix with the same number of columns as `x`. The coefficients corresponding to columns of `x` which
 are not used in the fit are set to zero. If you would like to call `predict` with a `newx` matrix that includes
-only the columns that you fit on, you should subset `x` yourself before calling `lreg`.
+only the columns that you fit on, you should subset `x` yourself before calling `logisticreg`.
 """
-function lreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2), convTol=1.0e-8)
+function logisticreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2), convTol=1.0e-8)
     if size(x, 2) == 1
         x = reshape(x, size(x, 1), 1)
     end
@@ -141,7 +141,7 @@ function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
             fname = tempname()
             open(fname, "w") do f
                 serialize(f, (x, y, wts, offset, convTol))
-                info("Error in lreg. x, y, wts, offset and convTol written to $fname")
+                info("Error in logisticreg. x, y, wts, offset and convTol written to $fname")
             end
         end
         rethrow(err)

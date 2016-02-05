@@ -12,7 +12,7 @@ facts("Testing Qmodels") do
     a = round(rand(n))
     y = round(rand(n))
 
-    qfit = lreg([w a], y)
+    qfit = logisticreg([w a], y)
     logitQnA1 = linpred(qfit, [w ones(n)])
     logitQnA0 = linpred(qfit, [w zeros(n)])
     logitQnAA = ifelse(a.==1, logitQnA1, logitQnA0)
@@ -23,11 +23,11 @@ facts("Testing Qmodels") do
         @fact predict(q, a) --> logistic(ifelse(a.==1, logitQnA1, logitQnA0))
     end
 
-    gn1 = predict(lreg(w,a), w)
+    gn1 = predict(logisticreg(w,a), w)
     gna = ifelse(a.==1, gn1, 1-gn1)
     hAA = (2a-1)./gna
     hA1 = 1./gn1
-    fluc = lreg(hAA, y, offset=logitQnAA)
+    fluc = logisticreg(hAA, y, offset=logitQnAA)
     param=ATE()
     theirfluc = computefluc(q, param, gn1, a, y)
     fluctuate!(q, param, gn1, a, y)

@@ -155,7 +155,7 @@ function computefluc(q::Qmodel, param::Parameter, gn1, A, Y; weighted::Bool=fals
     hA1, hA0, wts = compute_h_wts(param, gn1, A, weighted=weighted)
     hAA = ifelse(A.==1, hA1, hA0)
     offset = linpred(q, A)
-    epsilon = lreg(hAA, Y, offset=offset, wts=wts)
+    epsilon = logisticreg(hAA, Y, offset=offset, wts=wts)
     Fluctuation(hA1, hA0, wts, epsilon, weighted)
 end
 

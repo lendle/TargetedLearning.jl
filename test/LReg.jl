@@ -10,7 +10,7 @@ facts("Testing LReg") do
     newx = rand(newn, p)
 
     context("without offest or weights") do
-        lrfit = lreg(x, y)
+        lrfit = logisticreg(x, y)
         @fact lrfit --> is_a(LR)
         @fact predict(lrfit, newx) --> roughly(logistic(newx * lrfit.β))
 
@@ -28,29 +28,29 @@ facts("Testing LReg") do
     context("with offset") do
         off = rand(n)
         newoff = rand(newn)
-        lrfitoff = lreg(x, y, offset=off)
+        lrfitoff = logisticreg(x, y, offset=off)
         @fact predict(lrfitoff, newx, offset=newoff) -->  roughly(logistic(newx * lrfitoff.β .+ newoff))
         @fact_throws predict(lrfitoff, newx)
     end
 
     context("with weights") do
-        lrfitwts = lreg(x, y, wts=ones(50))
-        @fact lrfitwts.β --> roughly(lreg(x,y).β)
+        lrfitwts = logisticreg(x, y, wts=ones(50))
+        @fact lrfitwts.β --> roughly(logisticreg(x,y).β)
         rwts = rand(50)
-        lrfitwts2 = lreg(x, y, wts=rwts)
+        lrfitwts2 = logisticreg(x, y, wts=rwts)
         @fact lrfitwts2.β --> not(roughly(lrfitwts.β))
     end
 
     context("fitting on a subset of columns") do
-        sslrfit = lreg(x, y, subset=[3,1])
-        @fact sslrfit.β[[1,3]] --> roughly(lreg(x[:, [1,3]], y).β)
+        sslrfit = logisticreg(x, y, subset=[3,1])
+        @fact sslrfit.β[[1,3]] --> roughly(logisticreg(x[:, [1,3]], y).β)
         @fact sslrfit.β[2] --> 0.0
         @fact sslrfit.idx --> [1,3]
-        @fact sslrfit.β --> lreg(x, y, subset=[1,3]).β
+        @fact sslrfit.β --> logisticreg(x, y, subset=[1,3]).β
     end
 
     context("works when x is a vector") do
-        lrvec = lreg(rand(10), round(rand(10)))
+        lrvec = logisticreg(rand(10), round(rand(10)))
         @fact lrvec --> is_a(LR)
         @fact predict(lrvec, rand(10)) --> is_a(Vector)
     end
