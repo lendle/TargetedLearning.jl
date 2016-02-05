@@ -56,10 +56,10 @@ end
 function make_chunk_subset{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                            W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                            param::Parameter{T}, idx::AbstractVector{Int}, gbounds::Vector{T},
-                           penalize::Bool)
+                           penalize::Bool, link::Reg)
     length(logitQnA1) == length(logitQnA0) == size(W, 1) == length(A) == length(Y) ||
         error(ArgumentError("Input sizes do not match"))
-    q = Qmodel(logitQnA1[idx], logitQnA0[idx])
+    q = Qmodel(link, logitQnA1[idx], logitQnA0[idx])
     param = subset(param, idx)
     W = W[idx, :]
     A = A[idx]
@@ -76,10 +76,10 @@ StatsBase.nobs(chunk::Qchunk) = nobs(chunk.q)
 A `QCV` holds a training `Qchunk` and a validation `Qchunk`, a sequence of estimated gs corresponding to
 each fluctuation of the `Qchunk`s, the `SearchStrategy` in use, and indexes of used and unused covariates.
 """
-type QCV{T<:AbstractFloat}
+type QCV{T<:AbstractFloat, R<:Reg}
     chunk_train::Qchunk{T}
     chunk_val::Qchunk{T}
-    gseq::Vector{LR{T}}
+    gseq::Vector{LR{T,R}}
     searchstrategy::SearchStrategy
     used_covars::IntSet
     unused_covars::IntSet
@@ -148,15 +148,15 @@ function makeQCV{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                    W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                                    param::Parameter{T}, searchstrategy::SearchStrategy,
                                    idx_train::AbstractVector{Int}, gbounds::Vector{T},
-                                   penalize::Bool)
+                                   penalize::Bool, link::Reg)
     n, p = size(W)
     idx_train = sort(idx_train)
     idx_val = setdiff(1:n, idx_train)
-    chunk_train = make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_train, gbounds, penalize)
-    chunk_val= make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_val, gbounds, false)
+    chunk_train = make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_train, gbounds, penalize, link)
+    chunk_val= make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_val, gbounds, false, link)
     used_covars = IntSet()
     unused_covars = setdiff(IntSet(1:p), used_covars)
-    gseq = LR{T}[]
+    gseq = LR{T, typeof(link)}[]
     QCV(chunk_train, chunk_val, gseq, deepcopy(searchstrategy), used_covars, unused_covars)
 end
 
@@ -174,7 +174,7 @@ immutable FluctuationInfo
     end
 end
 
-function FluctuationInfo{T}(steps::Int, gseq::Vector{LR{T}}, new_flucseq::Vector{Bool})
+function FluctuationInfo{L<:LR}(steps::Int, gseq::Vector{L}, new_flucseq::Vector{Bool})
     new_flucseq[1] || throw(ArgumentError("new_flucseq[1] should be true"))
     first_covars = Vector{Int}[convert(Vector{Int}, gseq[1].idx)]::Vector{Vector{Int}}
     added_covar_order = [setdiff(a.idx, b.idx)::Vector{Int} for (a, b) in zip(gseq[2:end], gseq[1:end-1])]::Vector{Vector{Int}}
@@ -245,6 +245,7 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                  param::Parameter{T}=ATE(),
                                  gbounds::Vector{T}=[0.01, 0.99],
                                  penalize_risk::Bool=false,
+                                 linearfluc::Bool=false,
                                  searchstrategy::SearchStrategy = ForwardStepwise(),
                                  cvplan = StratifiedKfold(length(unique(Y))<3? zip(A, Y) : A, 10),
                                  patience::Int=typemax(Int)
@@ -258,16 +259,18 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
 
     all(W[:, 1] .== 1) || throw(ArgumentError("The first column of W should be all ones."))
 
+    link = linearfluc? LinearReg() : LogisticReg()
+
     #create vector of QCV objects
     cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy,
-                    idx_train, gbounds, penalize_risk)::QCV{T}
+                    idx_train, gbounds, penalize_risk, link)::QCV{T}
             for idx_train in cvplan]
 
     #using cross-validation, find best number of steps to take
     best_steps = find_steps(cvqs, patience=patience)
 
     #build a chunk with the full data set
-    fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, gbounds, penalize_risk, convert(T, Inf))
+    fullchunk = Qchunk(Qmodel(link, logitQnA1, logitQnA0), W, A, Y, param, 1:n, gbounds, penalize_risk, convert(T, Inf))
     gseq = LR{T}[]
     new_flucseq = Bool[]
     used_covars = IntSet()

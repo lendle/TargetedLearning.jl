@@ -11,16 +11,23 @@ using StatsBase, StatsFuns
 import StatsBase: predict
 import Distributions: log1pexp
 
-export LR, logisticreg, predict, linpred
+export LR, logisticreg, predict, linpred, Reg, LinearReg, LogisticReg, fitreg
+
+abstract Reg
+type LinearReg <: Reg end
+type LogisticReg <: Reg end
 
 """The `LR` type contains the coefficent vector of a logistic regression fit, as well as indexes of
 included columns in the design matrix.
 """
-immutable LR{T<:AbstractFloat}
+immutable LR{T<:AbstractFloat, R<:Reg}
     β::Vector{T}
     idx::AbstractVector{Int}
     fitwithoffset::Bool
 end
+
+LR{R<:Reg}(::Type{R}, β, idx, fitwithoffset) = LR{eltype(β), R}(β, idx, fitwithoffset)
+
 
 """
 Returns the linear component of predicted values from a logistic regression fit with a new X matrix
@@ -62,7 +69,8 @@ Returns the predicted on the probability scale values from a logistic regression
 
 * `offset` - offsets. The length should be the same as `size(newx, 1)` of `lr` was fit with an offset, or 0 otherwise.
 """
-predict(lr::LR, newx; offset=Array(eltype(newx), 0)) = logistic(linpred(lr, newx, offset=offset))
+predict{T}(lr::LR{T,LogisticReg}, newx; offset=Array(eltype(newx), 0)) = logistic(linpred(lr, newx, offset=offset))
+predict{T}(lr::LR{T,LinearReg}, newx; offset=Array(eltype(newx), 0)) = linpred(lr, newx, offset=offset)
 
 """
 Fits a logistic regression model
@@ -101,13 +109,13 @@ function logisticreg(x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2),
     if subset == 1:size(x,2) || collect(1:size(x,2)) == subset
         subset = 1:size(x,2)
 #         return LR(coef(fit(GeneralizedLinearModel, x, y, Binomial(); wts=wts, offset=offset, convTol=convTol)), subset, fitwithoffset)
-        return LR(myfit(x, y, wts=wts, offset=offset, convTol=convTol), subset, fitwithoffset)
+        return LR(LogisticReg, myfit(x, y, wts=wts, offset=offset, convTol=convTol), subset, fitwithoffset)
     else
         tempx = x[:, subset]
         β = zeros(eltype(x), size(x, 2))
 #        β[subset] = coef(fit(GeneralizedLinearModel, tempx, y, Binomial(); wts=wts, offset=offset, convTol=convTol))
         β[subset] = myfit(tempx, y, wts=wts, offset=offset, convTol=convTol)
-        return LR(β, subset, fitwithoffset)
+        return LR(LogisticReg, β, subset, fitwithoffset)
     end
 end
 
@@ -148,4 +156,24 @@ function myfit(x, y; wts=ones(y), offset=similar(y,0), convTol=1.0e-8)
     end
 end
 
+function linearreg(x, y; wts=ones(y), offset=similar(y,0))
+    if size(x, 2) == 1
+        x = reshape(x, size(x, 1), 1)
+    end
+    fitwithoffset = length(offset) > 0
+
+    if wts == ones(y)
+      beta = x\y
+    else
+      beta =  broadcast(*, sqrt(wts), x) \ (sqrt(wts) .* y)
+    end
+    return LR(LinearReg, beta, 1:size(x, 2), fitwithoffset)
+end
+
+fitreg(::Type{LogisticReg}, x, y; wts=ones(y), offset=similar(y,0), subset=1:size(x,2), convTol=1.0e-8) =
+  logisticreg(x, y; wts=wts, offset=offset, subset=subset, convTol=convTol)
+
+
+fitreg(::Type{LinearReg}, x, y; wts=ones(y), offset=similar(y,0)) =
+  linearreg(x, y; wts=wts, offset=offset)
 end

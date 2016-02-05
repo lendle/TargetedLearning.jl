@@ -22,18 +22,18 @@ facts("Test CTMLEs") do
     end
 
     context("making chunk subsets") do
-        qc = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0], false)
+        qc = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0], false, LogisticReg())
         @fact qc --> is_a(Qchunk)
         @fact CTMLEs.nobs(qc) --> 3
-        @fact qc.risk --> CTMLEs.risk(Qmodel(logitQnA1[1:3], logitQnA0[1:3]), a[1:3], y[1:3], ATE(), false)
-        qc_pen = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0], true)
+        @fact qc.risk --> CTMLEs.risk(Qmodel(LogisticReg(), logitQnA1[1:3], logitQnA0[1:3]), a[1:3], y[1:3], ATE(), false)
+        qc_pen = CTMLEs.make_chunk_subset(logitQnA1, logitQnA0, w, a, y, ATE(), 1:3, [0.0, 1.0], true, LogisticReg())
         @fact qc_pen.risk --> Inf
     end
 
     context("FluctuationInfo") do
-        g1 = LReg.LR(zeros(1), [1], false)
-        g2 = LReg.LR(zeros(2), [1, 3], false)
-        g1b = LReg.LR(zeros(2), [1, 5], false)
+        g1 = LReg.LR(LReg.LogisticReg, zeros(1), [1], false)
+        g2 = LReg.LR(LReg.LogisticReg, zeros(2), [1, 3], false)
+        g1b = LReg.LR(LReg.LogisticReg, zeros(2), [1, 5], false)
 
         f1 = FluctuationInfo(1, [g1], [true])
         @fact f1.covar_order --> Vector{Int}[[1]]

@@ -9,7 +9,7 @@ end
 
 export tmle
 
-using ..Qmodels, ..Parameters, ..Common
+using ..Qmodels, ..Parameters, ..Common, ..LReg
 
 type TMLE{T<:AbstractFloat} <: AbstractScalarEstimate
     psi::T
@@ -48,8 +48,9 @@ of \(g_n(A_i\mid W_i)\) where \(g_n(A_i \mid W_i)\) is computed as `gn1[i]` if `
 """
 function tmle(logitQnA1::Vector, logitQnA0::Vector, gn1::Vector, A, Y;
               param::Parameter=ATE(),
-              weightedfluc::Bool=false)
-    q = Qmodel(logitQnA1, logitQnA0)
+              weightedfluc::Bool=false,
+              linearfluc::Bool=false)
+    q = Qmodel(linearfluc? LinearReg() : LogisticReg(), logitQnA1, logitQnA0)
     fluctuate!(q, param, gn1, A, Y, weighted=weightedfluc)
     TMLE(applyparam(param, q, A, Y)..., nobs(q), estimand(param))
 end
