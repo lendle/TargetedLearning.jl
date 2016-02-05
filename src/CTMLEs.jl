@@ -56,7 +56,7 @@ end
 function make_chunk_subset{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                            W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                            param::Parameter{T}, idx::AbstractVector{Int}, gbounds::Vector{T},
-                           penalize::Bool, link::Reg)
+                           penalize::Bool, link::Link)
     length(logitQnA1) == length(logitQnA0) == size(W, 1) == length(A) == length(Y) ||
         error(ArgumentError("Input sizes do not match"))
     q = Qmodel(link, logitQnA1[idx], logitQnA0[idx])
@@ -76,10 +76,10 @@ StatsBase.nobs(chunk::Qchunk) = nobs(chunk.q)
 A `QCV` holds a training `Qchunk` and a validation `Qchunk`, a sequence of estimated gs corresponding to
 each fluctuation of the `Qchunk`s, the `SearchStrategy` in use, and indexes of used and unused covariates.
 """
-type QCV{T<:AbstractFloat, R<:Reg}
+type QCV{T<:AbstractFloat, L<:Link}
     chunk_train::Qchunk{T}
     chunk_val::Qchunk{T}
-    gseq::Vector{LR{T,R}}
+    gseq::Vector{LR{T,L}}
     searchstrategy::SearchStrategy
     used_covars::IntSet
     unused_covars::IntSet
@@ -148,7 +148,7 @@ function makeQCV{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                    W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                                    param::Parameter{T}, searchstrategy::SearchStrategy,
                                    idx_train::AbstractVector{Int}, gbounds::Vector{T},
-                                   penalize::Bool, link::Reg)
+                                   penalize::Bool, link::Link)
     n, p = size(W)
     idx_train = sort(idx_train)
     idx_val = setdiff(1:n, idx_train)
@@ -259,7 +259,7 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
 
     all(W[:, 1] .== 1) || throw(ArgumentError("The first column of W should be all ones."))
 
-    link = linearfluc? LinearReg() : LogisticReg()
+    link = linearfluc? Linear() : Logistic()
 
     #create vector of QCV objects
     cvqs = [makeQCV(logitQnA1, logitQnA0, W, A, Y, param, searchstrategy,

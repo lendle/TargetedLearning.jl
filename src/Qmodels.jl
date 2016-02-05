@@ -16,11 +16,11 @@ computefluc, valfluc
 A `Fluctuation` holds fluctuation covariates and weights. The weight times the fluctuation covariate is the so called "clever covariate" in the targeted
 learning literature.
 """
-type Fluctuation{T<:AbstractFloat, R<:Reg}
+type Fluctuation{T<:AbstractFloat, L<:Link}
     hA1::Vector{T}
     hA0::Vector{T}
     wts::Vector{T}
-    epsilon::LR{T,R}
+    epsilon::LR{T,L}
     weighted::Bool
     function Fluctuation(hA1, hA0, wts, epsilon, weighted)
         length(hA1) == length(hA0) == length(wts) || error(ArgumentError("lengths of hA1, hA0 and wts do not match"))
@@ -28,9 +28,9 @@ type Fluctuation{T<:AbstractFloat, R<:Reg}
     end
 end
 
-Fluctuation{T<:AbstractFloat,R<:Reg}(hA1::Vector{T}, hA0::Vector{T}, wts::Vector{T},
-                              epsilon::LR{T,R}, weighted::Bool) =
-    Fluctuation{T,R}(hA1, hA0, wts, epsilon, weighted)
+Fluctuation{T<:AbstractFloat,L<:Link}(hA1::Vector{T}, hA0::Vector{T}, wts::Vector{T},
+                              epsilon::LR{T,L}, weighted::Bool) =
+    Fluctuation{T,L}(hA1, hA0, wts, epsilon, weighted)
 
 nobs(fluc::Fluctuation) = length(fluc.hA1)
 
@@ -67,17 +67,17 @@ The `Qmodel` type represents an estimate of \(\bar{Q}(a,w) = E(Y\mid A=a, W=w)\)
 
 Initial estimate and fluctuations.
 """
-type Qmodel{T<:AbstractFloat, R<:Reg}
+type Qmodel{T<:AbstractFloat, L<:Link}
     logitQnA1::Vector{T} # \logit\bar{Q}_{n}(A=1, W)
     logitQnA0::Vector{T} # \logit\bar{Q}_{n}(A=0, W)
-    flucseq::Vector{Fluctuation{T, R}} #flucseq[i] = ith fluctuation LR
+    flucseq::Vector{Fluctuation{T, L}} #flucseq[i] = ith fluctuation LR
     function Qmodel(logitQnA1, logitQnA0)
         length(logitQnA1) == length(logitQnA0) || error(ArgumentError("lengths of logitQnA1 and logitQnA0 do not match"))
         new(logitQnA1, logitQnA0, Fluctuation{T}[])
     end
 end
 
-Qmodel{T<:AbstractFloat}(link::Reg, logitQnA1::Vector{T}, logitQnA0::Vector{T}) = Qmodel{T, typeof(link)}(logitQnA1, logitQnA0)
+Qmodel{T<:AbstractFloat}(link::Link, logitQnA1::Vector{T}, logitQnA0::Vector{T}) = Qmodel{T, typeof(link)}(logitQnA1, logitQnA0)
 
 nobs(q::Qmodel) = length(q.logitQnA1)
 
@@ -113,8 +113,8 @@ end
 * `a` - vector of treatments
 
 """
-predict{T<:AbstractFloat}(q::Qmodel{T,LogisticReg}, a::Vector{T}) = logistic(linpred(q,a))
-predict{T<:AbstractFloat}(q::Qmodel{T,LinearReg}, a::Vector{T}) = linpred(q,a)
+predict{T<:AbstractFloat}(q::Qmodel{T,Logistic}, a::Vector{T}) = logistic(linpred(q,a))
+predict{T<:AbstractFloat}(q::Qmodel{T,Linear}, a::Vector{T}) = linpred(q,a)
 
 function compute_h_wts(param::Parameter, gn1, A; weighted::Bool=false)
     n = length(A)
@@ -151,12 +151,12 @@ by \(g_n(A_i\mid W_i)\), and weights are set to 1.
 If `true`, the fluctuation covariate is used directly, and weights are set to the reciprical
 of \(g_n(A_i\mid W_i)\) where \(g_n(A_i \mid W_i)\) is computed as `gn1[i]` if `A[i]` is 1, or `1-gn1[i]` otherwise.
 """
-function computefluc{T,R}(q::Qmodel{T,R}, param::Parameter, gn1, A, Y; weighted::Bool=false)
+function computefluc{T,L}(q::Qmodel{T,L}, param::Parameter, gn1, A, Y; weighted::Bool=false)
     #computes fluctuation for a given q and g
     hA1, hA0, wts = compute_h_wts(param, gn1, A, weighted=weighted)
     hAA = ifelse(A.==1, hA1, hA0)
     offset = linpred(q, A)
-    epsilon = fitreg(R, hAA, Y, offset=offset, wts=wts)
+    epsilon = fitreg(L(), hAA, Y, offset=offset, wts=wts)
     Fluctuation(hA1, hA0, wts, epsilon, weighted)
 end
 

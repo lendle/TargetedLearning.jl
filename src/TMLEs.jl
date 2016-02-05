@@ -50,7 +50,7 @@ function tmle(logitQnA1::Vector, logitQnA0::Vector, gn1::Vector, A, Y;
               param::Parameter=ATE(),
               weightedfluc::Bool=false,
               linearfluc::Bool=false)
-    q = Qmodel(linearfluc? LinearReg() : LogisticReg(), logitQnA1, logitQnA0)
+    q = Qmodel(linearfluc? Linear() : Logistic(), logitQnA1, logitQnA0)
     fluctuate!(q, param, gn1, A, Y, weighted=weightedfluc)
     TMLE(applyparam(param, q, A, Y)..., nobs(q), estimand(param))
 end

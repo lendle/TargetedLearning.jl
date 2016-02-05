@@ -17,7 +17,7 @@ facts("Testing Qmodels") do
     logitQnA0 = linpred(qfit, [w zeros(n)])
     logitQnAA = ifelse(a.==1, logitQnA1, logitQnA0)
 
-    q = Qmodel(LogisticReg(), logitQnA1, logitQnA0)
+    q = Qmodel(Logistic(), logitQnA1, logitQnA0)
 
     context("predict on unfluctuated Qmodel") do
         @fact predict(q, a) --> logistic(ifelse(a.==1, logitQnA1, logitQnA0))
@@ -33,7 +33,7 @@ facts("Testing Qmodels") do
     fluctuate!(q, param, gn1, a, y)
 
     context("fluctuation") do
-        @fact theirfluc.epsilon --> is_a(LR{Float64, LogisticReg})
+        @fact theirfluc.epsilon --> is_a(LR{Float64, Logistic})
         @fact theirfluc.epsilon.β --> roughly(fluc.β)
         @fact q.flucseq[1].epsilon.β --> roughly(fluc.β)
     end
