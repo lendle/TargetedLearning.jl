@@ -247,7 +247,8 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                                  penalize_risk::Bool=false,
                                  searchstrategy::SearchStrategy = ForwardStepwise(),
                                  cvplan = StratifiedKfold(length(unique(Y))<3? zip(A, Y) : A, 10),
-                                 patience::Int=typemax(Int)
+                                 patience::Int=typemax(Int),
+                                 set_steps::Int=-1
                                 )
     n,p = size(W)
     n == length(logitQnA1) ==
@@ -264,7 +265,12 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
             for idx_train in cvplan]
 
     #using cross-validation, find best number of steps to take
-    best_steps = find_steps(cvqs, patience=patience)
+    if set_steps >= 0
+      @info("Setting number of steps to $set_steps. Skipping cross-validation.")
+      best_steps = set_steps
+    else
+      best_steps = find_steps(cvqs, patience=patience)
+    end
 
     #build a chunk with the full data set
     fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, gbounds, penalize_risk, convert(T, Inf))
