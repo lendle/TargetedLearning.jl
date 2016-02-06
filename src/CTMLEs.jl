@@ -27,14 +27,16 @@ using ..LReg, ..Common, ..Parameters, ..Qmodels
 
 import ..Qmodels: fluctuate!, defluctuate!, Fluctuation
 
-include("pcor.jl")
-include("strategies.jl")
 
-subset{P<:Parameter}(param::P, idx::AbstractVector{Int}) =
-    P(map(d -> subset(d, idx), regimens(param))...)
+type GMachine{T<:AbstractFloat}
+  A::Vector{T}
+  W::Matrix{T}
+end
 
-subset(d::StaticRegimen, idx) = d
-subset(d::DynamicRegimen, idx) = DynamicRegimen(d.a[idx])
+function give_me_a_g(gmachine::GMachine; subset=1:size(gmachine.W, 2))
+  lreg(gmachine.W, gmachine.A, subset=subset)
+end
+
 
 """
 A `Qchunk` holds (a subset of) the data set and corresponding indexes along with a `Qmodel` which can compute predictions for
@@ -46,28 +48,42 @@ type Qchunk{T<:AbstractFloat}
     W::Matrix{T}
     A::Vector{T}
     Y::Vector{T}
+    gmachine::GMachine
     param::Parameter{T}
     idx::AbstractVector{Int}
     gbounds::Vector{T}
     penalize::Bool
     risk::T
+    used_covars::IntSet
+    unused_covars::IntSet
 end
+
+include("pcor.jl")
+include("strategies.jl")
+
+subset{P<:Parameter}(param::P, idx::AbstractVector{Int}) =
+    P(map(d -> subset(d, idx), regimens(param))...)
+
+subset(d::StaticRegimen, idx) = d
+subset(d::DynamicRegimen, idx) = DynamicRegimen(d.a[idx])
+
 
 function make_chunk_subset{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
                            W::Matrix{T}, A::Vector{T}, Y::Vector{T},
                            param::Parameter{T}, idx::AbstractVector{Int}, gbounds::Vector{T},
-                           penalize::Bool)
+                           penalize::Bool, used_covars::IntSet, unused_covars::IntSet)
     length(logitQnA1) == length(logitQnA0) == size(W, 1) == length(A) == length(Y) ||
         error(ArgumentError("Input sizes do not match"))
     q = Qmodel(logitQnA1[idx], logitQnA0[idx])
     param = subset(param, idx)
+    gmachine=GMachine(A, W)
     W = W[idx, :]
     A = A[idx]
     Y = Y[idx]
     #Can't compute penalized risk if q isn't fluctuated yet,
     #so set to Inf
     q_risk = penalize? convert(T, Inf) : risk(q, A, Y, param, false)
-    Qchunk(q, W, A, Y, param, idx, gbounds, penalize, q_risk)
+    Qchunk(q, W, A, Y, gmachine, param, idx, gbounds, penalize, q_risk, used_covars, unused_covars)
 end
 
 StatsBase.nobs(chunk::Qchunk) = nobs(chunk.q)
@@ -152,10 +168,10 @@ function makeQCV{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     n, p = size(W)
     idx_train = sort(idx_train)
     idx_val = setdiff(1:n, idx_train)
-    chunk_train = make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_train, gbounds, penalize)
-    chunk_val= make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_val, gbounds, false)
     used_covars = IntSet()
-    unused_covars = setdiff(IntSet(1:p), used_covars)
+    unused_covars = IntSet(1:p)
+    chunk_train = make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_train, gbounds, penalize, used_covars, unused_covars)
+    chunk_val= make_chunk_subset(logitQnA1, logitQnA0, W, A, Y, param, idx_val, gbounds, false, used_covars, unused_covars)
     gseq = LR{T}[]
     QCV(chunk_train, chunk_val, gseq, deepcopy(searchstrategy), used_covars, unused_covars)
 end
@@ -267,17 +283,17 @@ function ctmle{T<:AbstractFloat}(logitQnA1::Vector{T}, logitQnA0::Vector{T},
     best_steps = find_steps(cvqs, patience=patience)
 
     #build a chunk with the full data set
-    fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, param, 1:n, gbounds, penalize_risk, convert(T, Inf))
-    gseq = LR{T}[]
-    new_flucseq = Bool[]
     used_covars = IntSet()
     unused_covars = IntSet(1:p)
+    fullchunk = Qchunk(Qmodel(logitQnA1, logitQnA0), W, A, Y, GMachine(A, W), param, 1:n, gbounds, penalize_risk, convert(T, Inf), used_covars, unused_covars)
+    gseq = LR{T}[]
+    new_flucseq = Bool[]
     #and add covariates steps # of times, saving g fits
     @info("Fitting final estimate of Q")
     for step in 1:best_steps
 #         @debug("used_covars: $used_covars")
 #         @debug("unused_covars: $unused_covars")
-        gfit, new_fluc = add_covars!(fullchunk, searchstrategy, used_covars, unused_covars)
+        gfit, new_fluc = add_covar_chunk!(fullchunk, searchstrategy)
         push!(gseq, gfit)
         push!(new_flucseq, new_fluc)
         @info(if length(gseq) == 1
@@ -332,7 +348,7 @@ function find_steps{T<:AbstractFloat}(qcvs::Vector{QCV{T}}; patience::Int=typema
     @info("Choosing number of steps via cross validation")
     while notdone
         steps += 1
-        map(add_covars!, qcvs)
+        map(add_covar_qcv!, qcvs)
         val_risk = mean(map(qcv -> qcv.chunk_val.risk, qcvs))
         if val_risk < best_risk
             best_risk = val_risk
@@ -363,7 +379,7 @@ Adds next covariate(s) to a Qchunk based on a search strategy
 
 ** Details **
 
-If `used_covars` is emtpy (because this is the first time `add_covars!` has been called on this chunk,
+If `used_covars` is emtpy (because this is the first time `add_covar_chunk!` has been called on this chunk,
 a fluctuation based on an intercept only model is added to Q.
 Otherwise, next covariates are added where the order is determined by `searchstrategy`
 
@@ -371,21 +387,19 @@ Returns most recent `gfit` object and a boolean which is `true` if the most rece
 or `false` if the previous fluctuation was updated with new covariates.
 
 """
-function add_covars!(chunk::Qchunk, searchstrategy::SearchStrategy, used_covars, unused_covars)
-    if isempty(used_covars)
+function add_covar_chunk!(chunk::Qchunk, searchstrategy::SearchStrategy)
+    if isempty(chunk.used_covars)
 #         @debug("Initial fluctuation")
-        push!(used_covars, 1)
-        delete!(unused_covars, 1)
-        gfit = lreg(chunk.W, chunk.A, subset=1:1)
+        push!(chunk.used_covars, 1)
+        delete!(chunk.unused_covars, 1)
+        gfit = give_me_a_g(chunk.gmachine, subset=1:1)
         fluc = computefluc(chunk.q, chunk.param, bound!(predict(gfit, chunk.W), chunk.gbounds), chunk.A, chunk.Y)
         fluctuate!(chunk.q, fluc)
         chunk.risk = risk(chunk.q,chunk.A, chunk.Y, chunk.param, chunk.penalize)
         return gfit, true
     else
 #         @debug("Adding covariate(s)")
-        abc = add_covars!(searchstrategy, chunk.q, chunk.param, chunk.W, chunk.A, chunk.Y,
-                          used_covars, unused_covars, chunk.risk, chunk.gbounds, chunk.penalize)
-        q_risk, gfit, new_fluc = abc
+        q_risk, gfit, new_fluc = add_covar!(searchstrategy, chunk)
         chunk.risk=q_risk
         return gfit, new_fluc
     end
@@ -404,7 +418,7 @@ If `qcv` has no unused covariates, none are added.  New covariates are first add
 Returns updated `qcv`.
 
 """
-function add_covars!(qcv::QCV)
+function add_covar_qcv!(qcv::QCV)
     if isempty(qcv.unused_covars)
         @debug("No covariates to add")
         return qcv
@@ -415,7 +429,7 @@ function add_covars!(qcv::QCV)
     # update q_val, which dpeends on g fit on q_train, and fluc
 
     #add next covar to training chunk and store gfit
-    gfit, new_fluc = add_covars!(train, qcv.searchstrategy, qcv.used_covars, qcv.unused_covars)
+    gfit, new_fluc = add_covar_chunk!(train, qcv.searchstrategy)
     push!(qcv.gseq, gfit)
 
     #add newest fluctuation to val chunk and compute risk
